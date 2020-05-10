@@ -1,0 +1,68 @@
+#arena, #inventory, #packing-area, .bin, .item {
+    border: 1px solid black;
+}
+#arena {
+    margin: 30px;
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+#packing-area {
+    margin: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-direction: column;
+}
+#inventory {
+    margin: 30px;
+}
+.item {
+    opacity: 70%;
+    position: absolute;
+    box-sizing: border-box;
+    z-index: 30;
+}
+.item.packed {
+    opacity: 90%;
+    z-index: 10;
+}
+
+.bin .item {
+    position: absolute;
+}
+.bin {
+    position: relative;
+    margin: 30px;
+    box-sizing: border-box;
+}
+#inventory, .bin {
+    background-image: linear-gradient(to right, grey 1px, transparent 1px),
+        linear-gradient(to bottom, grey 1px, transparent 1px);
+    background-position: -0.5px -0.5px;
+}
+.bin.drop-target {
+    border: 2px solid black;
+}
+#hover-rect {
+    visibility: hidden;
+    position: fixed;
+    border: 1px solid gray;
+    z-index: 20;
+}
+#hover-rect.success {
+    background: rgba(40, 167, 69, 0.5);
+}
+#hover-rect.failure {
+    background: rgba(220, 53, 69, 0.5);
+}
+
+body {
+    width: 100%;
+    margin: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
