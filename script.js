@@ -332,7 +332,8 @@ class DragData {
 
 function mousedownHandler(ev) {
     var target = ev.target;
-    console.debug('mousedown', ev.clientX, ev.clientY, target);
+    console.debug(ev.type, ev.clientX, ev.clientY, target);
+    ev.preventDefault();
     if(target.classList.contains('item')) {
         var itemDomElem = target;
         var originalXPos = itemDomElem.getBoundingClientRect().x;
@@ -404,6 +405,7 @@ function getMouseBin(ev) {
 
 function mousemoveHandler(ev) {
     // console.debug("mousemove", ev.target.id, ev.target.classList.value);
+    ev.preventDefault();
     var dragData = DragData.get();
     if(dragData === null) {
         return;
@@ -443,7 +445,8 @@ function endDrag() {
 
 function mouseupHandler(ev) {
     var target = ev.target;
-    console.debug('mouseup', target);
+    console.debug(ev.type, target);
+    ev.preventDefault();
     var dragData = DragData.get();
     if(dragData === null) {
         return;
@@ -464,7 +467,8 @@ function mouseupHandler(ev) {
 
 function mouseleaveHandler(ev) {
     var target = ev.target;
-    console.debug('mouseleave', target);
+    console.debug(ev.type, target);
+    ev.preventDefault();
     var dragData = DragData.get();
     if(dragData !== null) {
         endDrag();
@@ -478,10 +482,10 @@ function addEventListeners() {
         return false;
     });
 
-    arena.addEventListener('mousedown', mousedownHandler);
-    arena.addEventListener('mousemove', mousemoveHandler);
-    arena.addEventListener('mouseup', mouseupHandler);
-    arena.addEventListener('mouseleave', mouseleaveHandler);
+    arena.addEventListener('pointerdown', mousedownHandler);
+    arena.addEventListener('pointermove', mousemoveHandler);
+    arena.addEventListener('pointerup', mouseupHandler);
+    arena.addEventListener('pointerleave', mouseleaveHandler);
 }
 
 addEventListeners();
