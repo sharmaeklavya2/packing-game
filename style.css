@@ -11,14 +11,14 @@
     touch-action: none;
 }
 #packing-area {
-    margin: 30px;
+    margin: 10px;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     flex-direction: column;
 }
 #inventory {
-    margin: 30px;
+    margin: 10px;
 }
 .item {
     opacity: 70%;
@@ -36,7 +36,7 @@
 }
 .bin {
     position: relative;
-    margin: 30px;
+    margin: 10px;
     box-sizing: border-box;
 }
 #inventory, .bin {

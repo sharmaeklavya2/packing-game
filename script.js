@@ -164,7 +164,7 @@ var arena = document.getElementById('arena');
 var inventory = document.getElementById('inventory');
 var packingArea = document.getElementById('packing-area');
 var hoverRect = document.getElementById('hover-rect');
-var scaleFactor = 50;
+var scaleFactor = 30;
 
 function setPos(domElem, xPos, yPos) {
     domElem.style.top = yPos + 'px';
