@@ -37,7 +37,6 @@
 .bin {
     position: relative;
     margin: 10px;
-    box-sizing: border-box;
 }
 #inventory, .bin {
     background-image: linear-gradient(to right, grey 1px, transparent 1px),
