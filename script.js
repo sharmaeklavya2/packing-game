@@ -325,6 +325,22 @@ class Game {
         }
     }
 
+    trimBins(targetEmpty) {
+        var nEmpty = 0;
+        var nBins = this.bins.length;
+        for(; nEmpty < nBins && this.bins[nBins - nEmpty - 1].bin.isEmpty(); ++nEmpty);
+
+        if(nEmpty <= targetEmpty) {
+            this.addBins(targetEmpty - nEmpty);
+        }
+        else {
+            for(var i=1; i <= nEmpty - targetEmpty; ++i) {
+                this.bins[nBins - i].destroy();
+            }
+            this.bins.length = nBins - nEmpty + targetEmpty;
+        }
+    }
+
     moveItemsToInventory(firstTime) {
         var xOff = inventory.getBoundingClientRect().x - arena.getBoundingClientRect().x;
         var yOff = inventory.getBoundingClientRect().y - arena.getBoundingClientRect().y;
@@ -509,6 +525,7 @@ function mousemoveHandler(ev) {
 function endDrag() {
     hoverRect.style.visibility = 'hidden';
     DragData.unset();
+    game.trimBins(1);
 }
 
 function mouseupHandler(ev) {
