@@ -156,15 +156,19 @@ class FixedInput {
         this.binYLen = 3;
         this.nBin = 2;  // null for bin-packing
     }
+
+    isKnapsack() {
+        return this.nBin !== null;
+    }
 }
 
 // UI Layer ====================================================================
 
+var arenaWrapper = document.getElementById('arena-wrapper');
 var arena = document.getElementById('arena');
 var inventory = document.getElementById('inventory');
 var packingArea = document.getElementById('packing-area');
 var hoverRect = document.getElementById('hover-rect');
-var scaleFactor = 30;
 
 function setPos(domElem, xPos, yPos) {
     domElem.style.top = yPos + 'px';
@@ -172,18 +176,19 @@ function setPos(domElem, xPos, yPos) {
 }
 
 class ItemUI {
-    constructor(itemInfo, id) {
+    constructor(itemInfo, id, scaleFactor) {
         this.itemInfo = itemInfo;
         this.rect = new Rectangle(null, null, itemInfo.xLen, itemInfo.yLen);
         this.id = id;
         this.binUI = null;
+        this.scaleFactor = scaleFactor;
 
         // DOM
         var elem = document.createElement('div');
         elem.classList.add('item');
         elem.setAttribute('data-item-id', this.id);
-        elem.style.width = scaleFactor * this.rect.xLen + 'px';
-        elem.style.height = scaleFactor * this.rect.yLen + 'px';
+        elem.style.width = this.scaleFactor * this.rect.xLen + 'px';
+        elem.style.height = this.scaleFactor * this.rect.yLen + 'px';
         elem.style.backgroundColor = itemInfo.color;
         this.domElem = elem;
     }
@@ -194,6 +199,7 @@ class ItemUI {
             this.binUI.domElem.removeChild(this.domElem);
             this.domElem.classList.remove('packed');
             this.binUI = null;
+            inventory.appendChild(this.domElem);
         }
     }
 
@@ -204,7 +210,7 @@ class ItemUI {
             this.rect.xPos = xPos;
             this.rect.yPos = yPos;
             this.domElem.classList.add('packed');
-            setPos(this.domElem, scaleFactor * xPos, scaleFactor * yPos);
+            setPos(this.domElem, this.scaleFactor * xPos, this.scaleFactor * yPos);
             this.binUI.domElem.appendChild(this.domElem);
             return true;
         }
@@ -215,7 +221,7 @@ class ItemUI {
 }
 
 class BinUI {
-    constructor(xLen, yLen, dummy, id) {
+    constructor(xLen, yLen, dummy, id, scaleFactor) {
         if(dummy) {
             this.bin = new DummyBin(xLen, yLen);
         }
@@ -223,13 +229,14 @@ class BinUI {
             this.bin = new Bin(xLen, yLen);
         }
         this.id = id;
+        this.scaleFactor = scaleFactor;
 
         var elem = document.createElement('div');
         elem.classList.add('bin');
         elem.setAttribute('data-bin-id', this.id);
-        elem.style.width = this.bin.xLen * scaleFactor + 'px';
-        elem.style.height = this.bin.yLen * scaleFactor + 'px';
-        elem.style.backgroundSize = scaleFactor + 'px ' + scaleFactor + 'px';
+        elem.style.width = this.bin.xLen * this.scaleFactor + 'px';
+        elem.style.height = this.bin.yLen * this.scaleFactor + 'px';
+        elem.style.backgroundSize = this.scaleFactor + 'px ' + this.scaleFactor + 'px';
         this.domElem = elem;
     }
     destroy() {
@@ -240,16 +247,22 @@ class BinUI {
 
 class Game {
 
-    makeBins(nBin) {
+    addBins(nBin) {
         for(var i=0; i<nBin; ++i) {
-            var bin = new BinUI(input.binXLen, input.binYLen, false, i);
+            var bin = new BinUI(this.input.binXLen, this.input.binYLen, false, i, this.scaleFactor);
             this.bins.push(bin);
             packingArea.appendChild(bin.domElem);
         }
     }
 
-    constructor(input) {
+    _setInventoryDims(xLen, yLen) {
+        inventory.style.width = xLen * this.scaleFactor + 'px';
+        inventory.style.height = yLen * this.scaleFactor + 'px';
+    }
+
+    constructor(input, scaleFactor) {
         this.input = input;
+        this.scaleFactor = scaleFactor;
 
         // set inventory's dimensions
         var totalYLen = 0;
@@ -259,51 +272,76 @@ class Game {
             totalYLen += item.yLen;
             maxXLen = Math.max(maxXLen, item.xLen);
         }
-        inventory.style.width = maxXLen * scaleFactor + 'px';
-        inventory.style.height = totalYLen * scaleFactor + 'px';
-        inventory.style.backgroundSize = scaleFactor + 'px ' + scaleFactor + 'px';
+        this._setInventoryDims(maxXLen, totalYLen);
+        inventory.style.backgroundSize = this.scaleFactor + 'px ' + this.scaleFactor + 'px';
 
         // create items
         this.items = [];
         for(var i=0; i < inputItems.length; ++i) {
-            var itemUI = new ItemUI(inputItems[i], i);
+            var itemUI = new ItemUI(inputItems[i], i, this.scaleFactor);
             this.items.push(itemUI);
         }
+        this.moveItemsToInventory(true);
 
-        // create bins for knapsack problem
+        // create bins
         this.bins = [];
-        if(this.input.nBin !== null) {
-            this.makeBins(this.input.nBin);
+        if(this.input.isKnapsack()) {
+            this.addBins(this.input.nBin);
         }
-        this.resetGame();
+        else {
+            this.addBins(1);
+        }
     }
 
-    resetGame() {
-        // move items to inventory
+    moveItemsToInventory(firstTime) {
         var xOff = inventory.getBoundingClientRect().x - arena.getBoundingClientRect().x;
         var yOff = inventory.getBoundingClientRect().y - arena.getBoundingClientRect().y;
-        var yAgg = 0;
+        this.yAgg = 0;
         for(var item of this.items) {
             item.detach();
-            inventory.appendChild(item.domElem);
-            setPos(item.domElem, xOff, yOff + yAgg * scaleFactor);
-            yAgg += item.rect.yLen;
-        }
-
-        if(this.input.nBin === null) {
-            // if bin-packing, then remake bins
-            for(var bin of this.bins) {
-                packingArea.removeChild(bin.domElem);
-                bin.destroy();
+            if(firstTime) {
+                inventory.appendChild(item.domElem);
             }
-            this.bins.length = 0;
-            this.makeBins(1);
+            setPos(item.domElem, xOff, yOff + this.yAgg * this.scaleFactor);
+            this.yAgg += item.rect.yLen;
         }
+    }
+
+    _destroyBins() {
+        for(var bin of this.bins) {
+            packingArea.removeChild(bin.domElem);
+            bin.destroy();
+        }
+        this.bins.length = 0;
+    }
+
+    reset() {
+        this.moveItemsToInventory(false);
+        if(!this.input.isKnapsack()) {
+            this._destroyBins();
+            this.addBins(1);
+        }
+    }
+
+    _destroyItems() {
+        this.yAgg = 0;
+        for(var item of this.items) {
+            item.detach();
+            inventory.removeChild(item.domElem);
+        }
+        this.items.length = 0;
+    }
+
+    destroy() {
+        this._destroyItems();
+        this._destroyBins();
+        this._setInventoryDims(0, 0);
+        inventory.style.backgroundSize = null;
     }
 }
 
 var input = new FixedInput();
-var game = new Game(input);
+var game = new Game(input, 30);
 
 // Event Handlers ==============================================================
 
@@ -345,7 +383,6 @@ function mousedownHandler(ev) {
         DragData.set(new DragData(itemId, itemXOff, itemYOff));
 
         item.detach();
-        inventory.appendChild(item.domElem);
         var xPos = originalXPos - arena.getBoundingClientRect().x;
         var yPos = originalYPos - arena.getBoundingClientRect().y;
         setPos(item.domElem, xPos, yPos);
@@ -370,8 +407,8 @@ function getPos(ev, bin, binDomElem) {
     var dragData = DragData.get();
     var binX = binDomElem.getBoundingClientRect().x;
     var binY = binDomElem.getBoundingClientRect().y;
-    var xPos = (ev.clientX - binX - dragData.xOff) / scaleFactor;
-    var yPos = (ev.clientY - binY - dragData.yOff) / scaleFactor;
+    var xPos = (ev.clientX - binX - dragData.xOff) / bin.scaleFactor;
+    var yPos = (ev.clientY - binY - dragData.yOff) / bin.scaleFactor;
     xPos = clip(Math.round(xPos), 0, bin.bin.xLen-1);
     yPos = clip(Math.round(yPos), 0, bin.bin.yLen-1);
     return [xPos, yPos];
@@ -383,8 +420,8 @@ function moveHoverRect(bin, binDomElem, rect) {
     }
     else {
         setPos(hoverRect,
-            binDomElem.getBoundingClientRect().x + rect.xPos * scaleFactor,
-            binDomElem.getBoundingClientRect().y + rect.yPos * scaleFactor);
+            binDomElem.getBoundingClientRect().x + rect.xPos * bin.scaleFactor,
+            binDomElem.getBoundingClientRect().y + rect.yPos * bin.scaleFactor);
         hoverRect.style.visibility = 'visible';
     }
 }
