@@ -169,6 +169,7 @@ var arena = document.getElementById('arena');
 var inventory = document.getElementById('inventory');
 var packingArea = document.getElementById('packing-area');
 var hoverRect = document.getElementById('hover-rect');
+var uiMargin = 10;  // margin between arena and the elements inside it, in px.
 
 function setPos(domElem, xPos, yPos) {
     domElem.style.top = yPos + 'px';
@@ -256,15 +257,16 @@ class Game {
     }
 
     _setInventoryDims(xLen, yLen) {
+        this.invXLen = xLen;
+        this.invYLen = yLen;
         inventory.style.width = xLen * this.scaleFactor + 'px';
         inventory.style.height = yLen * this.scaleFactor + 'px';
     }
 
     constructor(input, scaleFactor) {
         this.input = input;
-        this.scaleFactor = scaleFactor;
 
-        // set inventory's dimensions
+        // get inventory's dimensions
         var totalYLen = 0;
         var maxXLen = 0;
         var inputItems = this.input.items;
@@ -272,7 +274,24 @@ class Game {
             totalYLen += item.yLen;
             maxXLen = Math.max(maxXLen, item.xLen);
         }
-        this._setInventoryDims(maxXLen, totalYLen);
+        var invXLen = maxXLen, invYLen = totalYLen;
+
+        if(scaleFactor === null) {
+            // infer scaleFactor from arenaWrapper's dims
+            var arenaX = arenaWrapper.getBoundingClientRect().width;
+            var arenaY = arenaWrapper.getBoundingClientRect().height;
+            console.log("arena:", arenaX, arenaY);
+            var scaleX = (arenaX - 3 * uiMargin) / (invXLen + this.input.binXLen);
+            var scaleY = (arenaY - 3 * uiMargin) / Math.max(invYLen, this.input.binYLen);
+            console.log("inferred scale:", scaleX, scaleY);
+            this.scaleFactor = Math.min(scaleX, scaleY);
+        }
+        else {
+            this.scaleFactor = scaleFactor;
+        }
+
+        // set inventory's dimensions
+        this._setInventoryDims(invXLen, invYLen);
         inventory.style.backgroundSize = this.scaleFactor + 'px ' + this.scaleFactor + 'px';
 
         // create items
@@ -341,7 +360,7 @@ class Game {
 }
 
 var input = new FixedInput();
-var game = new Game(input, 30);
+var game = new Game(input, null);
 
 // Event Handlers ==============================================================
 
