@@ -6,6 +6,7 @@ var inventory = document.getElementById('inventory');
 var packingArea = document.getElementById('packing-area');
 var hoverRect = document.getElementById('hover-rect');
 var statsBar = document.getElementById('stats-bar');
+var itemInfoBar = document.getElementById('item-info-bar');
 
 var uiMargin = 10;  // margin between arena and the elements inside it, in px.
 var defaultItemColor = 'blue';
@@ -450,6 +451,7 @@ class Game {
     constructor(input, scaleFactor) {
         this.input = input;
         this.stats = new Stats(this.input.gameType, this.input.items);
+        this.itemInfoBar = new ItemInfoBar(this.input.gameType);
 
         // get inventory's dimensions
         var totalYLen = 0;
@@ -567,11 +569,43 @@ class Game {
         this._destroyBins();
         this._setInventoryDims(0, 0);
         this.stats.destroy();
+        this.itemInfoBar.destroy();
         inventory.style.backgroundSize = null;
     }
 }
 
-//==[ Event Handlers ]==========================================================
+class ItemInfoBar {
+    constructor(gameType) {
+        this.gameType = gameType;
+        var domElemNames = ['width', 'height'];
+        if(this.gameType == 'ks') {
+            domElemNames.push('profit');
+        }
+        this.domElems = createBarItems(itemInfoBar, domElemNames);
+    }
+
+    activate(item) {
+        var d = {'width': item.xLen, 'height': item.yLen, 'profit': item.profit};
+        for(let [key, value] of Object.entries(d)) {
+            var domElem = this.domElems[key];
+            if(domElem !== undefined) {
+                domElem.innerHTML = value;
+            }
+        }
+        itemInfoBar.style.visibility = 'visible';
+    }
+
+    deactivate() {
+        for(let [key, domElem] of Object.entries(this.domElems)) {
+            domElem.innerHTML = '';
+        }
+        itemInfoBar.style.visibility = 'hidden';
+    }
+
+    destroy() {
+        itemInfoBar.innerHTML = '';
+    }
+}
 
 class DragData {
     constructor(itemId, xOff, yOff) {
@@ -587,12 +621,16 @@ class DragData {
             throw new Error('globalDragData is already set');
         }
         globalDragData = dragData;
+        globalGame.itemInfoBar.activate(globalGame.items[dragData.itemId].itemInfo);
         // ev.dataTransfer.setData('text/html', null);
     }
     static unset() {
         globalDragData = null;
+        globalGame.itemInfoBar.deactivate();
     }
 }
+
+//==[ Event Handlers ]==========================================================
 
 function mousedownHandler(ev) {
     var target = ev.target;

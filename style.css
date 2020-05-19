@@ -60,6 +60,10 @@ body {
 #stats-bar {
     bottom: 0;
 }
+#item-info-bar {
+    bottom: 2em;
+    visibility: hidden;
+}
 .bar {
     position: fixed;
     width: 100%;
