@@ -5,6 +5,7 @@ var arena = document.getElementById('arena');
 var inventory = document.getElementById('inventory');
 var packingArea = document.getElementById('packing-area');
 var hoverRect = document.getElementById('hover-rect');
+var statsBar = document.getElementById('stats-bar');
 
 var uiMargin = 10;  // margin between arena and the elements inside it, in px.
 var defaultItemColor = 'blue';
@@ -308,6 +309,7 @@ class ItemUI {
             this.binUI.bin.remove(this.rect);
             this.binUI.domElem.removeChild(this.domElem);
             this.domElem.classList.remove('packed');
+            globalGame.stats.reportDetach(this.itemInfo, this.binUI.bin.isEmpty());
             this.binUI = null;
             inventory.appendChild(this.domElem);
         }
@@ -315,12 +317,14 @@ class ItemUI {
 
     attach(binUI, xPos, yPos) {
         console.assert(this.binUI === null, 'item infidelity');
+        var wasEmpty = binUI.bin.isEmpty();
         if(binUI.bin.insert(new Rectangle(xPos, yPos, this.rect.xLen, this.rect.yLen))) {
             this.binUI = binUI;
             this.rect.xPos = xPos;
             this.rect.yPos = yPos;
             this.domElem.classList.add('packed');
             setPos(this.domElem, this.scaleFactor * xPos, this.scaleFactor * yPos);
+            globalGame.stats.reportAttach(this.itemInfo, wasEmpty);
             this.binUI.domElem.appendChild(this.domElem);
             return true;
         }
@@ -361,10 +365,87 @@ class BinUI {
     }
 }
 
+class Stats {
+    constructor(gameType, items) {
+        // items are ItemInfo objects
+        this.gameType = gameType;
+        this.nItems = 0;
+        this.nItemsPacked = 0;
+        this.nBins = 0;
+        this.profit = 0;
+        for(var item of items) {
+            this.nItems++;
+            this.profit += item.profit;
+        }
+
+        var domElemNames = ['packed', 'unpacked'];
+        if(this.gameType == 'bp') {
+            domElemNames.push('bins used');
+        }
+        else if(this.gameType == 'ks') {
+            domElemNames.push('profit');
+        }
+
+        this.domElems = {};
+        for(var name of domElemNames) {
+            var entryDom = document.createElement('div');
+            entryDom.classList.add('stats-entry');
+            var labelDom = document.createElement('div');
+            labelDom.classList.add('stats-label');
+            labelDom.innerHTML = name;
+            var valueDom = document.createElement('div');
+            valueDom.classList.add('stats-value');
+            this.domElems[name] = valueDom;
+            entryDom.appendChild(labelDom);
+            entryDom.appendChild(valueDom);
+            statsBar.appendChild(entryDom);
+        };
+        this.refreshDom();
+    }
+
+    reportAttach(item, wasEmpty) {
+        this.nItemsPacked++;
+        this.profit += item.profit;
+        if(wasEmpty) {
+            this.nBins++;
+        }
+        this.refreshDom();
+    }
+
+    reportDetach(item, isEmpty) {
+        this.nItemsPacked--;
+        this.profit -= item.profit;
+        if(isEmpty) {
+            this.nBins--;
+        }
+        this.refreshDom();
+    }
+
+    refreshDom() {
+        var d = {
+            'packed': this.nItemsPacked,
+            'unpacked': this.nItems - this.nItemsPacked,
+            'bins used': this.nBins,
+            'profit': this.profit,
+        };
+        for(let [key, value] of Object.entries(d)) {
+            var domElem = this.domElems[key];
+            if(domElem !== undefined) {
+                domElem.innerHTML = value;
+            }
+        }
+    }
+
+    destroy() {
+        statsBar.innerHTML = '';
+    }
+}
+
 class Game {
 
     constructor(input, scaleFactor) {
         this.input = input;
+        this.stats = new Stats(this.input.gameType, this.input.items);
 
         // get inventory's dimensions
         var totalYLen = 0;
@@ -481,6 +562,7 @@ class Game {
         this._destroyItems();
         this._destroyBins();
         this._setInventoryDims(0, 0);
+        this.stats.destroy();
         inventory.style.backgroundSize = null;
     }
 }
