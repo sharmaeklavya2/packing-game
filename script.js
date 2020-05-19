@@ -365,6 +365,24 @@ class BinUI {
     }
 }
 
+function createBarItems(domParent, names) {
+    var domElems = {};
+    for(var name of names) {
+        var entryDom = document.createElement('div');
+        entryDom.classList.add('bar-entry');
+        var labelDom = document.createElement('div');
+        labelDom.classList.add('bar-label');
+        labelDom.innerHTML = name;
+        var valueDom = document.createElement('div');
+        valueDom.classList.add('bar-value');
+        domElems[name] = valueDom;
+        entryDom.appendChild(labelDom);
+        entryDom.appendChild(valueDom);
+        domParent.appendChild(entryDom);
+    };
+    return domElems;
+}
+
 class Stats {
     constructor(gameType, items) {
         // items are ItemInfo objects
@@ -385,21 +403,7 @@ class Stats {
         else if(this.gameType == 'ks') {
             domElemNames.push('profit');
         }
-
-        this.domElems = {};
-        for(var name of domElemNames) {
-            var entryDom = document.createElement('div');
-            entryDom.classList.add('stats-entry');
-            var labelDom = document.createElement('div');
-            labelDom.classList.add('stats-label');
-            labelDom.innerHTML = name;
-            var valueDom = document.createElement('div');
-            valueDom.classList.add('stats-value');
-            this.domElems[name] = valueDom;
-            entryDom.appendChild(labelDom);
-            entryDom.appendChild(valueDom);
-            statsBar.appendChild(entryDom);
-        };
+        this.domElems = createBarItems(statsBar, domElemNames);
         this.refreshDom();
     }
 

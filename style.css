@@ -58,8 +58,10 @@ body {
 }
 
 #stats-bar {
-    position: fixed;
     bottom: 0;
+}
+.bar {
+    position: fixed;
     width: 100%;
     display: flex;
     flex-wrap: wrap;
@@ -67,14 +69,14 @@ body {
     z-index: 15;
     height: 2em;
 }
-.stats-entry {
+.bar-entry {
     display: flex;
     align-items: center;
 }
-.stats-label::after {
+.bar-label::after {
     content: ":";
 }
-.stats-label, .stats-value {
+.bar-label, .bar-value {
     padding: 3px 5px 3px 5px;
 }
 
@@ -87,7 +89,7 @@ body {
     box-shadow: 0 0 0 1px rgba(0,0,0,0.3);
     flex-shrink: 0;
 }
-#stats-bar {
+.bar {
     background: rgba(0, 0, 0, 0.2);
 }
 
