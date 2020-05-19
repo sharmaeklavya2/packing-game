@@ -670,6 +670,12 @@ class DragData {
     }
 }
 
+function resizeGame(newScaleFactor) {
+    var input = globalGame.input;
+    globalGame.destroy();
+    globalGame = new Game(input, newScaleFactor);
+}
+
 //==[ Event Handlers ]==========================================================
 
 function mousedownHandler(ev) {
