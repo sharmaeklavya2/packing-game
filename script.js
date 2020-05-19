@@ -192,6 +192,18 @@ class Input {
     }
 }
 
+function inputGenBP1(n, xLen, yLen, rotation) {
+    var items = [];
+    for(var i=0; i<n; ++i) {
+        var width = 1 + Math.floor(Math.pow(Math.random(), 2) * xLen);
+        var height = 1 + Math.floor(Math.pow(Math.random(), 2) * yLen);
+        var colorHue = Math.floor(Math.random() * 360);
+        var color = 'hsl(' + colorHue + ', 100%, 50%)';
+        items.push(new ItemInfo(width, height, null, color));
+    }
+    return new Input(xLen, yLen, 'bp', items, null, rotation, null);
+}
+
 //==[ IO Layer ]================================================================
 
 class InputError extends Error {
@@ -793,4 +805,5 @@ function addEventListeners() {
 //==[ Main ]====================================================================
 
 addEventListeners();
-loadGameFromUrl('levels/bp/1.json');
+// loadGameFromUrl('levels/bp/1.json');
+globalGame = new Game(inputGenBP1(10, 6, 5, false), null);
