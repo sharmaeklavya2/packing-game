@@ -471,10 +471,10 @@ function applyToJsonResponse(url, hook, failHook) {
     xhttp.send();
 }
 
-var game = null;
+var globalGame = null;
 applyToJsonResponse('levels/bp/1.json', function(json) {
         var input = inputFromObject(json);
-        game = new Game(input, null);
+        globalGame = new Game(input, null);
     }, null);
 
 // Event Handlers ==============================================================
@@ -513,7 +513,7 @@ function mousedownHandler(ev) {
         var itemXOff = ev.clientX - originalXPos;
         var itemYOff = ev.clientY - originalYPos;
         var itemId = parseInt(itemDomElem.getAttribute('data-item-id'));
-        var item = game.items[itemId];
+        var item = globalGame.items[itemId];
         DragData.set(new DragData(itemId, itemXOff, itemYOff));
 
         item.detach();
@@ -566,7 +566,7 @@ function inRect(xPos, yPos, domRect) {
 }
 
 function getMouseBin(ev) {
-    for(var bin of game.bins) {
+    for(var bin of globalGame.bins) {
         if(inRect(ev.clientX, ev.clientY, bin.domElem.getBoundingClientRect())) {
             return bin;
         }
@@ -583,7 +583,7 @@ function mousemoveHandler(ev) {
     }
 
     // move item
-    var item = game.items[dragData.itemId];
+    var item = globalGame.items[dragData.itemId];
     var arenaX = arena.getBoundingClientRect().x;
     var arenaY = arena.getBoundingClientRect().y;
     setPos(item.domElem, ev.clientX - dragData.xOff - arenaX, ev.clientY - dragData.yOff - arenaY);
@@ -612,7 +612,7 @@ function mousemoveHandler(ev) {
 function endDrag() {
     hoverRect.style.visibility = 'hidden';
     DragData.unset();
-    game.trimBins(1);
+    globalGame.trimBins(1);
 }
 
 function mouseupHandler(ev) {
@@ -625,7 +625,7 @@ function mouseupHandler(ev) {
     }
 
     var itemId = dragData.itemId;
-    var item = game.items[dragData.itemId]
+    var item = globalGame.items[dragData.itemId]
     var bin = getMouseBin(ev);
 
     // attach item to bin
