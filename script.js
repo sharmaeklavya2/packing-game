@@ -199,7 +199,7 @@ function inputGenBP1(n, xLen, yLen, rotation) {
         var height = 1 + Math.floor(Math.pow(Math.random(), 3) * yLen);
         var colorHue = Math.floor(Math.random() * 360);
         var color = 'hsl(' + colorHue + ', 100%, 50%)';
-        items.push(new ItemInfo(width, height, null, color));
+        items.push(new ItemInfo(width, height, 0, color));
     }
     return new Input(xLen, yLen, 'bp', items, null, rotation, null);
 }
