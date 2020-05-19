@@ -221,6 +221,9 @@ function itemInfoFromObject(j) {
     var reqProps = ['xLen', 'yLen'];
     var optProps = ['color', 'profit'];
     var o = readObjectProps(j, reqProps, optProps);
+    if(o.profit === null) {
+        o.profit = 0;
+    }
     return new ItemInfo(o['xLen'], o['yLen'], o['profit'], o['color']);
 }
 
