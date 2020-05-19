@@ -33,9 +33,9 @@ body {
     padding-top: 5px;
     padding-bottom: 5px;
     display: flex;
-    justify-content: space-between;
+    justify-content: start;
     align-items: flex-start;
-    flex-direction: column;
+    flex-wrap: wrap;
 }
 .bin {
     position: relative;
@@ -64,6 +64,7 @@ body {
 }
 #inventory, .bin {
     box-shadow: 0 0 0 1px rgba(0,0,0,0.3);
+    flex-shrink: 0;
 }
 
 .item {
