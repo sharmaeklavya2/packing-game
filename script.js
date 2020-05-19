@@ -170,6 +170,7 @@ var inventory = document.getElementById('inventory');
 var packingArea = document.getElementById('packing-area');
 var hoverRect = document.getElementById('hover-rect');
 var uiMargin = 10;  // margin between arena and the elements inside it, in px.
+var defaultItemColor = 'blue';
 
 function setPos(domElem, xPos, yPos) {
     domElem.style.top = yPos + 'px';
@@ -190,7 +191,12 @@ class ItemUI {
         elem.setAttribute('data-item-id', this.id);
         elem.style.width = this.scaleFactor * this.rect.xLen + 'px';
         elem.style.height = this.scaleFactor * this.rect.yLen + 'px';
-        elem.style.backgroundColor = itemInfo.color;
+        if(itemInfo.color !== null) {
+            elem.style.backgroundColor = itemInfo.color;
+        }
+        else {
+            elem.style.backgroundColor = defaultItemColor;
+        }
         this.domElem = elem;
     }
 
