@@ -1,56 +1,78 @@
-#arena, #inventory, #packing-area, .bin, .item {
-    border: 1px solid black;
+html {
+    height: 100%;
+}
+body {
+    min-height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 30px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: stretch;
+}
+
+#arena-wrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 #arena {
-    margin: 30px;
     position: relative;
-    display: flex;
-    justify-content: space-between;
+    display: inline-flex;
     align-items: flex-start;
-    flex-wrap: wrap;
     touch-action: none;
 }
-#packing-area {
+
+#inventory {
     margin: 10px;
+}
+#packing-area {
+    padding-top: 5px;
+    padding-bottom: 5px;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     flex-direction: column;
 }
-#inventory {
-    margin: 10px;
+.bin {
+    position: relative;
+    margin: 5px 10px 5px 10px;
 }
+
 .item {
-    opacity: 70%;
     position: absolute;
-    box-sizing: border-box;
     z-index: 30;
+    box-sizing: border-box;
 }
 .item.packed {
-    opacity: 90%;
     z-index: 10;
 }
 
-.bin .item {
-    position: absolute;
-}
-.bin {
-    position: relative;
-    margin: 10px;
-}
-#inventory, .bin {
-    background-image: linear-gradient(to right, grey 1px, transparent 1px),
-        linear-gradient(to bottom, grey 1px, transparent 1px);
-    background-position: -0.5px -0.5px;
-}
-.bin.drop-target {
-    border: 2px solid black;
-}
 #hover-rect {
     visibility: hidden;
     position: fixed;
-    border: 1px solid gray;
     z-index: 20;
+}
+
+/* beautification */
+
+#arena, .item {
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 1px 3px 1px rgba(0,0,0,0.15);
+}
+#inventory, .bin {
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.3);
+}
+
+.item {
+    opacity: 70%;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+}
+.item.packed {
+    opacity: 90%;
+    box-shadow: none;
 }
 #hover-rect.success {
     background: rgba(40, 167, 69, 0.5);
@@ -58,11 +80,8 @@
 #hover-rect.failure {
     background: rgba(220, 53, 69, 0.5);
 }
-
-body {
-    width: 100%;
-    margin: 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+#inventory, .bin {
+    background-image: linear-gradient(to right, rgba(0,0,0,0.1) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0,0,0,0.1) 1px, transparent 1px);
+    background-position: -0.5px -0.5px;
 }
