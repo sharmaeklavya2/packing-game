@@ -1,0 +1,11 @@
+{
+    "binXLen": 3,
+    "binYLen": 2,
+    "gameType": "bp",
+    "rotation": false,
+    "expectation": 2,
+    "items": [
+        {"xLen": 2, "yLen": 1, "color": "blue", "n": 3},
+        {"xLen": 1, "yLen": 2, "color": "green", "n": 2}
+    ]
+}

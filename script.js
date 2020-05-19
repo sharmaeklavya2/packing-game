@@ -144,22 +144,90 @@ class ItemInfo {
     }
 }
 
-class FixedInput {
-    constructor(items) {
-        this.items = [
-            new ItemInfo(2, 1, 1, 'green'),
-            new ItemInfo(1, 2, 1, 'blue'),
-            new ItemInfo(2, 2, 1, 'yellow'),
-            new ItemInfo(3, 2, 1, 'red'),
-            ];
-        this.binXLen = 4;
-        this.binYLen = 3;
-        this.nBin = 2;  // null for bin-packing
+class Input {
+    constructor(binXLen, binYLen, gameType, items, nBin, rotation, expectation) {
+        this.items = items;
+        // new ItemInfo(2, 1, 1, 'green')
+        this.binXLen = binXLen;
+        this.binYLen = binYLen;
+        this.items = items;
+        this.nBin = nBin;
+        this.rotation = rotation;
+        this.expectation = expectation;
+        this.gameType = gameType;
+
+        if(this.gameType == 'bp') {
+            this.nBin = 1;
+        }
+        else if(this.gameType != 'ks') {
+            throw new InputError('invalid gameType');
+        }
     }
 
     isKnapsack() {
-        return this.nBin !== null;
+        return gameType == 'ks';
     }
+
+    binsEstimate() {
+        if(this.gameType == 'bp' && this.expectation !== null) {
+            return Math.max(this.nBin, this.expectation);
+        }
+        else {
+            return this.nBin;
+        }
+    }
+}
+
+// IO Layer ====================================================================
+
+class InputError extends Error {
+    constructor(message) {super(message);}
+}
+
+function readObjectProps(input, reqProps, optProps) {
+    var o = {};
+    for(var prop of reqProps) {
+        if(input.hasOwnProperty(prop)) {
+            o[prop] = input[prop];
+        }
+        else {
+            throw new InputError(prop + ' is missing');
+        }
+    }
+    for(var prop of optProps) {
+        if(input.hasOwnProperty(prop)) {
+            o[prop] = input[prop];
+        }
+        else {
+            o[prop] = null;
+        }
+    }
+    return o;
+}
+
+function itemInfoFromObject(j) {
+    var reqProps = ['xLen', 'yLen'];
+    var optProps = ['color', 'profit'];
+    var o = readObjectProps(j, reqProps, optProps);
+    return new ItemInfo(o['xLen'], o['yLen'], o['profit'], o['color']);
+}
+
+function inputFromObject(j) {
+    var reqProps = ['binXLen', 'binYLen', 'gameType', 'items'];
+    var optProps = ['nBin', 'rotation', 'expectation', 'colorscheme'];
+    var o = readObjectProps(j, reqProps, optProps);
+    var items = [];
+    for(var itemObj of o['items']) {
+        var n = itemObj.n;
+        if(n === null) {
+            n = 1;
+        }
+        for(var i=0; i<n; ++i) {
+            var item = itemInfoFromObject(itemObj);
+            items.push(item);
+        }
+    }
+    return new Input(o.binXLen, o.binYLen, o.gameType, items, o.nBin, o.rotation, o.expectation);
 }
 
 // UI Layer ====================================================================
@@ -317,12 +385,7 @@ class Game {
 
         // create bins
         this.bins = [];
-        if(this.input.isKnapsack()) {
-            this.addBins(this.input.nBin);
-        }
-        else {
-            this.addBins(1);
-        }
+        this.addBins(this.input.nBin);
     }
 
     trimBins(targetEmpty) {
@@ -387,8 +450,32 @@ class Game {
     }
 }
 
-var input = new FixedInput();
-var game = new Game(input, null);
+function applyToJsonResponse(url, hook, failHook) {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+        if(this.readyState == 4) {
+            if(this.status >= 200 && this.status <= 299) {
+                console.debug('received response for ' + url);
+                var json = JSON.parse(this.responseText);
+                hook(json);
+            }
+            else {
+                console.error('status code for ' + url + ':', this.status);
+                if(failHook !== null) {
+                    failHook(this.status);
+                }
+            }
+        }
+    };
+    xhttp.open('GET', url, true);
+    xhttp.send();
+}
+
+var game = null;
+applyToJsonResponse('levels/bp/1.json', function(json) {
+        var input = inputFromObject(json);
+        game = new Game(input, null);
+    }, null);
 
 // Event Handlers ==============================================================
 
