@@ -361,10 +361,10 @@ class Game {
             // infer scaleFactor from arenaWrapper's dims
             var arenaX = arenaWrapper.getBoundingClientRect().width;
             var arenaY = arenaWrapper.getBoundingClientRect().height;
-            console.log("arena:", arenaX, arenaY);
             var scaleX = (arenaX - 3 * uiMargin) / (invXLen + this.input.binXLen);
-            var scaleY = (arenaY - 3 * uiMargin) / Math.max(invYLen, this.input.binYLen);
-            console.log("inferred scale:", scaleX, scaleY);
+            var scaleY = (arenaY - uiMargin * (1 + this.input.binsEstimate()))
+                / Math.max(invYLen, this.input.binsEstimate() * this.input.binYLen);
+            console.debug("inferred scale:", scaleX, scaleY);
             this.scaleFactor = Math.min(scaleX, scaleY);
         }
         else {
