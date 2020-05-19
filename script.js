@@ -204,6 +204,31 @@ function inputGenBP1(n, xLen, yLen, rotation) {
     return new Input(xLen, yLen, 'bp', items, null, rotation, null);
 }
 
+function nextFitStrip(items, binXLen) {
+    if(items.length == 0) {
+        return [0, []];
+    }
+    var sol = [[0, 0]];
+    var maxY = items[0].yLen;
+    var xSum = items[0].xLen, ySum = 0;
+    for(var i=1; i<items.length; ++i) {
+        var item = items[i];
+        if(item.xLen <= binXLen - xSum) {
+            sol.push([xSum, ySum]);
+            xSum += item.xLen;
+            maxY = Math.max(maxY, item.yLen);
+        }
+        else {
+            ySum += maxY;
+            sol.push([0, ySum]);
+            maxY = item.yLen;
+            xSum = item.xLen;
+        }
+    }
+    ySum += maxY;
+    return [ySum, sol];
+}
+
 //==[ IO Layer ]================================================================
 
 class InputError extends Error {
@@ -466,14 +491,14 @@ class Game {
         this.itemInfoBar = new ItemInfoBar(this.input.gameType);
 
         // get inventory's dimensions
-        var totalYLen = 0;
         var maxXLen = 0;
         var inputItems = this.input.items;
         for(var item of inputItems) {
-            totalYLen += item.yLen;
             maxXLen = Math.max(maxXLen, item.xLen);
         }
-        var invXLen = maxXLen, invYLen = totalYLen;
+        var invXLen = maxXLen;
+        let [invYLen, nextFitSol] = nextFitStrip(inputItems, maxXLen);
+        this.nextFitSol = nextFitSol;
 
         if(scaleFactor === null) {
             // infer scaleFactor from arenaWrapper's dims
@@ -542,12 +567,15 @@ class Game {
         var xOff = inventory.getBoundingClientRect().x - arena.getBoundingClientRect().x;
         var yOff = inventory.getBoundingClientRect().y - arena.getBoundingClientRect().y;
         this.yAgg = 0;
-        for(var item of this.items) {
+        var n = this.items.length;
+        for(var i=0; i<n; ++i) {
+            var item = this.items[i];
             item.detach();
             if(firstTime) {
                 inventory.appendChild(item.domElem);
             }
-            setPos(item.domElem, xOff, yOff + this.yAgg * this.scaleFactor);
+            setPos(item.domElem, xOff + this.nextFitSol[i][0] * this.scaleFactor,
+                yOff + this.nextFitSol[i][1] * this.scaleFactor);
             this.yAgg += item.rect.yLen;
         }
     }
