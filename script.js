@@ -247,8 +247,14 @@ class BinUI {
         this.domElem = elem;
     }
     destroy() {
-        this.bin = null;
-        this.domElem = null;
+        if(this.bin.isEmpty()) {
+            packingArea.removeChild(this.domElem);
+            this.bin = null;
+            this.domElem = null;
+        }
+        else {
+            throw new Error('attempt to destroy non-empty bin');
+        }
     }
 }
 
@@ -256,7 +262,8 @@ class Game {
 
     addBins(nBin) {
         for(var i=0; i<nBin; ++i) {
-            var bin = new BinUI(this.input.binXLen, this.input.binYLen, false, i, this.scaleFactor);
+            var bin = new BinUI(this.input.binXLen, this.input.binYLen, false,
+                this.bins.length + i, this.scaleFactor);
             this.bins.push(bin);
             packingArea.appendChild(bin.domElem);
         }
@@ -334,7 +341,6 @@ class Game {
 
     _destroyBins() {
         for(var bin of this.bins) {
-            packingArea.removeChild(bin.domElem);
             bin.destroy();
         }
         this.bins.length = 0;
