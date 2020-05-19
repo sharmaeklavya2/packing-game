@@ -1,6 +1,18 @@
 'use strict';
 
-// Logic Layer =================================================================
+var arenaWrapper = document.getElementById('arena-wrapper');
+var arena = document.getElementById('arena');
+var inventory = document.getElementById('inventory');
+var packingArea = document.getElementById('packing-area');
+var hoverRect = document.getElementById('hover-rect');
+
+var uiMargin = 10;  // margin between arena and the elements inside it, in px.
+var defaultItemColor = 'blue';
+
+var globalGame = null;
+var globalDragData = null;
+
+//==[ Logic Layer ]=============================================================
 
 class Rectangle {
     constructor(xPos, yPos, xLen, yLen) {
@@ -178,7 +190,7 @@ class Input {
     }
 }
 
-// IO Layer ====================================================================
+//==[ IO Layer ]================================================================
 
 class InputError extends Error {
     constructor(message) {super(message);}
@@ -230,15 +242,35 @@ function inputFromObject(j) {
     return new Input(o.binXLen, o.binYLen, o.gameType, items, o.nBin, o.rotation, o.expectation);
 }
 
-// UI Layer ====================================================================
+function applyToJsonResponse(url, hook, failHook) {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+        if(this.readyState == 4) {
+            if(this.status >= 200 && this.status <= 299) {
+                console.debug('received response for ' + url);
+                var json = JSON.parse(this.responseText);
+                hook(json);
+            }
+            else {
+                console.error('status code for ' + url + ':', this.status);
+                if(failHook !== null) {
+                    failHook(this.status);
+                }
+            }
+        }
+    };
+    xhttp.open('GET', url, true);
+    xhttp.send();
+}
 
-var arenaWrapper = document.getElementById('arena-wrapper');
-var arena = document.getElementById('arena');
-var inventory = document.getElementById('inventory');
-var packingArea = document.getElementById('packing-area');
-var hoverRect = document.getElementById('hover-rect');
-var uiMargin = 10;  // margin between arena and the elements inside it, in px.
-var defaultItemColor = 'blue';
+function loadGameFromUrl(url) {
+    applyToJsonResponse(url, function(json) {
+            var input = inputFromObject(json);
+            globalGame = new Game(input, null);
+        }, null);
+}
+
+//==[ UI Layer ]================================================================
 
 function setPos(domElem, xPos, yPos) {
     domElem.style.top = yPos + 'px';
@@ -328,22 +360,6 @@ class BinUI {
 
 class Game {
 
-    addBins(nBin) {
-        for(var i=0; i<nBin; ++i) {
-            var bin = new BinUI(this.input.binXLen, this.input.binYLen, false,
-                this.bins.length + i, this.scaleFactor);
-            this.bins.push(bin);
-            packingArea.appendChild(bin.domElem);
-        }
-    }
-
-    _setInventoryDims(xLen, yLen) {
-        this.invXLen = xLen;
-        this.invYLen = yLen;
-        inventory.style.width = xLen * this.scaleFactor + 'px';
-        inventory.style.height = yLen * this.scaleFactor + 'px';
-    }
-
     constructor(input, scaleFactor) {
         this.input = input;
 
@@ -386,6 +402,22 @@ class Game {
         // create bins
         this.bins = [];
         this.addBins(this.input.nBin);
+    }
+
+    addBins(nBin) {
+        for(var i=0; i<nBin; ++i) {
+            var bin = new BinUI(this.input.binXLen, this.input.binYLen, false,
+                this.bins.length + i, this.scaleFactor);
+            this.bins.push(bin);
+            packingArea.appendChild(bin.domElem);
+        }
+    }
+
+    _setInventoryDims(xLen, yLen) {
+        this.invXLen = xLen;
+        this.invYLen = yLen;
+        inventory.style.width = xLen * this.scaleFactor + 'px';
+        inventory.style.height = yLen * this.scaleFactor + 'px';
     }
 
     trimBins(targetEmpty) {
@@ -450,36 +482,7 @@ class Game {
     }
 }
 
-function applyToJsonResponse(url, hook, failHook) {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
-        if(this.readyState == 4) {
-            if(this.status >= 200 && this.status <= 299) {
-                console.debug('received response for ' + url);
-                var json = JSON.parse(this.responseText);
-                hook(json);
-            }
-            else {
-                console.error('status code for ' + url + ':', this.status);
-                if(failHook !== null) {
-                    failHook(this.status);
-                }
-            }
-        }
-    };
-    xhttp.open('GET', url, true);
-    xhttp.send();
-}
-
-var globalGame = null;
-applyToJsonResponse('levels/bp/1.json', function(json) {
-        var input = inputFromObject(json);
-        globalGame = new Game(input, null);
-    }, null);
-
-// Event Handlers ==============================================================
-
-var globalDragData = null;
+//==[ Event Handlers ]==========================================================
 
 class DragData {
     constructor(itemId, xOff, yOff) {
@@ -660,4 +663,7 @@ function addEventListeners() {
     arena.addEventListener('pointerleave', mouseleaveHandler);
 }
 
+//==[ Main ]====================================================================
+
 addEventListeners();
+loadGameFromUrl('levels/bp/1.json');
