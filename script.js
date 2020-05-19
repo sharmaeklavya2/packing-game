@@ -179,7 +179,7 @@ class Input {
     }
 
     isKnapsack() {
-        return gameType == 'ks';
+        return this.gameType == 'ks';
     }
 
     binsEstimate() {
