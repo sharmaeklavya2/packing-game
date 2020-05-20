@@ -13,6 +13,7 @@ var defaultItemColor = 'blue';
 
 var globalGame = null;
 var globalDragData = null;
+var inputGenerators = {};
 
 //==[ Logic Layer ]=============================================================
 
@@ -192,7 +193,9 @@ class Input {
     }
 }
 
-function inputGenBP1(n, xLen, yLen, rotation) {
+function inputGenBP1(q) {
+    var n = parseInt(q.n), xLen = parseInt(q.xLen), yLen = parseInt(q.yLen),
+        rotation = q.rotation == 'true';
     var items = [];
     for(var i=0; i<n; ++i) {
         var width = 1 + Math.floor(Math.pow(Math.random(), 3) * xLen);
@@ -203,6 +206,8 @@ function inputGenBP1(n, xLen, yLen, rotation) {
     }
     return new Input(xLen, yLen, 'bp', items, null, rotation, null);
 }
+inputGenBP1.defaultValues = {'n': 25, 'xLen': 8, 'yLen': 8, 'rotation': false};
+inputGenerators['bp1'] = inputGenBP1;
 
 function nextFitStrip(items, binXLen) {
     if(items.length == 0) {
@@ -355,11 +360,29 @@ function applyToJsonResponse(url, hook, failHook) {
     xhttp.send();
 }
 
-function loadGameFromUrl(url) {
+function loadGameFromUrl(url, scaleFactor) {
     applyToJsonResponse(url, function(json) {
             var input = inputFromObject(json);
-            globalGame = new Game(input, null);
+            globalGame = new Game(input, scaleFactor);
         }, null);
+}
+
+function addDefault(d, defaultValues) {
+    for(let [k, v] of Object.entries(defaultValues)) {
+        if(d[k] === undefined) {
+            d[k] = v;
+        }
+    }
+}
+
+function loadGameFromGen(genName, q, scaleFactor) {
+    var gen = inputGenerators[genName];
+    if(gen === undefined) {
+        throw new Error('input generator ' + genName + ' not found');
+    }
+    addDefault(q, gen.defaultValues);
+    var input = gen(q);
+    globalGame = new Game(input, null);
 }
 
 //==[ UI Layer ]================================================================
@@ -889,5 +912,5 @@ function addEventListeners() {
 //==[ Main ]====================================================================
 
 addEventListeners();
-// loadGameFromUrl('levels/bp/1.json');
-globalGame = new Game(inputGenBP1(25, 8, 8, false), null);
+// loadGameFromUrl('levels/bp/1.json', null);
+loadGameFromGen('bp1', {});
