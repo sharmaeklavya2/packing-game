@@ -385,6 +385,50 @@ function loadGameFromGen(genName, q, scaleFactor) {
     globalGame = new Game(input, null);
 }
 
+function dictAssertAccess(d, key, name) {
+    if(d.hasOwnProperty(key)) {
+        return d[key];
+    }
+    else {
+        throw new InputError(name + ': missing ' + key);
+    }
+}
+
+function loadGameFromQParams(q) {
+    if(Object.keys(q).length == 0) {
+        q['srctype'] = 'gen';
+        q['src'] = 'bp1';
+    }
+
+    var scaleFactor = null;
+    if(q.hasOwnProperty('scaleFactor')) {
+        scaleFactor = q.scaleFactor;
+    }
+    var srctype = dictAssertAccess(q, 'srctype', 'querystring');
+
+    if(srctype == 'url') {
+        var url = dictAssertAccess(q, 'src', 'querystring');
+        loadGameFromUrl(url, scaleFactor);
+    }
+    else if(srctype == 'gen') {
+        var genName = dictAssertAccess(q, 'src', 'querystring');
+        loadGameFromGen(genName, q, scaleFactor);
+    }
+    else {
+        throw new InputError('unknown srctype: ' + srctype);
+    }
+}
+
+function getQParams() {
+    var params = new URLSearchParams(window.location.search);
+    var d = {};
+    for(let [key, value] of params.entries()) {
+        d[key] = value;
+    }
+    console.debug('query params:', JSON.stringify(d));
+    return d;
+}
+
 //==[ UI Layer ]================================================================
 
 function setPos(domElem, xPos, yPos) {
@@ -912,5 +956,4 @@ function addEventListeners() {
 //==[ Main ]====================================================================
 
 addEventListeners();
-// loadGameFromUrl('levels/bp/1.json', null);
-loadGameFromGen('bp1', {});
+loadGameFromQParams(getQParams());
