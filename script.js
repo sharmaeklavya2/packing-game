@@ -382,7 +382,7 @@ function loadGameFromGen(genName, q, scaleFactor) {
     }
     addDefault(q, gen.defaultValues);
     var input = gen(q);
-    globalGame = new Game(input, null);
+    globalGame = new Game(input, scaleFactor);
 }
 
 function dictAssertAccess(d, key, name) {
@@ -402,7 +402,7 @@ function loadGameFromQParams(q) {
 
     var scaleFactor = null;
     if(q.hasOwnProperty('scaleFactor')) {
-        scaleFactor = q.scaleFactor;
+        scaleFactor = parseFloat(q.scaleFactor);
     }
     var srctype = dictAssertAccess(q, 'srctype', 'querystring');
 
