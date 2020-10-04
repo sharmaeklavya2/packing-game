@@ -115,3 +115,20 @@ body {
         linear-gradient(to bottom, rgba(0,0,0,0.1) 1px, transparent 1px);
     background-position: -0.5px -0.5px;
 }
+
+
+ @media (prefers-color-scheme: dark) {
+    body {
+      background-color: black;
+      color: black;
+    }
+    .bar {
+    background: rgb(204,204,204);
+    } 
+    #arena {
+     box-shadow: 0 1px 2px rgba(255,255,255,0.7), 0 1px 3px 1px rgba(255,255,255,0.7);  
+    }
+    #inventory, .bin {
+        background-image: linear-gradient(to right, rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.6) 1px, transparent 1px);
+    } 
+} 
