@@ -117,7 +117,7 @@ body {
 }
 
 
- @media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark) {
     body {
         background-color: rgb(27, 30, 32);
         color: black;
