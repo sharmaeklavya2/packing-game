@@ -120,7 +120,6 @@ body {
 @media (prefers-color-scheme: dark) {
     body {
         background-color: rgb(27, 30, 32);
-        color: black;
         --bar-color: rgb(33, 36, 37);
         --whitish-tint: rgba(255, 255, 255, 0.7);
         --light-shadow: rgba(255,255,255,0.2);
