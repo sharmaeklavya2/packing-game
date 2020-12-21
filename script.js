@@ -613,8 +613,8 @@ class Game {
         for(var item of inputItems) {
             maxXLen = Math.max(maxXLen, item.xLen);
         }
-        var invXLen = maxXLen;
-        let [invYLen, nextFitSol] = nfdhStrip(inputItems, maxXLen);
+        var invXLen = Math.max(maxXLen, this.input.binXLen);
+        let [invYLen, nextFitSol] = nfdhStrip(inputItems, invXLen);
         this.nextFitSol = nextFitSol;
 
         if(scaleFactor === null) {
