@@ -422,6 +422,7 @@ class Stats {
 
     destroy() {
         statsBar.innerHTML = '';
+        this.domElems = null;
     }
 }
 
@@ -550,6 +551,8 @@ class Game {
         this._setInventoryDims(0, 0);
         this.stats.destroy();
         this.itemInfoBar.destroy();
+        this.level = null;
+        this.nextFitSol = null;
         inventory.style.backgroundSize = null;
     }
 }
@@ -584,6 +587,7 @@ class ItemInfoBar {
 
     destroy() {
         itemInfoBar.innerHTML = '';
+        this.domElems = null;
     }
 }
 
@@ -614,6 +618,13 @@ function restartGame(newScaleFactor=null) {
     var level = globalGame.level;
     globalGame.destroy();
     globalGame = new Game(level, newScaleFactor);
+}
+
+function clearGame() {
+    if(globalGame !== null) {
+        globalGame.destroy();
+        globalGame = null;
+    }
 }
 
 //==[ Event Handlers ]==========================================================
