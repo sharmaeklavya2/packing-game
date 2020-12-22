@@ -236,7 +236,7 @@ function itemInfoFromObject(j) {
 
 function processLevel(j) {
     var reqProps = ['binXLen', 'binYLen', 'items'];
-    var optProps = {'gameType': 'bp', 'positions': [], 'rotation': false, 'expectation': null};
+    var optProps = {'gameType': 'bp', 'startPos': [], 'rotation': false, 'expectation': null};
     var o = readObjectPropsWithAssert(j, reqProps, optProps);
     var items = [];
     console.assert(o.gameType === 'bp', "the only supported gameType is bp");
@@ -428,6 +428,7 @@ class Stats {
 
 class Game {
     constructor(level, scaleFactor=null) {
+        globalGame = this;
         this.level = level;
         this.stats = new Stats(this.level.gameType, this.level.items);
         this.itemInfoBar = new ItemInfoBar(this.level.gameType);
@@ -465,17 +466,31 @@ class Game {
             var itemUI = new ItemUI(inputItems[i], i, this.scaleFactor);
             this.items.push(itemUI);
         }
-        this.moveItemsToInventory(true);
+        this._moveItemsToInventory(true);
 
-        // create bins
+        // create bins and position items
         this.bins = [];
-        this.addBins(1);
+        this._createBinsAndPositionItems(this.level.startPos);
+    }
+
+    getItemPositions() {
+        var pos = [];
+        for(var i=0; i < this.items.length; ++i) {
+            var item = this.items[i];
+            if(item.binUI !== null) {
+                pos.push([item.binUI.id, item.rect.xPos, item.rect.yPos]);
+            }
+            else {
+                pos.push(null);
+            }
+        }
+        return pos;
     }
 
     addBins(nBin) {
         for(var i=0; i<nBin; ++i) {
             var bin = new BinUI(this.level.binXLen, this.level.binYLen, false,
-                this.bins.length + i, this.scaleFactor);
+                this.bins.length, this.scaleFactor);
             this.bins.push(bin);
             packingArea.appendChild(bin.domElem);
         }
@@ -504,7 +519,7 @@ class Game {
         }
     }
 
-    moveItemsToInventory(firstTime) {
+    _moveItemsToInventory(firstTime) {
         var xOff = inventory.getBoundingClientRect().x - arena.getBoundingClientRect().x;
         var yOff = inventory.getBoundingClientRect().y - arena.getBoundingClientRect().y;
         this.yAgg = 0;
@@ -521,6 +536,25 @@ class Game {
         }
     }
 
+    _createBinsAndPositionItems(pos) {
+        var binsNeeded = 1;
+        var inputItems = this.level.items;
+        for(var i=0; i < pos.length && i < inputItems.length; ++i) {
+            if(pos[i] !== null && pos[i] !== undefined) {
+                binsNeeded = Math.max(binsNeeded, pos[i][0] + 2);
+            }
+        }
+        this.addBins(binsNeeded);
+
+        // move items as per pos
+        for(var i=0; i < pos.length && i < inputItems.length; ++i) {
+            if(pos[i] !== null && pos[i] !== undefined) {
+                let [binId, xPos, yPos] = pos[i];
+                this.items[i].attach(this.bins[binId], xPos, yPos);
+            }
+        }
+    }
+
     _destroyBins() {
         for(var bin of this.bins) {
             bin.destroy();
@@ -528,12 +562,13 @@ class Game {
         this.bins.length = 0;
     }
 
-    putBack() {
-        this.moveItemsToInventory(false);
-        if(this.level.gameType === 'bp') {
-            this._destroyBins();
-            this.addBins(1);
+    putBack(pos=null) {
+        this._moveItemsToInventory(false);
+        this._destroyBins();
+        if(pos === null) {
+            pos = [];
         }
+        this._createBinsAndPositionItems(pos);
     }
 
     _destroyItems() {
