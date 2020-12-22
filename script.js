@@ -641,14 +641,14 @@ function mousedownHandler(ev) {
     }
 }
 
-function getPos(ev, bin, binDomElem) {
+function getPos(ev, xLen, yLen, bin, binDomElem) {
     var dragData = DragData.get();
     var binX = binDomElem.getBoundingClientRect().x;
     var binY = binDomElem.getBoundingClientRect().y;
     var xPos = (ev.clientX - binX - dragData.xOff) / bin.scaleFactor;
     var yPos = (ev.clientY - binY - dragData.yOff) / bin.scaleFactor;
-    xPos = clip(Math.round(xPos), 0, bin.bin.xLen-1);
-    yPos = clip(Math.round(yPos), 0, bin.bin.yLen-1);
+    xPos = clip(Math.round(xPos), 0, bin.bin.xLen-xLen);
+    yPos = clip(Math.round(yPos), 0, bin.bin.yLen-yLen);
     return [xPos, yPos];
 }
 
@@ -699,7 +699,7 @@ function mousemoveHandler(ev) {
     }
     else {
         var binDomElem = bin.domElem;
-        let [xPos, yPos] = getPos(ev, bin, binDomElem);
+        let [xPos, yPos] = getPos(ev, item.rect.xLen, item.rect.yLen, bin, binDomElem);
         var newPosRect = new Rectangle(xPos, yPos, item.rect.xLen, item.rect.yLen);
         moveHoverRect(bin, binDomElem, newPosRect);
         if(bin.bin.canFit(newPosRect)) {
@@ -734,7 +734,7 @@ function mouseupHandler(ev) {
 
     // attach item to bin
     if(bin !== null) {
-        let [xPos, yPos] = getPos(ev, bin, bin.domElem);
+        let [xPos, yPos] = getPos(ev, item.rect.xLen, item.rect.yLen, bin, bin.domElem);
         item.attach(bin, xPos, yPos);
     }
 
