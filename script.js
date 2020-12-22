@@ -13,7 +13,6 @@ var defaultItemColor = 'blue';
 
 var globalGame = null;
 var globalDragData = null;
-var inputGenerators = {};
 
 //==[ Logic Layer ]=============================================================
 
@@ -159,213 +158,7 @@ class ItemInfo {
     }
 }
 
-class Input {
-    constructor(binXLen, binYLen, gameType, items, nBin, rotation, expectation) {
-        this.items = items;
-        // new ItemInfo(2, 1, 1, 'green')
-        this.binXLen = binXLen;
-        this.binYLen = binYLen;
-        this.items = items;
-        this.nBin = nBin;
-        this.rotation = rotation;
-        this.expectation = expectation;
-        this.gameType = gameType;
-
-        if(this.gameType == 'bp') {
-            this.nBin = 1;
-        }
-        else if(this.gameType != 'ks') {
-            throw new InputError('invalid gameType');
-        }
-    }
-
-    isKnapsack() {
-        return this.gameType == 'ks';
-    }
-
-    binsEstimate() {
-        if(this.gameType == 'bp' && this.expectation !== null) {
-            return Math.max(this.nBin, this.expectation);
-        }
-        else {
-            return this.nBin;
-        }
-    }
-}
-
-function inputGenBP1(q) {
-    var n = parseInt(q.n), xLen = parseInt(q.xLen), yLen = parseInt(q.yLen),
-        rotation = q.rotation == 'true';
-    var items = [];
-    for(var i=0; i<n; ++i) {
-        var width = 1 + Math.floor(Math.pow(Math.random(), 3) * xLen);
-        var height = 1 + Math.floor(Math.pow(Math.random(), 3) * yLen);
-        var colorHue = Math.floor(Math.random() * 360);
-        var color = 'hsl(' + colorHue + ', 100%, 50%)';
-        items.push(new ItemInfo(width, height, 0, color));
-    }
-    return new Input(xLen, yLen, 'bp', items, null, rotation, null);
-}
-inputGenBP1.defaultValues = {'n': 25, 'xLen': 8, 'yLen': 8, 'rotation': false};
-inputGenerators['bp1'] = inputGenBP1;
-
-function nextFitStrip(items, binXLen) {
-    if(items.length == 0) {
-        return [0, []];
-    }
-    var sol = [[0, 0]];
-    var maxY = items[0].yLen;
-    var xSum = items[0].xLen, ySum = 0;
-    for(var i=1; i<items.length; ++i) {
-        var item = items[i];
-        if(item.xLen <= binXLen - xSum) {
-            sol.push([xSum, ySum]);
-            xSum += item.xLen;
-            maxY = Math.max(maxY, item.yLen);
-        }
-        else {
-            ySum += maxY;
-            sol.push([0, ySum]);
-            maxY = item.yLen;
-            xSum = item.xLen;
-        }
-    }
-    ySum += maxY;
-    return [ySum, sol];
-}
-
-function keyFuncToCompareFunc(keyFunc) {
-    return function(x, y) {
-        let xKey = keyFunc(x), yKey = keyFunc(y);
-        if(xKey < yKey) {
-            return -1;
-        }
-        else if(xKey > yKey) {
-            return 1;
-        }
-        else {
-            return 0;
-        }
-    };
-}
-
-function sortMaps(a, compareFunc) {
-// returns (pi, piinv, sorted(a)) such that a[pi] = sorted(a)
-    var b = [], n = a.length;
-    for(var i=0; i<n; ++i) {
-        b.push([i, a[i]]);
-    }
-    b.sort(function(x, y) {
-        return compareFunc(x[1], y[1]);
-    });
-    var pi = [], sortedA = [], piinv = Array(n);
-    for(var i=0; i<n; ++i) {
-        pi.push(b[i][0]);
-        sortedA.push(b[i][1]);
-        piinv[b[i][0]] = i;
-    }
-    b.length = 0;
-    return [pi, piinv, sortedA];
-}
-
-function applyIndexMap(a, pi) {
-    var b = [], n = a.length;
-    for(var i=0; i<n; ++i) {
-        b.push(a[pi[i]]);
-    }
-    return b;
-}
-
-function nfdhStrip(items, binXLen) {
-    var compareFunc = keyFuncToCompareFunc(function(x) {return -x.yLen;});
-    let [pi, piinv, itemsSorted] = sortMaps(items, compareFunc);
-    let [ySum, solSorted] = nextFitStrip(itemsSorted, binXLen);
-    var sol = applyIndexMap(solSorted, piinv);
-    return [ySum, sol];
-}
-
-//==[ IO Layer ]================================================================
-
-class InputError extends Error {
-    constructor(message) {super(message);}
-}
-
-function readObjectProps(input, reqProps, optProps) {
-    var o = {};
-    for(var prop of reqProps) {
-        if(input.hasOwnProperty(prop)) {
-            o[prop] = input[prop];
-        }
-        else {
-            throw new InputError(prop + ' is missing');
-        }
-    }
-    for(var prop of optProps) {
-        if(input.hasOwnProperty(prop)) {
-            o[prop] = input[prop];
-        }
-        else {
-            o[prop] = null;
-        }
-    }
-    return o;
-}
-
-function itemInfoFromObject(j) {
-    var reqProps = ['xLen', 'yLen'];
-    var optProps = ['color', 'profit'];
-    var o = readObjectProps(j, reqProps, optProps);
-    if(o.profit === null) {
-        o.profit = 0;
-    }
-    return new ItemInfo(o['xLen'], o['yLen'], o['profit'], o['color']);
-}
-
-function inputFromObject(j) {
-    var reqProps = ['binXLen', 'binYLen', 'gameType', 'items'];
-    var optProps = ['nBin', 'rotation', 'expectation', 'colorscheme'];
-    var o = readObjectProps(j, reqProps, optProps);
-    var items = [];
-    for(var itemObj of o['items']) {
-        var n = itemObj.n;
-        if(n === null) {
-            n = 1;
-        }
-        for(var i=0; i<n; ++i) {
-            var item = itemInfoFromObject(itemObj);
-            items.push(item);
-        }
-    }
-    return new Input(o.binXLen, o.binYLen, o.gameType, items, o.nBin, o.rotation, o.expectation);
-}
-
-function applyToJsonResponse(url, hook, failHook) {
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function() {
-        if(this.readyState == 4) {
-            if(this.status >= 200 && this.status <= 299) {
-                console.debug('received response for ' + url);
-                var json = JSON.parse(this.responseText);
-                hook(json);
-            }
-            else {
-                console.error('status code for ' + url + ':', this.status);
-                if(failHook !== null) {
-                    failHook(this.status);
-                }
-            }
-        }
-    };
-    xhttp.open('GET', url, true);
-    xhttp.send();
-}
-
-function loadGameFromUrl(url, scaleFactor) {
-    applyToJsonResponse(url, function(json) {
-            var input = inputFromObject(json);
-            globalGame = new Game(input, scaleFactor);
-        }, null);
-}
+//==[ Util ]====================================================================
 
 function addDefault(d, defaultValues) {
     for(let [k, v] of Object.entries(defaultValues)) {
@@ -373,16 +166,6 @@ function addDefault(d, defaultValues) {
             d[k] = v;
         }
     }
-}
-
-function loadGameFromGen(genName, q, scaleFactor) {
-    var gen = inputGenerators[genName];
-    if(gen === undefined) {
-        throw new Error('input generator ' + genName + ' not found');
-    }
-    addDefault(q, gen.defaultValues);
-    var input = gen(q);
-    globalGame = new Game(input, scaleFactor);
 }
 
 function dictAssertAccess(d, key, name) {
@@ -394,39 +177,81 @@ function dictAssertAccess(d, key, name) {
     }
 }
 
-function loadGameFromQParams(q) {
-    if(Object.keys(q).length == 0) {
-        q['srctype'] = 'gen';
-        q['src'] = 'bp1';
+function clip(x, lo, hi) {
+    if (x <= lo) {
+        return lo;
     }
-
-    var scaleFactor = null;
-    if(q.hasOwnProperty('scaleFactor')) {
-        scaleFactor = parseFloat(q.scaleFactor);
-    }
-    var srctype = dictAssertAccess(q, 'srctype', 'querystring');
-
-    if(srctype == 'url') {
-        var url = dictAssertAccess(q, 'src', 'querystring');
-        loadGameFromUrl(url, scaleFactor);
-    }
-    else if(srctype == 'gen') {
-        var genName = dictAssertAccess(q, 'src', 'querystring');
-        loadGameFromGen(genName, q, scaleFactor);
+    else if (x >= hi) {
+        return hi;
     }
     else {
-        throw new InputError('unknown srctype: ' + srctype);
+        return x;
     }
 }
 
-function getQParams() {
-    var params = new URLSearchParams(window.location.search);
-    var d = {};
-    for(let [key, value] of params.entries()) {
-        d[key] = value;
+function readObjectPropsWithAssert(input, reqProps, optProps) {
+    var o = {};
+    for(var prop of reqProps) {
+        if(input.hasOwnProperty(prop)) {
+            o[prop] = input[prop];
+        }
+        else {
+            throw new InputError(prop + ' is missing');
+        }
     }
-    console.debug('query params:', JSON.stringify(d));
-    return d;
+    if(optProps.constructor == Object) {
+        for(let [prop, value] of Object.entries(optProps)) {
+            if(input.hasOwnProperty(prop)) {
+                o[prop] = input[prop];
+            }
+            else {
+                o[prop] = value;
+            }
+        }
+    }
+    else {
+        for(var prop of optProps) {
+            if(input.hasOwnProperty(prop)) {
+                o[prop] = input[prop];
+            }
+            else {
+                o[prop] = null;
+            }
+        }
+    }
+    return o;
+}
+
+//==[ Data Cleaning ]===========================================================
+
+function itemInfoFromObject(j) {
+    var reqProps = ['xLen', 'yLen'];
+    var optProps = ['color', 'profit'];
+    var o = readObjectPropsWithAssert(j, reqProps, optProps);
+    if(o.profit === null) {
+        o.profit = 0;
+    }
+    return new ItemInfo(o['xLen'], o['yLen'], o['profit'], o['color']);
+}
+
+function processLevel(j) {
+    var reqProps = ['binXLen', 'binYLen', 'items'];
+    var optProps = {'gameType': 'bp', 'positions': [], 'rotation': false, 'expectation': null};
+    var o = readObjectPropsWithAssert(j, reqProps, optProps);
+    var items = [];
+    console.assert(o.gameType === 'bp', "the only supported gameType is bp");
+    for(var itemObj of o['items']) {
+        var n = itemObj.n;
+        if(n === undefined) {
+            n = 1;
+        }
+        for(var i=0; i<n; ++i) {
+            var item = itemInfoFromObject(itemObj);
+            items.push(item);
+        }
+    }
+    o.items = items;
+    return o;
 }
 
 //==[ UI Layer ]================================================================
@@ -601,19 +426,18 @@ class Stats {
 }
 
 class Game {
-
-    constructor(input, scaleFactor) {
-        this.input = input;
-        this.stats = new Stats(this.input.gameType, this.input.items);
-        this.itemInfoBar = new ItemInfoBar(this.input.gameType);
+    constructor(level, scaleFactor=null) {
+        this.level = level;
+        this.stats = new Stats(this.level.gameType, this.level.items);
+        this.itemInfoBar = new ItemInfoBar(this.level.gameType);
 
         // get inventory's dimensions
         var maxXLen = 0;
-        var inputItems = this.input.items;
+        var inputItems = this.level.items;
         for(var item of inputItems) {
             maxXLen = Math.max(maxXLen, item.xLen);
         }
-        var invXLen = Math.max(maxXLen, this.input.binXLen);
+        var invXLen = Math.max(maxXLen, this.level.binXLen);
         let [invYLen, nextFitSol] = nfdhStrip(inputItems, invXLen);
         this.nextFitSol = nextFitSol;
 
@@ -621,9 +445,8 @@ class Game {
             // infer scaleFactor from arenaWrapper's dims
             var arenaX = arenaWrapper.getBoundingClientRect().width;
             var arenaY = arenaWrapper.getBoundingClientRect().height;
-            var scaleX = (arenaX - 3 * uiMargin) / (invXLen + this.input.binXLen);
-            var scaleY = (arenaY - uiMargin * (1 + this.input.binsEstimate()))
-                / Math.max(invYLen, this.input.binsEstimate() * this.input.binYLen);
+            var scaleX = (arenaX - 3 * uiMargin) / (invXLen + this.level.binXLen);
+            var scaleY = (arenaY - 2 * uiMargin) / invYLen;
             console.debug("inferred scale:", scaleX, scaleY);
             this.scaleFactor = Math.min(scaleX, scaleY);
         }
@@ -645,12 +468,12 @@ class Game {
 
         // create bins
         this.bins = [];
-        this.addBins(this.input.nBin);
+        this.addBins(1);
     }
 
     addBins(nBin) {
         for(var i=0; i<nBin; ++i) {
-            var bin = new BinUI(this.input.binXLen, this.input.binYLen, false,
+            var bin = new BinUI(this.level.binXLen, this.level.binYLen, false,
                 this.bins.length + i, this.scaleFactor);
             this.bins.push(bin);
             packingArea.appendChild(bin.domElem);
@@ -704,9 +527,9 @@ class Game {
         this.bins.length = 0;
     }
 
-    reset() {
+    putBack() {
         this.moveItemsToInventory(false);
-        if(!this.input.isKnapsack()) {
+        if(this.level.gameType === 'bp') {
             this._destroyBins();
             this.addBins(1);
         }
@@ -787,10 +610,10 @@ class DragData {
     }
 }
 
-function resizeGame(newScaleFactor) {
-    var input = globalGame.input;
+function restartGame(newScaleFactor=null) {
+    var level = globalGame.level;
     globalGame.destroy();
-    globalGame = new Game(input, newScaleFactor);
+    globalGame = new Game(level, newScaleFactor);
 }
 
 //==[ Event Handlers ]==========================================================
@@ -815,18 +638,6 @@ function mousedownHandler(ev) {
         setPos(item.domElem, xPos, yPos);
         hoverRect.style.height = itemDomElem.getBoundingClientRect().height + 'px';
         hoverRect.style.width = itemDomElem.getBoundingClientRect().width + 'px';
-    }
-}
-
-function clip(x, lo, hi) {
-    if (x <= lo) {
-        return lo;
-    }
-    else if (x >= hi) {
-        return hi;
-    }
-    else {
-        return x;
     }
 }
 
@@ -955,5 +766,10 @@ function addEventListeners() {
 
 //==[ Main ]====================================================================
 
-addEventListeners();
-loadGameFromQParams(getQParams());
+function main() {
+    addEventListeners();
+    loadGameFromQParams(getQParams());
+}
+
+//==[ Garbage ]=================================================================
+
