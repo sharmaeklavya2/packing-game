@@ -7,12 +7,14 @@ var packingArea = document.getElementById('packing-area');
 var hoverRect = document.getElementById('hover-rect');
 var statsBar = document.getElementById('stats-bar');
 var itemInfoBar = document.getElementById('item-info-bar');
+var levelLoaderElem = document.getElementById('level-loader');
 
 var uiMargin = 10;  // margin between arena and the elements inside it, in px.
 var defaultItemColor = 'blue';
 
 var globalGame = null;
 var globalDragData = null;
+var uploadScaleFactor = null;
 
 //==[ Logic Layer ]=============================================================
 
@@ -808,6 +810,10 @@ function addEventListeners() {
     arena.addEventListener('pointermove', mousemoveHandler);
     arena.addEventListener('pointerup', mouseupHandler);
     arena.addEventListener('pointerleave', mouseleaveHandler);
+
+    levelLoaderElem.addEventListener('change', function(ev) {
+            loadGameFromFiles(ev.target.files, uploadScaleFactor);
+        });
 }
 
 //==[ Main ]====================================================================

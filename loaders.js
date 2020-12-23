@@ -70,6 +70,30 @@ function loadGameFromGen(genName, q, scaleFactor=null) {
     loadGameFromRawLevel(level, scaleFactor);
 }
 
+function loadGameFromFile(file, scaleFactor=null) {
+    const reader = new FileReader();
+    reader.addEventListener('load', function(ev) {
+        var level = JSON.parse(ev.target.result);
+        loadGameFromRawLevel(level, scaleFactor);
+    });
+    reader.readAsText(file);
+}
+
+function loadGameFromFiles(files, scaleFactor=null) {
+    if(files.length > 0) {
+        console.log('loading file ' + files[0].name);
+        loadGameFromFile(files[0], scaleFactor);
+    }
+    else {
+        console.log('no file given to loader');
+    }
+}
+
+function loadGameFromUpload(scaleFactor=null) {
+    uploadScaleFactor = scaleFactor;
+    levelLoaderElem.click();
+}
+
 function loadGameFromQParams(q) {
     if(Object.keys(q).length == 0) {
         q['srctype'] = 'gen';
