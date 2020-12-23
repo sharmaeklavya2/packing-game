@@ -816,6 +816,3 @@ function main() {
     addEventListeners();
     loadGameFromQParams(getQParams());
 }
-
-//==[ Garbage ]=================================================================
-
