@@ -691,14 +691,18 @@ class Game {
         else {
             // check if moving will cause clash. If yes, invalidate history and warn.
             var bin = this.bins[coords[0]];
+            var currCoords = item.coords();
             var newPosRect = new Rectangle(coords[1], coords[2],
                 item.itemInfo.xLen, item.itemInfo.yLen);
+            item.detach();
             if(bin.bin.canFit(newPosRect)) {
-                item.detach();
                 item.attach(bin, coords[1], coords[2]);
                 this.trimBins(1);
             }
             else {
+                if(currCoords !== null) {
+                    item.attach(this.bins[currCoords[0]], currCoords[1], currCoords[2]);
+                }
                 console.warn('undo failed: cannot move item ' + item.id
                     + ' to position ' + coords + '; invalidating history');
                 this.history = [];
