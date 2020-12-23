@@ -13,6 +13,7 @@ var downloaderElem = document.getElementById('downloader');
 var uiMargin = 10;  // margin between arena and the elements inside it, in px.
 var defaultItemColor = 'blue';
 
+var handleKeyPresses = true;
 var globalGame = null;
 var globalDragData = null;
 var uploadScaleFactor = null;
@@ -162,6 +163,16 @@ class ItemInfo {
 }
 
 //==[ Util ]====================================================================
+
+function arraysEqual(a, b) {
+    if(a === b) {return true;}
+    if(a === null || b === null) {return false;}
+    if(a.length !== b.length) {return false;}
+    for(var i = 0; i < a.length; ++i) {
+        if(a[i] !== b[i]) {return false;}
+    }
+    return true;
+}
 
 function addDefault(d, defaultValues) {
     for(let [k, v] of Object.entries(defaultValues)) {
@@ -501,6 +512,7 @@ class Game {
         this.level = level;
         this.stats = new Stats(this.level.gameType, this.level.items);
         this.itemInfoBar = new ItemInfoBar(this.level.gameType);
+        this.history = [];
 
         // get inventory's dimensions
         var maxXLen = 0;
@@ -580,7 +592,7 @@ class Game {
         var nBins = this.bins.length;
         for(; nEmpty < nBins && this.bins[nBins - nEmpty - 1].bin.isEmpty(); ++nEmpty);
 
-        if(nEmpty <= targetEmpty) {
+        if(nEmpty < targetEmpty) {
             this.addBins(targetEmpty - nEmpty);
         }
         else {
@@ -606,6 +618,15 @@ class Game {
                 yOff + this.nextFitSol[i][1] * this.scaleFactor);
             this.yAgg += item.itemInfo.yLen;
         }
+    }
+
+    _moveItemToInventory(itemId) {
+        var xOff = inventory.getBoundingClientRect().x - arena.getBoundingClientRect().x;
+        var yOff = inventory.getBoundingClientRect().y - arena.getBoundingClientRect().y;
+        var item = this.items[itemId];
+        item.detach();
+        setPos(item.domElem, xOff + this.nextFitSol[itemId][0] * this.scaleFactor,
+            yOff + this.nextFitSol[itemId][1] * this.scaleFactor);
     }
 
     _createBinsAndPositionItems(pos) {
@@ -637,10 +658,52 @@ class Game {
     putBack(pos=null) {
         this._moveItemsToInventory(false);
         this._destroyBins();
+        this.history = [];
         if(pos === null) {
             pos = [];
         }
         this._createBinsAndPositionItems(pos);
+    }
+
+    _recordHistory(itemId, oldCoords, newCoords) {
+        if(!arraysEqual(oldCoords, newCoords)) {
+            this.history.push({'itemId': itemId, 'oldCoords': oldCoords, 'newCoords': newCoords});
+        }
+    }
+
+    undo() {
+        if(this.history.length === 0) {
+            return;
+        }
+        const record = this.history.pop();
+        var item = this.items[record.itemId];
+        var coords = record.oldCoords;
+
+        if(coords === null) {
+            this._moveItemToInventory(item.id);
+            this.trimBins(1);
+        }
+        else if(coords[0] >= this.bins.length) {
+            this.addBins(coords[0] + 1 - this.bins.length);
+            item.detach();
+            item.attach(this.bins[coords[0]], coords[1], coords[2]);
+        }
+        else {
+            // check if moving will cause clash. If yes, invalidate history and warn.
+            var bin = this.bins[coords[0]];
+            var newPosRect = new Rectangle(coords[1], coords[2],
+                item.itemInfo.xLen, item.itemInfo.yLen);
+            if(bin.bin.canFit(newPosRect)) {
+                item.detach();
+                item.attach(bin, coords[1], coords[2]);
+                this.trimBins(1);
+            }
+            else {
+                console.warn('undo failed: cannot move item ' + item.id
+                    + ' to position ' + coords + '; invalidating history');
+                this.history = [];
+            }
+        }
     }
 
     _destroyItems() {
@@ -656,6 +719,7 @@ class Game {
         this._destroyItems();
         this._destroyBins();
         this._setInventoryDims(0, 0);
+        this.history = [];
         this.stats.destroy();
         this.itemInfoBar.destroy();
         this.level = null;
@@ -705,8 +769,9 @@ class ItemInfoBar {
 }
 
 class DragData {
-    constructor(itemId, xOff, yOff) {
+    constructor(itemId, coords, xOff, yOff) {
         this.itemId = itemId;
+        this.coords = coords;
         this.xOff = xOff;
         this.yOff = yOff;
     }
@@ -754,7 +819,7 @@ function mousedownHandler(ev) {
         var itemYOff = ev.clientY - originalYPos;
         var itemId = parseInt(itemDomElem.getAttribute('data-item-id'));
         var item = globalGame.items[itemId];
-        DragData.set(new DragData(itemId, itemXOff, itemYOff));
+        DragData.set(new DragData(itemId, item.coords(), itemXOff, itemYOff));
 
         item.detach();
         var xPos = originalXPos - arena.getBoundingClientRect().x;
@@ -839,6 +904,12 @@ function mousemoveHandler(ev) {
 
 function endDrag() {
     hoverRect.style.visibility = 'hidden';
+    var dragData = DragData.get();
+    if(dragData !== null) {
+        var oldCoords = dragData.coords;
+        var item = globalGame.items[dragData.itemId];
+        globalGame._recordHistory(dragData.itemId, oldCoords, item.coords());
+    }
     DragData.unset();
     globalGame.trimBins(1);
 }
@@ -875,6 +946,15 @@ function mouseleaveHandler(ev) {
     }
 }
 
+function keydownHandler(ev) {
+    if(handleKeyPresses && !ev.defaultPrevented) {
+        if(ev.key == 'z' && (ev.metaKey || ev.ctrlKey)) {
+            globalGame.undo();
+            ev.preventDefault();
+        }
+    }
+}
+
 function addEventListeners() {
     arena.addEventListener('dragstart', function(ev) {
         console.debug('dragstart', ev.target);
@@ -886,6 +966,7 @@ function addEventListeners() {
     arena.addEventListener('pointermove', mousemoveHandler);
     arena.addEventListener('pointerup', mouseupHandler);
     arena.addEventListener('pointerleave', mouseleaveHandler);
+    window.addEventListener('keydown', keydownHandler);
 
     levelLoaderElem.addEventListener('change', function(ev) {
             loadGameFromFiles(ev.target.files, uploadScaleFactor);
