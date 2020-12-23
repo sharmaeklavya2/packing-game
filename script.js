@@ -8,6 +8,7 @@ var hoverRect = document.getElementById('hover-rect');
 var statsBar = document.getElementById('stats-bar');
 var itemInfoBar = document.getElementById('item-info-bar');
 var levelLoaderElem = document.getElementById('level-loader');
+var downloaderElem = document.getElementById('downloader');
 
 var uiMargin = 10;  // margin between arena and the elements inside it, in px.
 var defaultItemColor = 'blue';
@@ -222,6 +223,20 @@ function readObjectPropsWithAssert(input, reqProps, optProps) {
         }
     }
     return o;
+}
+
+function downloadBlob(blob, filename, cleanup=false) {
+    var url = URL.createObjectURL(blob);
+    downloaderElem.href = url;
+    downloaderElem.download = filename;
+    downloaderElem.click();
+    if(cleanup) {
+        setTimeout(function() {
+                downloaderElem.removeAttribute('href');
+                downloaderElem.removeAttribute('download');
+                window.URL.revokeObjectURL(url);
+            }, 0);
+    }
 }
 
 //==[ SerDe and Cleaning ]======================================================
@@ -637,6 +652,12 @@ class Game {
         this.nextFitSol = null;
         inventory.style.backgroundSize = null;
     }
+}
+
+function downloadProgress(filename='progress.json', cleanup=false) {
+    var level = serializeLevel(globalGame.level, globalGame.getItemPositions());
+    var blob = new Blob([JSON.stringify(level)], {type: 'application/json'});
+    downloadBlob(blob, filename, cleanup);
 }
 
 class ItemInfoBar {
