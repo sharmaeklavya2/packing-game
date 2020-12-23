@@ -814,6 +814,17 @@ function addEventListeners() {
     levelLoaderElem.addEventListener('change', function(ev) {
             loadGameFromFiles(ev.target.files, uploadScaleFactor);
         });
+    arenaWrapper.addEventListener('dragover', function(ev) {
+            ev.stopPropagation();
+            ev.preventDefault();
+            ev.dataTransfer.dropEffect = 'copy';
+        });
+    arenaWrapper.addEventListener('drop', function(ev) {
+            ev.stopPropagation();
+            ev.preventDefault();
+            ev.dataTransfer.dropEffect = 'copy';
+            loadGameFromFiles(ev.dataTransfer.files, uploadScaleFactor);
+        });
 }
 
 //==[ Main ]====================================================================
