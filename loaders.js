@@ -51,11 +51,13 @@ function applyToJsonResponse(url, hook, failHook) {
     xhttp.send();
 }
 
+function loadGameFromRawLevel(level, scaleFactor=null) {
+    clearGame();
+    globalGame = new Game(processLevel(level), scaleFactor);
+}
+
 function loadGameFromUrl(url, scaleFactor=null) {
-    applyToJsonResponse(url, function(level) {
-            clearGame();
-            globalGame = new Game(processLevel(level), scaleFactor);
-        }, null);
+    applyToJsonResponse(url, function(json) {loadGameFromRawLevel(json, scaleFactor);}, null);
 }
 
 function loadGameFromGen(genName, q, scaleFactor=null) {
@@ -65,8 +67,7 @@ function loadGameFromGen(genName, q, scaleFactor=null) {
     }
     addDefault(q, gen.defaultValues);
     var level = gen(q);
-    clearGame();
-    globalGame = new Game(processLevel(level), scaleFactor);
+    loadGameFromRawLevel(level, scaleFactor);
 }
 
 function loadGameFromQParams(q) {
