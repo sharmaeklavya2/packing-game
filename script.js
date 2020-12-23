@@ -322,7 +322,8 @@ function setPos(domElem, xPos, yPos) {
 class ItemUI {
     constructor(itemInfo, id, scaleFactor) {
         this.itemInfo = itemInfo;
-        this.rect = new Rectangle(null, null, itemInfo.xLen, itemInfo.yLen);
+        this.xPos = null;
+        this.yPos = null;
         this.id = id;
         this.binUI = null;
         this.scaleFactor = scaleFactor;
@@ -331,8 +332,8 @@ class ItemUI {
         var elem = document.createElement('div');
         elem.classList.add('item');
         elem.setAttribute('data-item-id', this.id);
-        elem.style.width = this.scaleFactor * this.rect.xLen + 'px';
-        elem.style.height = this.scaleFactor * this.rect.yLen + 'px';
+        elem.style.width = this.scaleFactor * this.itemInfo.xLen + 'px';
+        elem.style.height = this.scaleFactor * this.itemInfo.yLen + 'px';
         if(itemInfo.color !== null) {
             elem.style.backgroundColor = itemInfo.color;
         }
@@ -342,9 +343,19 @@ class ItemUI {
         this.domElem = elem;
     }
 
+    coords() {
+        if(this.binUI !== null) {
+           return [this.binUI.id, this.xPos, this.yPos];
+        }
+        else {
+            return null;
+        }
+    }
+
     detach() {
         if(this.binUI !== null) {
-            this.binUI.bin.remove(this.rect);
+            this.binUI.bin.remove(new Rectangle(this.xPos, this.yPos,
+                this.itemInfo.xLen, this.itemInfo.yLen));
             this.binUI.domElem.removeChild(this.domElem);
             this.domElem.classList.remove('packed');
             globalGame.stats.reportDetach(this.itemInfo, this.binUI.bin.isEmpty());
@@ -356,10 +367,10 @@ class ItemUI {
     attach(binUI, xPos, yPos) {
         console.assert(this.binUI === null, 'item infidelity');
         var wasEmpty = binUI.bin.isEmpty();
-        if(binUI.bin.insert(new Rectangle(xPos, yPos, this.rect.xLen, this.rect.yLen))) {
+        if(binUI.bin.insert(new Rectangle(xPos, yPos, this.itemInfo.xLen, this.itemInfo.yLen))) {
             this.binUI = binUI;
-            this.rect.xPos = xPos;
-            this.rect.yPos = yPos;
+            this.xPos = xPos;
+            this.yPos = yPos;
             this.domElem.classList.add('packed');
             setPos(this.domElem, this.scaleFactor * xPos, this.scaleFactor * yPos);
             globalGame.stats.reportAttach(this.itemInfo, wasEmpty);
@@ -533,19 +544,18 @@ class Game {
 
     getItemPositions() {
         var pos = [];
-        var conseqNulls = 0;
+        var consecNulls = 0;
         for(var i=0; i < this.items.length; ++i) {
-            var item = this.items[i];
-            if(item.binUI !== null) {
-                pos.push([item.binUI.id, item.rect.xPos, item.rect.yPos]);
-                conseqNulls = 0;
+            var coords = this.items[i].coords();
+            pos.push(coords);
+            if(coords === null) {
+                consecNulls += 1;
             }
             else {
-                pos.push(null);
-                conseqNulls += 1;
+                consecNulls = 0;
             }
         }
-        pos.length -= conseqNulls;
+        pos.length -= consecNulls;
         return pos;
     }
 
@@ -594,7 +604,7 @@ class Game {
             }
             setPos(item.domElem, xOff + this.nextFitSol[i][0] * this.scaleFactor,
                 yOff + this.nextFitSol[i][1] * this.scaleFactor);
-            this.yAgg += item.rect.yLen;
+            this.yAgg += item.itemInfo.yLen;
         }
     }
 
@@ -813,8 +823,8 @@ function mousemoveHandler(ev) {
     }
     else {
         var binDomElem = bin.domElem;
-        let [xPos, yPos] = getPos(ev, item.rect.xLen, item.rect.yLen, bin, binDomElem);
-        var newPosRect = new Rectangle(xPos, yPos, item.rect.xLen, item.rect.yLen);
+        let [xPos, yPos] = getPos(ev, item.itemInfo.xLen, item.itemInfo.yLen, bin, binDomElem);
+        var newPosRect = new Rectangle(xPos, yPos, item.itemInfo.xLen, item.itemInfo.yLen);
         moveHoverRect(bin, binDomElem, newPosRect);
         if(bin.bin.canFit(newPosRect)) {
             hoverRect.classList.add('success');
@@ -848,7 +858,7 @@ function mouseupHandler(ev) {
 
     // attach item to bin
     if(bin !== null) {
-        let [xPos, yPos] = getPos(ev, item.rect.xLen, item.rect.yLen, bin, bin.domElem);
+        let [xPos, yPos] = getPos(ev, item.itemInfo.xLen, item.itemInfo.yLen, bin, bin.domElem);
         item.attach(bin, xPos, yPos);
     }
 
