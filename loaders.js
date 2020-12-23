@@ -28,6 +28,8 @@ function levelGenBP1(q) {
     return obj;
 }
 levelGenBP1.defaultValues = {'n': 25, 'xLen': 8, 'yLen': 8, 'rotation': false};
+levelGenBP1.info = 'Independently and randomly generate colors and dimensions of each item. '
+    + 'Parameters: n is the number of items, xLen is the bin width, yLen is the bin height.';
 levelGenerators['bp1'] = levelGenBP1;
 
 function applyToJsonResponse(url, hook, failHook) {
