@@ -224,16 +224,24 @@ function readObjectPropsWithAssert(input, reqProps, optProps) {
     return o;
 }
 
-//==[ Data Cleaning ]===========================================================
+//==[ SerDe and Cleaning ]======================================================
 
 function itemInfoFromObject(j) {
     var reqProps = ['xLen', 'yLen'];
-    var optProps = ['color', 'profit'];
+    var optProps = {'color': null, 'profit': 0};
     var o = readObjectPropsWithAssert(j, reqProps, optProps);
-    if(o.profit === null) {
-        o.profit = 0;
-    }
     return new ItemInfo(o['xLen'], o['yLen'], o['profit'], o['color']);
+}
+
+function serializeItemInfo(itemInfo) {
+    var o = {"xLen": itemInfo.xLen, "yLen": itemInfo.yLen};
+    if(itemInfo.color !== null) {
+        o['color'] = itemInfo.color;
+    }
+    if(itemInfo.profit !== null && itemInfo.profit !== 0) {
+        o['profit'] = itemInfo.profit;
+    }
+    return o;
 }
 
 function processLevel(j) {
@@ -253,6 +261,39 @@ function processLevel(j) {
         }
     }
     o.items = items;
+    return o;
+}
+
+function serItemsEqual(a, b) {
+    return (a.xPos === b.xPos && a.yPos === b.yPos
+        && a.profit === b.profit && a.color === b.color);
+}
+
+function serializeLevel(level, pos=null) {
+    var o = {"binXLen": level.binXLen, "binYLen": level.binYLen, "gameType": level.gameType,
+        "rotation": level.rotation};
+    if(level.expectation !== null) {o['expectation'] = level.expectation;}
+    if(pos !== null && pos.length > 0) {o['startPos'] = pos;}
+
+    var serItems = [];
+    o['items'] = serItems;
+    var prevSerItem = null;
+    for(var i=0; i < level.items.length; ++i) {
+        var serItem = serializeItemInfo(level.items[i]);
+        if(prevSerItem !== null && serItemsEqual(prevSerItem, serItem)) {
+            var n = prevSerItem['n'];
+            if(n === undefined) {
+                prevSerItem['n'] = 2;
+            }
+            else {
+                prevSerItem['n'] = n+1;
+            }
+        }
+        else {
+            serItems.push(serItem);
+            prevSerItem = serItem;
+        }
+    }
     return o;
 }
 
@@ -477,15 +518,19 @@ class Game {
 
     getItemPositions() {
         var pos = [];
+        var conseqNulls = 0;
         for(var i=0; i < this.items.length; ++i) {
             var item = this.items[i];
             if(item.binUI !== null) {
                 pos.push([item.binUI.id, item.rect.xPos, item.rect.yPos]);
+                conseqNulls = 0;
             }
             else {
                 pos.push(null);
+                conseqNulls += 1;
             }
         }
+        pos.length -= conseqNulls;
         return pos;
     }
 
