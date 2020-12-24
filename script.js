@@ -9,6 +9,11 @@ var statsBar = document.getElementById('stats-bar');
 var itemInfoBar = document.getElementById('item-info-bar');
 var levelLoaderElem = document.getElementById('level-loader');
 var downloaderElem = document.getElementById('downloader');
+var newGameButton = document.getElementById('new-game-button');
+var undoButton = document.getElementById('undo-button');
+var saveGameButton = document.getElementById('save-game-button');
+var aboutButton = document.getElementById('about-button');
+var ngForm = document.getElementById('ng-form');
 
 var uiMargin = 10;  // margin between arena and the elements inside it, in px.
 var defaultItemColor = 'blue';
@@ -17,6 +22,9 @@ var handleKeyPresses = true;
 var globalGame = null;
 var globalDragData = null;
 var uploadScaleFactor = null;
+
+var aboutText = "This is a 2D geometric bin-packing game. You have to pack all items from "
+    + "the left side into the minimum number of bins on the right side.";
 
 //==[ Logic Layer ]=============================================================
 
@@ -234,6 +242,14 @@ function readObjectPropsWithAssert(input, reqProps, optProps) {
         }
     }
     return o;
+}
+
+function toQueryString(obj) {
+    var strs = [];
+    for(let [key, value] of Object.entries(obj)) {
+        strs.push(encodeURIComponent(key) + "=" + encodeURIComponent(value));
+    }
+    return strs.join("&");
 }
 
 function downloadBlob(blob, filename, cleanup=false) {
@@ -506,6 +522,15 @@ class Stats {
     }
 }
 
+function disableUndoButton() {
+    undoButton.classList.add('disabled');
+    undoButton.classList.remove('enabled');
+}
+function enableUndoButton() {
+    undoButton.classList.remove('disabled');
+    undoButton.classList.add('enabled');
+}
+
 class Game {
     constructor(level, scaleFactor=null) {
         globalGame = this;
@@ -659,6 +684,7 @@ class Game {
         this._moveItemsToInventory(false);
         this._destroyBins();
         this.history = [];
+        disableUndoButton();
         if(pos === null) {
             pos = [];
         }
@@ -668,6 +694,9 @@ class Game {
     _recordHistory(itemId, oldCoords, newCoords) {
         if(!arraysEqual(oldCoords, newCoords)) {
             this.history.push({'itemId': itemId, 'oldCoords': oldCoords, 'newCoords': newCoords});
+        }
+        if(this.history.length > 0) {
+            enableUndoButton();
         }
     }
 
@@ -708,6 +737,9 @@ class Game {
                 this.history = [];
             }
         }
+        if(this.history.length === 0) {
+            disableUndoButton();
+        }
     }
 
     _destroyItems() {
@@ -724,6 +756,7 @@ class Game {
         this._destroyBins();
         this._setInventoryDims(0, 0);
         this.history = [];
+        disableUndoButton();
         this.stats.destroy();
         this.itemInfoBar.destroy();
         this.level = null;
@@ -959,6 +992,29 @@ function keydownHandler(ev) {
     }
 }
 
+function ngFormSubmitHandler(ev) {
+    ev.preventDefault();
+    const formData = new FormData(ngForm);
+    var choice = formData.get('ng-choice');
+    let [srctype, src] = choice.split(':');
+    ngForm.classList.add('disabled');
+    ngForm.classList.remove('enabled');
+    if(srctype == 'upload') {
+        loadGameFromUpload();
+        window.history.replaceState({}, null, '?');
+    }
+    else if(srctype == 'url') {
+        loadGameFromUrl(src);
+        var qs = toQueryString({'srctype': srctype, 'src': src});
+        window.history.replaceState({}, null, '?' + qs);
+    }
+    else if(srctype == 'gen') {
+        loadGameFromGen(src, {});
+        var qs = toQueryString({'srctype': srctype, 'src': src});
+        window.history.replaceState({}, null, '?' + qs);
+    }
+}
+
 function addEventListeners() {
     arena.addEventListener('dragstart', function(ev) {
         console.debug('dragstart', ev.target);
@@ -986,6 +1042,20 @@ function addEventListeners() {
             ev.dataTransfer.dropEffect = 'copy';
             loadGameFromFiles(ev.dataTransfer.files, uploadScaleFactor);
         });
+    undoButton.addEventListener('click', function(ev) {
+            if(globalGame !== null) {globalGame.undo();}
+        });
+    saveGameButton.addEventListener('click', function(ev) {
+            if(globalGame !== null) {downloadProgress();}
+        });
+    aboutButton.addEventListener('click', function(ev) {
+            window.alert(aboutText);
+        });
+    newGameButton.addEventListener('click', function(ev) {
+            ngForm.classList.toggle('disabled');
+            ngForm.classList.toggle('enabled');
+        });
+    ngForm.addEventListener('submit', ngFormSubmitHandler);
 }
 
 //==[ Main ]====================================================================

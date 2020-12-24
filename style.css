@@ -4,20 +4,22 @@ html {
 body {
     min-height: 100%;
     width: 100%;
+    padding-top: 4rem;
+    padding-bottom: 2em;
     margin: 0;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    align-items: stretch;
 }
 
 #arena-wrapper {
-    margin: 30px 30px calc(30px + 2em) 30px;
+    margin: 32px;
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-self: stretch;
+    align-items: start;
 }
 #arena {
     position: relative;
@@ -114,4 +116,73 @@ body {
     background-image: linear-gradient(to right, rgba(0,0,0,0.1) 1px, transparent 1px),
         linear-gradient(to bottom, rgba(0,0,0,0.1) 1px, transparent 1px);
     background-position: -0.5px -0.5px;
+}
+
+/* nav */
+
+.icon {
+    max-height: 2.5rem;
+    max-width: 2.5rem;
+}
+#nav {
+    list-style: none;
+    padding: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    position: fixed;
+    top: 0;
+    z-index: 40;
+    flex-wrap: wrap;
+    align-self: center;
+}
+#nav > li {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    box-sizing: border-box;
+    min-width: 4rem;
+    font-size: 3rem;
+    user-select: none;
+    height: 4rem;
+    background-color: rgba(128, 128, 128, 0.4);
+    border-left: 1px solid black;
+    border-bottom: 1px solid black;
+}
+#nav > li.enabled {
+    cursor: pointer;
+}
+#nav > li.disabled {
+    color: gray;
+    fill: gray;
+}
+#nav > li.enabled:hover {
+    background-color: rgba(128, 128, 128, 0.6);
+}
+#nav > li.enabled:active {
+    background-color: rgba(128, 128, 128, 0.8);
+}
+#nav > li:last-child {
+    border-right: 1px solid black;
+}
+
+#ng-form {
+    background-color: rgba(128, 128, 128, 0.4);
+    padding: 0.5em;
+}
+#ng-form.disabled {
+    display: none;
+}
+#ng-form.enabled {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+#ng-form > div > * {
+    margin: 0.5em 2em;
+}
+#ng-submit {
+    margin: 0.25em 0;
 }
