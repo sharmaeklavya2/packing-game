@@ -19,13 +19,16 @@ body {
     display: flex;
     flex-direction: column;
     align-self: stretch;
-    align-items: start;
 }
 #arena {
     position: relative;
     display: inline-flex;
+    align-self: center;
     align-items: flex-start;
     touch-action: none;
+}
+#arena.large {
+    align-self: flex-start;
 }
 
 #inventory {
@@ -179,6 +182,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    align-self: center;
 }
 #ng-form > div > * {
     margin: 0.5em 2em;

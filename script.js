@@ -553,13 +553,18 @@ class Game {
             // infer scaleFactor from arenaWrapper's dims
             var arenaX = arenaWrapper.getBoundingClientRect().width;
             var arenaY = arenaWrapper.getBoundingClientRect().height;
-            var scaleX = (arenaX - 3 * uiMargin) / (invXLen + this.level.binXLen);
+            var scaleX = (arenaX - 4 * uiMargin) / (invXLen + this.level.binXLen);
             var scaleY = (arenaY - 2 * uiMargin) / invYLen;
             console.debug("inferred scale:", scaleX, scaleY);
             this.scaleFactor = Math.min(scaleX, scaleY);
         }
         else {
             this.scaleFactor = scaleFactor;
+            var expectedArenaX = (invXLen + this.level.binXLen) * this.scaleFactor + 4 * uiMargin;
+            var arenaWrapperX = arenaWrapper.getBoundingClientRect().width;
+            if(expectedArenaX >= arenaWrapperX) {
+                arena.classList.add('large');
+            }
         }
 
         // set inventory's dimensions
@@ -755,6 +760,7 @@ class Game {
         this._destroyItems();
         this._destroyBins();
         this._setInventoryDims(0, 0);
+        arena.classList.remove('large');
         this.history = [];
         disableUndoButton();
         this.stats.destroy();
