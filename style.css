@@ -88,6 +88,18 @@ body {
 .bar-label, .bar-value {
     padding: 3px 5px 3px 5px;
 }
+.bar-value.error {
+    color: #721c24;
+    background-color: #f5c6cb;
+}
+.bar-value.warning {
+    color: #856404;
+    background-color: #ffeeba;
+}
+.bar-value.success {
+    color: #155724;
+    background-color: #c3e6cb;
+}
 
 /* beautification */
 
@@ -96,6 +108,15 @@ body {
 }
 #inventory, .bin {
     box-shadow: 0 0 0 1px rgba(0,0,0,0.3);
+}
+.bin[data-bin-type="good"] {
+    box-shadow: 0 0 3px 1px rgb(0, 165, 40);
+}
+.bin[data-bin-type="warning"] {
+    box-shadow: 0 0 3px 1px rgb(191, 124, 0);
+}
+.bin[data-bin-type="danger"] {
+    box-shadow: 0 0 3px 1px rgb(191, 0, 0);
 }
 .bar {
     background: rgba(0, 0, 0, 0.2);

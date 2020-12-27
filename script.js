@@ -390,6 +390,7 @@ class ItemUI {
             globalGame.stats.reportDetach(this.itemInfo, this.binUI.bin.isEmpty());
             this.binUI = null;
             inventory.appendChild(this.domElem);
+            globalGame._assessBins();
         }
     }
 
@@ -404,6 +405,7 @@ class ItemUI {
             setPos(this.domElem, this.scaleFactor * xPos, this.scaleFactor * yPos);
             globalGame.stats.reportAttach(this.itemInfo, wasEmpty);
             this.binUI.domElem.appendChild(this.domElem);
+            globalGame._assessBins();
             return true;
         }
         else {
@@ -462,13 +464,15 @@ function createBarItems(domParent, names) {
 }
 
 class Stats {
-    constructor(gameType, items) {
+    constructor(gameType, items, lb, ub) {
         // items are ItemInfo objects
         this.gameType = gameType;
         this.nItems = 0;
         this.nItemsPacked = 0;
         this.nBins = 0;
         this.profit = 0;
+        this.lb = lb;
+        this.ub = ub;
         for(var item of items) {
             this.nItems++;
             this.profit += item.profit;
@@ -516,6 +520,27 @@ class Stats {
                 domElem.innerHTML = value;
             }
         }
+        if(d['unpacked'] === 0) {
+            this.domElems['packed'].classList.add('success');
+            this.domElems['unpacked'].classList.add('success');
+        }
+        else {
+            this.domElems['packed'].classList.remove('success');
+            this.domElems['unpacked'].classList.remove('success');
+        }
+        var binsUsedDomElem = this.domElems['bins used'];
+        binsUsedDomElem.classList.remove('success');
+        binsUsedDomElem.classList.remove('error');
+        binsUsedDomElem.classList.remove('warning');
+        if(this.nBins > this.ub) {
+            binsUsedDomElem.classList.add('error');
+        }
+        else if(this.nBins > this.lb) {
+            binsUsedDomElem.classList.add('warning');
+        }
+        else {
+            binsUsedDomElem.classList.add('success');
+        }
     }
 
     destroy() {
@@ -528,7 +553,8 @@ class Game {
     constructor(level, scaleFactor=null) {
         globalGame = this;
         this.level = level;
-        this.stats = new Stats(this.level.gameType, this.level.items);
+        this.stats = new Stats(this.level.gameType, this.level.items,
+            this.level.lower_bound, this.level.upper_bound);
         this.itemInfoBar = new ItemInfoBar(this.level.gameType);
         this.history = [];
 
@@ -575,6 +601,28 @@ class Game {
         // create bins and position items
         this.bins = [];
         this._createBinsAndPositionItems(this.level.startPos);
+    }
+
+    _assessBins() {
+        var lb = this.level.lower_bound, ub = this.level.upper_bound;
+        var used = 0;
+        for(var i=0; i<this.bins.length; ++i) {
+            var bin = this.bins[i];
+            if(!bin.bin.isEmpty()) {
+                used += 1
+                var binType = 'good';
+                if(used > ub) {
+                    binType = 'danger';
+                }
+                else if(used > lb) {
+                    binType = 'warning';
+                }
+                bin.domElem.setAttribute('data-bin-type', binType);
+            }
+            else {
+                bin.domElem.removeAttribute('data-bin-type', binType);
+            }
+        }
     }
 
     getItemPositions() {
