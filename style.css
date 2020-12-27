@@ -120,6 +120,9 @@ body {
         linear-gradient(to bottom, rgba(0,0,0,0.1) 1px, transparent 1px);
     background-position: -0.5px -0.5px;
 }
+#downloader {
+    display: none;
+}
 
 /* nav */
 
