@@ -3,7 +3,8 @@
     "binYLen": 19,
     "gameType": "bp",
     "rotation": false,
-    "expectation": 1,
+    "lower_bound": 1,
+    "upper_bound": 1,
     "items": [
         {"xLen": 7, "yLen": 4, "color": "hsl(0,100%,50%)", "n": 2},
         {"xLen": 6, "yLen": 4, "color": "hsl(20,100%,50%)", "n": 2},

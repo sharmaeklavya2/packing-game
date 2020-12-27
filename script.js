@@ -280,7 +280,8 @@ function serializeItemInfo(itemInfo) {
 
 function processLevel(j) {
     var reqProps = ['binXLen', 'binYLen', 'items'];
-    var optProps = {'gameType': 'bp', 'startPos': [], 'rotation': false, 'expectation': null};
+    var optProps = {'gameType': 'bp', 'startPos': [], 'rotation': false,
+        'lower_bound': null, 'upper_bound': null};
     var o = readObjectPropsWithAssert(j, reqProps, optProps);
     var items = [];
     console.assert(o.gameType === 'bp', "the only supported gameType is bp");
@@ -295,6 +296,15 @@ function processLevel(j) {
         }
     }
     o.items = items;
+    if(o.lower_bound === null || o.upper_bound === null) {
+        let [lb, ub] = bpBounds(items, o.binXLen, o.binYLen, o.rotation);
+        if(o.lower_bound === null) {
+            o.lower_bound = lb;
+        }
+        if(o.upper_bound === null) {
+            o.upper_bound = ub;
+        }
+    }
     return o;
 }
 
@@ -305,8 +315,8 @@ function serItemsEqual(a, b) {
 
 function serializeLevel(level, pos=null) {
     var o = {"binXLen": level.binXLen, "binYLen": level.binYLen, "gameType": level.gameType,
-        "rotation": level.rotation};
-    if(level.expectation !== null) {o['expectation'] = level.expectation;}
+        "rotation": level.rotation, "lower_bound": level.lower_bound,
+        "upper_bound": level.upper_bound};
     if(pos !== null && pos.length > 0) {o['startPos'] = pos;}
 
     var serItems = [];

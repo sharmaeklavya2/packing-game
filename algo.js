@@ -74,3 +74,14 @@ function nfdhStrip(items, stripXLen) {
     var sol = applyIndexMap(solSorted, piinv);
     return [ySum, sol];
 }
+
+function bpBounds(items, binXLen, binYLen, rotation) {
+    var area = 0;
+    for(var i=1; i<items.length; ++i) {
+        area += items[i].xLen * items[i].yLen;
+    }
+    var delta = 0.00000001;
+    var rarea_lb = (area - delta) / (binXLen * binYLen);
+    var rarea_ub = (area + delta) / (binXLen * binYLen);
+    return [Math.ceil(rarea_lb), Math.ceil(4 * rarea_ub) + 1];
+}
