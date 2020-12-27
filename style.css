@@ -164,16 +164,25 @@ body {
     color: gray;
     fill: gray;
 }
-#nav > li.enabled:hover {
+#nav > li.enabled:hover, #nav > li.enabled.pressed {
     background-color: rgba(128, 128, 128, 0.6);
 }
-#nav > li.enabled:active {
+#nav > li.enabled:active, #nav > li.enabled.pressed:hover {
     background-color: rgba(128, 128, 128, 0.8);
+}
+#nav > li.enabled.pressed:active {
+    background-color: rgba(128, 128, 128, 1);
 }
 #nav > li:last-child {
     border-right: 1px solid black;
 }
 
+#pre-arena {
+    margin-top: -32px;
+    margin-bottom: 32px;
+    display: flex;
+    flex-direction: column;
+}
 #ng-form {
     background-color: rgba(128, 128, 128, 0.4);
     padding: 0.5em;
@@ -192,4 +201,8 @@ body {
 }
 #ng-submit {
     margin: 0.25em 0;
+}
+#ng-form.loading {
+    background-color: rgba(128, 128, 128, 0.8);
+    opacity: 0.5;
 }

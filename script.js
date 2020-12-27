@@ -998,24 +998,32 @@ function keydownHandler(ev) {
     }
 }
 
+
+function ngFormSuccess() {
+    ngForm.classList.add('disabled');
+    ngForm.classList.remove('enabled');
+    ngForm.classList.remove('loading');
+    newGameButton.classList.remove('pressed');
+}
+
 function ngFormSubmitHandler(ev) {
     ev.preventDefault();
     const formData = new FormData(ngForm);
     var choice = formData.get('ng-choice');
     let [srctype, src] = choice.split(':');
-    ngForm.classList.add('disabled');
-    ngForm.classList.remove('enabled');
+    ngForm.classList.add('loading');
     if(srctype == 'upload') {
         loadGameFromUpload();
+        ngFormSuccess();
         window.history.replaceState({}, null, '?');
     }
     else if(srctype == 'url') {
-        loadGameFromUrl(src);
+        loadGameFromUrl(src, null, ngFormSuccess);
         var qs = toQueryString({'srctype': srctype, 'src': src});
         window.history.replaceState({}, null, '?' + qs);
     }
     else if(srctype == 'gen') {
-        loadGameFromGen(src, {});
+        loadGameFromGen(src, {}, null, ngFormSuccess);
         var qs = toQueryString({'srctype': srctype, 'src': src});
         window.history.replaceState({}, null, '?' + qs);
     }
@@ -1062,6 +1070,8 @@ function addEventListeners() {
     newGameButton.addEventListener('click', function(ev) {
             ngForm.classList.toggle('disabled');
             ngForm.classList.toggle('enabled');
+            ngForm.classList.remove('loading');
+            newGameButton.classList.toggle('pressed');
         });
     ngForm.addEventListener('submit', ngFormSubmitHandler);
 }

@@ -8,59 +8,61 @@
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <ul id="nav">
-        <li id="new-game-button" class="enabled" title="New game">+</li>
-        <li id="undo-button" class="disabled" title="Undo">
-            <svg class="icon" id="undo-icon"><title>Undo</title>
-                <use xlink:href="sprites.svg#fa-undo"/></svg>
-        </li>
-        <li id="save-game-button" class="enabled" title="Save game">
-            <svg class="icon" id="save-icon"><title>Save game</title>
-                <use xlink:href="sprites.svg#fa-save"/></svg>
-        </li>
-        <li id="export-img-button" class="disabled" title="Export as image">
-            <svg class="icon" id="export-img-icon"><title>Export as image</title>
-                <use xlink:href="sprites.svg#fa-file-image"/></svg>
-        </li>
-        <li id="about-button" class="enabled" title="About">?</li>
-    </ul>
-    <form id="ng-form" class="disabled">
-    <div>
-        <div>
-            <input type="radio" id="ng-radio-upload" name="ng-choice" value="upload:" />
-            <label for="ng-radio-upload">Choose file on disk</label>
-        </div>
-        <p>Levels:</p>
-        <div>
-            <input type="radio" id="ng-radio-url-1" name="ng-choice" value="url:levels/bp/1.json" checked />
-            <label for="ng-radio-url-1">Level 1</label>
-        </div>
-        <div>
-            <input type="radio" id="ng-radio-url-2" name="ng-choice" value="url:levels/bp/2.json" />
-            <label for="ng-radio-url-2">Level 2</label>
-        </div>
-        <p>Generators:</p>
-        <div>
-            <input type="radio" id="ng-radio-bp1" name="ng-choice" value="gen:bp1" />
-            <label for="ng-radio-gen-bp1">BP1</label>
-        </div>
+<ul id="nav">
+    <li id="new-game-button" class="enabled" title="New game">+</li>
+    <li id="undo-button" class="disabled" title="Undo">
+        <svg class="icon" id="undo-icon"><title>Undo</title>
+            <use xlink:href="sprites.svg#fa-undo"/></svg>
+    </li>
+    <li id="save-game-button" class="enabled" title="Save game">
+        <svg class="icon" id="save-icon"><title>Save game</title>
+            <use xlink:href="sprites.svg#fa-save"/></svg>
+    </li>
+    <li id="export-img-button" class="disabled" title="Export as image">
+        <svg class="icon" id="export-img-icon"><title>Export as image</title>
+            <use xlink:href="sprites.svg#fa-file-image"/></svg>
+    </li>
+    <li id="about-button" class="enabled" title="About">?</li>
+</ul>
+<div id="arena-wrapper">
+    <div id="pre-arena">
+        <form id="ng-form" class="disabled">
+            <div>
+                <div>
+                    <input type="radio" id="ng-radio-upload" name="ng-choice" value="upload:" />
+                    <label for="ng-radio-upload">Choose file on disk</label>
+                </div>
+                <p>Levels:</p>
+                <div>
+                    <input type="radio" id="ng-radio-url-1" name="ng-choice" value="url:levels/bp/1.json" checked />
+                    <label for="ng-radio-url-1">Level 1</label>
+                </div>
+                <div>
+                    <input type="radio" id="ng-radio-url-2" name="ng-choice" value="url:levels/bp/2.json" />
+                    <label for="ng-radio-url-2">Level 2</label>
+                </div>
+                <p>Generators:</p>
+                <div>
+                    <input type="radio" id="ng-radio-bp1" name="ng-choice" value="gen:bp1" />
+                    <label for="ng-radio-gen-bp1">BP1</label>
+                </div>
+            </div>
+            <button id="ng-submit" type="submit">Submit</button>
+        </form>
     </div>
-        <button id="ng-submit" type="submit">Submit</button>
-    </form>
-    <div id="arena-wrapper">
     <div id="arena">
         <div id="hover-rect"></div>
         <div id="inventory"></div>
         <div id="packing-area"></div>
     </div>
-    </div>
-    <div class="bar" id="item-info-bar"></div>
-    <div class="bar" id="stats-bar"></div>
-    <input type="file" id="level-loader" accept=".json,application/json" style="display:none" />
-    <a id="downloader" rel="nofollow"></a>
-    <script src="script.js"></script>
-    <script src="loaders.js"></script>
-    <script src="algo.js"></script>
-    <script>main();</script>
+</div>
+<div class="bar" id="item-info-bar"></div>
+<div class="bar" id="stats-bar"></div>
+<input type="file" id="level-loader" accept=".json,application/json" style="display:none" />
+<a id="downloader" rel="nofollow"></a>
+<script src="script.js"></script>
+<script src="loaders.js"></script>
+<script src="algo.js"></script>
+<script>main();</script>
 </body>
 </html>
