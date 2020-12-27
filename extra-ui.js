@@ -23,18 +23,19 @@ function ngFormSubmitHandler(ev) {
     var choice = formData.get('ng-choice');
     let [srctype, src] = choice.split(':');
     ngForm.classList.add('loading');
+    function failHook(msg) {addMsg('error', msg); ngFormSuccess();}
     if(srctype == 'upload') {
-        loadGameFromUpload();
+        loadGameFromUpload(null, null, failHook);
         ngFormSuccess();
         window.history.replaceState({}, null, '?');
     }
     else if(srctype == 'url') {
-        loadGameFromUrl(src, null, ngFormSuccess);
+        loadGameFromUrl(src, null, ngFormSuccess, failHook);
         var qs = toQueryString({'srctype': srctype, 'src': src});
         window.history.replaceState({}, null, '?' + qs);
     }
     else if(srctype == 'gen') {
-        loadGameFromGen(src, {}, null, ngFormSuccess);
+        loadGameFromGen(src, {}, null, ngFormSuccess, failHook);
         var qs = toQueryString({'srctype': srctype, 'src': src});
         window.history.replaceState({}, null, '?' + qs);
     }
