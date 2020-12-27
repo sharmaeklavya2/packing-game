@@ -9,11 +9,6 @@ var statsBar = document.getElementById('stats-bar');
 var itemInfoBar = document.getElementById('item-info-bar');
 var levelLoaderElem = document.getElementById('level-loader');
 var downloaderElem = document.getElementById('downloader');
-var newGameButton = document.getElementById('new-game-button');
-var undoButton = document.getElementById('undo-button');
-var saveGameButton = document.getElementById('save-game-button');
-var aboutButton = document.getElementById('about-button');
-var ngForm = document.getElementById('ng-form');
 
 var uiMargin = 10;  // margin between arena and the elements inside it, in px.
 var defaultItemColor = 'blue';
@@ -22,9 +17,6 @@ var handleKeyPresses = true;
 var globalGame = null;
 var globalDragData = null;
 var uploadInfo = {'scaleFactor': null, 'succHook': null, 'failHook': null};
-
-var aboutText = "This is a 2D geometric bin-packing game. You have to pack all items from "
-    + "the left side into the minimum number of bins on the right side.";
 
 //==[ Logic Layer ]=============================================================
 
@@ -522,15 +514,6 @@ class Stats {
     }
 }
 
-function disableUndoButton() {
-    undoButton.classList.add('disabled');
-    undoButton.classList.remove('enabled');
-}
-function enableUndoButton() {
-    undoButton.classList.remove('disabled');
-    undoButton.classList.add('enabled');
-}
-
 class Game {
     constructor(level, scaleFactor=null) {
         globalGame = this;
@@ -777,6 +760,21 @@ function downloadProgress(filename='progress.json', cleanup=false) {
     downloadBlob(blob, filename, cleanup);
 }
 
+function restartGame(newScaleFactor=null) {
+    var level = globalGame.level;
+    globalGame.destroy();
+    globalGame = new Game(level, newScaleFactor);
+}
+
+function clearGame() {
+    if(globalGame !== null) {
+        globalGame.destroy();
+        globalGame = null;
+    }
+}
+
+//==[ Event Handling ]==========================================================
+
 class ItemInfoBar {
     constructor(gameType) {
         this.gameType = gameType;
@@ -834,21 +832,6 @@ class DragData {
         globalGame.itemInfoBar.deactivate();
     }
 }
-
-function restartGame(newScaleFactor=null) {
-    var level = globalGame.level;
-    globalGame.destroy();
-    globalGame = new Game(level, newScaleFactor);
-}
-
-function clearGame() {
-    if(globalGame !== null) {
-        globalGame.destroy();
-        globalGame = null;
-    }
-}
-
-//==[ Event Handlers ]==========================================================
 
 function mousedownHandler(ev) {
     var target = ev.target;
@@ -999,36 +982,6 @@ function keydownHandler(ev) {
 }
 
 
-function ngFormSuccess() {
-    ngForm.classList.add('disabled');
-    ngForm.classList.remove('enabled');
-    ngForm.classList.remove('loading');
-    newGameButton.classList.remove('pressed');
-}
-
-function ngFormSubmitHandler(ev) {
-    ev.preventDefault();
-    const formData = new FormData(ngForm);
-    var choice = formData.get('ng-choice');
-    let [srctype, src] = choice.split(':');
-    ngForm.classList.add('loading');
-    if(srctype == 'upload') {
-        loadGameFromUpload();
-        ngFormSuccess();
-        window.history.replaceState({}, null, '?');
-    }
-    else if(srctype == 'url') {
-        loadGameFromUrl(src, null, ngFormSuccess);
-        var qs = toQueryString({'srctype': srctype, 'src': src});
-        window.history.replaceState({}, null, '?' + qs);
-    }
-    else if(srctype == 'gen') {
-        loadGameFromGen(src, {}, null, ngFormSuccess);
-        var qs = toQueryString({'srctype': srctype, 'src': src});
-        window.history.replaceState({}, null, '?' + qs);
-    }
-}
-
 function addEventListeners() {
     arena.addEventListener('dragstart', function(ev) {
         console.debug('dragstart', ev.target);
@@ -1058,27 +1011,4 @@ function addEventListeners() {
             loadGameFromFiles(ev.dataTransfer.files, uploadInfo['scaleFactor'],
                 uploadInfo['succHook'], uploadInfo['failHook']);
         });
-    undoButton.addEventListener('click', function(ev) {
-            if(globalGame !== null) {globalGame.undo();}
-        });
-    saveGameButton.addEventListener('click', function(ev) {
-            if(globalGame !== null) {downloadProgress();}
-        });
-    aboutButton.addEventListener('click', function(ev) {
-            window.alert(aboutText);
-        });
-    newGameButton.addEventListener('click', function(ev) {
-            ngForm.classList.toggle('disabled');
-            ngForm.classList.toggle('enabled');
-            ngForm.classList.remove('loading');
-            newGameButton.classList.toggle('pressed');
-        });
-    ngForm.addEventListener('submit', ngFormSubmitHandler);
-}
-
-//==[ Main ]====================================================================
-
-function main() {
-    addEventListeners();
-    loadGameFromQParams(getQParams());
 }
