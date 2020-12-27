@@ -21,7 +21,7 @@ var defaultItemColor = 'blue';
 var handleKeyPresses = true;
 var globalGame = null;
 var globalDragData = null;
-var uploadScaleFactor = null;
+var uploadInfo = {'scaleFactor': null, 'succHook': null, 'failHook': null};
 
 var aboutText = "This is a 2D geometric bin-packing game. You have to pack all items from "
     + "the left side into the minimum number of bins on the right side.";
@@ -1035,7 +1035,8 @@ function addEventListeners() {
     window.addEventListener('keydown', keydownHandler);
 
     levelLoaderElem.addEventListener('change', function(ev) {
-            loadGameFromFiles(ev.target.files, uploadScaleFactor);
+            loadGameFromFiles(ev.target.files, uploadInfo['scaleFactor'],
+                uploadInfo['succHook'], uploadInfo['failHook']);
         });
     arenaWrapper.addEventListener('dragover', function(ev) {
             ev.stopPropagation();
@@ -1046,7 +1047,8 @@ function addEventListeners() {
             ev.stopPropagation();
             ev.preventDefault();
             ev.dataTransfer.dropEffect = 'copy';
-            loadGameFromFiles(ev.dataTransfer.files, uploadScaleFactor);
+            loadGameFromFiles(ev.dataTransfer.files, uploadInfo['scaleFactor'],
+                uploadInfo['succHook'], uploadInfo['failHook']);
         });
     undoButton.addEventListener('click', function(ev) {
             if(globalGame !== null) {globalGame.undo();}

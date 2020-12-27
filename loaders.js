@@ -53,50 +53,70 @@ function applyToJsonResponse(url, hook, failHook) {
     xhttp.send();
 }
 
-function loadGameFromRawLevel(level, scaleFactor=null) {
+function loadGameFromRawLevel(level, scaleFactor=null, succHook=null, failHook=null) {
     clearGame();
     globalGame = new Game(processLevel(level), scaleFactor);
+    if(succHook !== null) {
+        succHook();
+    }
 }
 
-function loadGameFromUrl(url, scaleFactor=null) {
-    applyToJsonResponse(url, function(json) {loadGameFromRawLevel(json, scaleFactor);}, null);
+function loadGameFromUrl(url, scaleFactor=null, succHook=null, failHook=null) {
+    var failHook2 = null;
+    if(failHook !== null) {
+        failHook2 = function(statusCode) {failHook("could not retrieve " + url
+            + "; status code " + statusCode);};
+    }
+    applyToJsonResponse(url, function(json) {
+            loadGameFromRawLevel(json, scaleFactor, succHook, failHook);},
+        failHook2);
 }
 
-function loadGameFromGen(genName, q, scaleFactor=null) {
+function loadGameFromGen(genName, q, scaleFactor=null, succHook=null, failHook=null) {
     var gen = levelGenerators[genName];
     if(gen === undefined) {
         throw new Error('level generator ' + genName + ' not found');
     }
-    addDefault(q, gen.defaultValues);
-    var level = gen(q);
-    loadGameFromRawLevel(level, scaleFactor);
+    else {
+        addDefault(q, gen.defaultValues);
+        var level = gen(q);
+        loadGameFromRawLevel(level, scaleFactor, succHook, failHook);
+    }
 }
 
-function loadGameFromFile(file, scaleFactor=null) {
+function loadGameFromFile(file, scaleFactor=null, succHook=null, failHook=null) {
     const reader = new FileReader();
     reader.addEventListener('load', function(ev) {
         var level = JSON.parse(ev.target.result);
-        loadGameFromRawLevel(level, scaleFactor);
+        loadGameFromRawLevel(level, scaleFactor, succHook, failHook);
+    });
+    reader.addEventListener('error', function(ev) {
+        failHook('failed to read ' + file.name + '.')
     });
     reader.readAsText(file);
 }
 
-function loadGameFromFiles(files, scaleFactor=null) {
+function loadGameFromFiles(files, scaleFactor=null, succHook=null, failHook=null) {
     if(files.length > 0) {
         console.log('loading file ' + files[0].name);
-        loadGameFromFile(files[0], scaleFactor);
+        loadGameFromFile(files[0], scaleFactor, succHook, failHook);
     }
     else {
         console.log('no file given to loader');
+        if(succHook !== null) {
+            succHook();
+        }
     }
 }
 
-function loadGameFromUpload(scaleFactor=null) {
-    uploadScaleFactor = scaleFactor;
+function loadGameFromUpload(scaleFactor=null, succHook=null, failHook=null) {
+    uploadInfo['scaleFactor'] = scaleFactor;
+    uploadInfo['succHook'] = succHook;
+    uploadInfo['failHook'] = failHook;
     levelLoaderElem.click();
 }
 
-function loadGameFromQParams(q) {
+function loadGameFromQParams(q, succHook=null, failHook=null) {
     if(Object.keys(q).length == 0) {
         q['srctype'] = 'gen';
         q['src'] = 'bp1';
@@ -105,16 +125,17 @@ function loadGameFromQParams(q) {
     var scaleFactor = null;
     if(q.hasOwnProperty('scaleFactor')) {
         scaleFactor = parseFloat(q.scaleFactor);
+        // check if scaleFactor is a valid float
     }
     var srctype = dictAssertAccess(q, 'srctype', 'querystring');
 
     if(srctype == 'url') {
         var url = dictAssertAccess(q, 'src', 'querystring');
-        loadGameFromUrl(url, scaleFactor);
+        loadGameFromUrl(url, scaleFactor, succHook, failHook);
     }
     else if(srctype == 'gen') {
         var genName = dictAssertAccess(q, 'src', 'querystring');
-        loadGameFromGen(genName, q, scaleFactor);
+        loadGameFromGen(genName, q, scaleFactor, succHook, failHook);
     }
     else {
         throw new InputError('unknown srctype: ' + srctype);
