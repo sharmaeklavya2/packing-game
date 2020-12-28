@@ -243,6 +243,8 @@ body {
     align-self: center;
     padding: 0.2rem 1rem;
     font-size: 1rem;
+}
+#ng-submit:not([disabled]) {
     cursor: pointer;
 }
 #solve-menu.enabled {

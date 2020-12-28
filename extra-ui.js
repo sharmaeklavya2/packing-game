@@ -6,6 +6,7 @@ var saveGameButton = document.getElementById('save-game-button');
 var solveButton = document.getElementById('solve-button');
 var aboutButton = document.getElementById('about-button');
 var ngForm = document.getElementById('ng-form');
+var ngFormSubmitButton = document.getElementById('ng-submit');
 var solveMenu = document.getElementById('solve-menu');
 var solveList = document.getElementById('solve-list');
 var unpackButton = document.getElementById('unpack-button');
@@ -19,6 +20,17 @@ function ngFormSuccess() {
     ngForm.classList.remove('enabled');
     ngForm.classList.remove('loading');
     newGameButton.classList.remove('pressed');
+}
+
+function ngFormCheckHandler(ev) {
+    const formData = new FormData(ngForm);
+    var choice = formData.get('ng-choice');
+    if(choice === null) {
+        ngFormSubmitButton.setAttribute('disabled', 'disabled');
+    }
+    else {
+        ngFormSubmitButton.removeAttribute('disabled');
+    }
 }
 
 function ngFormSubmitHandler(ev) {
@@ -101,6 +113,8 @@ function addExtraUIEventListeners() {
             newGameButton.classList.toggle('pressed');
         });
     ngForm.addEventListener('submit', ngFormSubmitHandler);
+    ngForm.addEventListener('change', ngFormCheckHandler);
+    ngForm.addEventListener('input', ngFormCheckHandler);
     solveButton.addEventListener('click', function(ev) {
             ngForm.classList.add('disabled');
             ngForm.classList.remove('enabled');
