@@ -231,8 +231,18 @@ body {
 #ng-form > .options {
     padding: 0 2rem;
 }
-#ng-form > .options > * {
+#ng-form .input-pair, #ng-form p {
     margin: 0.5rem 0;
+}
+.input-pair {
+    display: flex;
+    align-items: baseline;
+}
+.input-pair > input {
+    margin: 0;
+}
+.input-pair > label {
+    padding-left: 0.5rem;
 }
 #ng-submit {
     margin: 0.25rem 0 0.5rem 0;

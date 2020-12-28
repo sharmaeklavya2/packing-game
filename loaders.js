@@ -4,7 +4,7 @@ class InputError extends Error {
     constructor(message) {super(message);}
 }
 
-var levelGenerators = {};
+var levelGenerators = new Map();
 
 function hueToColor(hue) {
     return 'hsl(' + hue + ', 100%, 50%)';
@@ -30,7 +30,7 @@ function levelGenBP1(q) {
 levelGenBP1.defaultValues = {'n': 25, 'xLen': 8, 'yLen': 8, 'rotation': false};
 levelGenBP1.info = 'Independently and randomly generate colors and dimensions of each item. '
     + 'Parameters: n is the number of items, xLen is the bin width, yLen is the bin height.';
-levelGenerators['bp1'] = levelGenBP1;
+levelGenerators.set('bp1', levelGenBP1);
 
 function applyToJsonResponse(url, hook, failHook) {
     var xhttp = new XMLHttpRequest();
@@ -73,7 +73,7 @@ function loadGameFromUrl(url, scaleFactor=null, succHook=null, failHook=null) {
 }
 
 function loadGameFromGen(genName, q, scaleFactor=null, succHook=null, failHook=null) {
-    var gen = levelGenerators[genName];
+    var gen = levelGenerators.get(genName);
     if(gen === undefined) {
         throw new Error('level generator ' + genName + ' not found');
     }

@@ -7,6 +7,8 @@ var solveButton = document.getElementById('solve-button');
 var aboutButton = document.getElementById('about-button');
 var ngForm = document.getElementById('ng-form');
 var ngFormSubmitButton = document.getElementById('ng-submit');
+var ngFormLevels = document.getElementById('ng-form-levels');
+var ngFormGens = document.getElementById('ng-form-gens');
 var solveMenu = document.getElementById('solve-menu');
 var solveList = document.getElementById('solve-list');
 var unpackButton = document.getElementById('unpack-button');
@@ -92,6 +94,47 @@ function repopulateSolveMenu() {
         solveList.appendChild(liElem);
     }
 }
+
+function populateNgForm() {
+    var levels = [
+        ['levels/bp/1.json', 'Level 1'],
+        ['levels/bp/2.json', 'Level 2'],
+    ];
+    for(var i=0; i < levels.length; ++i) {
+        let [url, label] = levels[i];
+        let id = 'ng-radio-url-' + i;
+        let inputElem = document.createElement('input');
+        inputElem.setAttribute('type', 'radio');
+        inputElem.setAttribute('id', id);
+        inputElem.setAttribute('name', 'ng-choice');
+        inputElem.setAttribute('value', 'url:' + url);
+        let labelElem = document.createElement('label');
+        labelElem.innerHTML = label;
+        labelElem.setAttribute('for', id);
+        let div = document.createElement('div');
+        div.appendChild(inputElem);
+        div.appendChild(labelElem);
+        div.classList.add('input-pair');
+        ngFormLevels.appendChild(div);
+    }
+    for(const [genName, gen] of levelGenerators) {
+        let id = 'ng-radio-gen-' + genName;
+        let inputElem = document.createElement('input');
+        inputElem.setAttribute('type', 'radio');
+        inputElem.setAttribute('id', id);
+        inputElem.setAttribute('name', 'ng-choice');
+        inputElem.setAttribute('value', 'gen:' + genName);
+        let labelElem = document.createElement('label');
+        labelElem.innerHTML = genName;
+        labelElem.setAttribute('for', id);
+        let div = document.createElement('div');
+        div.appendChild(inputElem);
+        div.appendChild(labelElem);
+        div.classList.add('input-pair');
+        ngFormGens.appendChild(div);
+    }
+}
+populateNgForm();
 
 function addExtraUIEventListeners() {
     undoButton.addEventListener('click', function(ev) {
