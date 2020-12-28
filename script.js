@@ -282,7 +282,7 @@ function serializeItemInfo(itemInfo) {
 function processLevel(j) {
     var reqProps = ['binXLen', 'binYLen', 'items'];
     var optProps = {'gameType': 'bp', 'startPos': [], 'rotation': false,
-        'lower_bound': null, 'upper_bound': null};
+        'lower_bound': null, 'upper_bound': null, 'solutions': {}};
     var o = readObjectPropsWithAssert(j, reqProps, optProps);
     var items = [];
     console.assert(o.gameType === 'bp', "the only supported gameType is bp");
@@ -298,14 +298,20 @@ function processLevel(j) {
         }
     }
     o.items = items;
-    if(o.lower_bound === null || o.upper_bound === null) {
-        let [lb, ub] = bpBounds(items, o.binXLen, o.binYLen, o.rotation);
-        if(o.lower_bound === null) {
-            o.lower_bound = lb;
+
+    var ubAlgos = ['nfdh', 'nfdh2'];
+    o.computed_ub = items.length;
+    for(const algoName of ubAlgos) {
+        if(o.solutions[algoName] === undefined || o.solutions[algoName] === null) {
+            o.solutions[algoName] = bpAlgos[algoName](items, o.binXLen, o.binYLen, []);
         }
-        if(o.upper_bound === null) {
-            o.upper_bound = ub;
-        }
+        o.computed_ub = Math.min(o.computed_ub, countUsedBins(o.solutions[algoName]));
+    }
+    if(o.upper_bound === null) {
+        o.upper_bound = o.computed_ub;
+    }
+    if(o.lower_bound === null) {
+        o.lower_bound = bpLowerBound(items, o.binXLen, o.binYLen, o.rotation);
     }
     return o;
 }
@@ -317,8 +323,8 @@ function serItemsEqual(a, b) {
 
 function serializeLevel(level, pos=null) {
     var o = {"binXLen": level.binXLen, "binYLen": level.binYLen, "gameType": level.gameType,
-        "rotation": level.rotation, "lower_bound": level.lower_bound,
-        "upper_bound": level.upper_bound};
+        "rotation": level.rotation, "solutions": level.solutions,
+        "lower_bound": level.lower_bound, "upper_bound": level.upper_bound};
     if(pos !== null && pos.length > 0) {o['startPos'] = pos;}
 
     var serItems = [];
@@ -567,11 +573,7 @@ class Game {
         }
         const origInvXLen = Math.max(maxXLen, this.level.binXLen);
         this.stripPackSol = nfdhStripPack(inputItems, origInvXLen, []);
-        var invXLen = 0, invYLen = 0;
-        for(var i=0; i < inputItems.length; ++i) {
-            invXLen = Math.max(invXLen, this.stripPackSol[i][0] + inputItems[i].xLen);
-            invYLen = Math.max(invYLen, this.stripPackSol[i][1] + inputItems[i].yLen);
-        }
+        let [invXLen, invYLen] = getStripDims(inputItems, this.stripPackSol);
 
         if(scaleFactor === null) {
             // infer scaleFactor from arenaWrapper's dims

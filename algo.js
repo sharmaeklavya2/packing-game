@@ -1,5 +1,7 @@
 'use strict';
 
+var bpAlgos = {};
+
 class Shelf {
     constructor(id, xLen) {
         this.id = id;
@@ -81,13 +83,97 @@ function nfdhStripPack(items, stripXLen, output) {
     return packShelvesIntoStrip(shelves, stripXLen, output);
 }
 
-function bpBounds(items, binXLen, binYLen, rotation) {
+function nextFit1D(items, binSize, output) {
+    var used = 0;
+    var binId = 0;
+    for(var i=0; i < items.length; ++i) {
+        if(used + items[i].size <= binSize) {
+            output[items[i].id] = [binId, used];
+            used += items[i].size;
+        }
+        else {
+            output[items[i].id] = [++binId, 0];
+            used = items[i].size;
+        }
+    }
+    return output;
+}
+
+function shelfBinPack(items, shelfAlgo, bpAlgo, binXLen, binYLen, output) {
+    var shelves = shelfAlgo(items, binXLen);
+    var shelfBPOutput = bpAlgo(shelves, binYLen, []);
+    for(var i=0; i < shelves.length; ++i) {
+        let items = shelves[i].items;
+        let xAgg = 0;
+        let [binId, y] = shelfBPOutput[i];
+        for(var j=0; j < items.length; ++j) {
+            output[items[j].id] = [binId, xAgg, y];
+            xAgg += items[j].xLen;
+        }
+    }
+    return output;
+}
+
+function nfdhBinPack(items, binXLen, binYLen, output) {
+    return shelfBinPack(items, nfdhShelfPack, nextFit1D, binXLen, binYLen, output);
+}
+
+bpAlgos['nfdh'] = nfdhBinPack;
+
+function getStripDims(items, stripPackSol) {
+    var xLen = 0, yLen = 0;
+    for(var i=0; i < items.length; ++i) {
+        xLen = Math.max(xLen, stripPackSol[items[i].id][0] + items[i].xLen);
+        yLen = Math.max(yLen, stripPackSol[items[i].id][1] + items[i].yLen);
+    }
+    return [xLen, yLen];
+}
+
+function countUsedBins(bpSol) {
+    var ind = [];
+    for(var i=0; i < bpSol.length; ++i) {
+        ind[bpSol[i][0]] = 1;
+    }
+    var nBins = 0;
+    for(var j=0; j < ind.length; ++j) {
+        if(ind[j] !== undefined) {
+            nBins++;
+        }
+    }
+    return nBins;
+}
+
+function rotateAllItems(items) {
+    for(var i=0; i < items.length; ++i) {
+        let yLen = items[i].yLen;
+        items[i].yLen = items[i].xLen;
+        items[i].xLen = yLen;
+    }
+}
+
+function mirrorAlgo(gbpAlgo) {
+    function mirrorBinPack(items, binXLen, binYLen, output) {
+        rotateAllItems(items);
+        gbpAlgo(items, binYLen, binXLen, output);
+        rotateAllItems(items);
+        for(var i=0; i < output.length; ++i) {
+            let y = output[i][2];
+            output[i][2] = output[i][1];
+            output[i][1] = y;
+        }
+        return output;
+    }
+    return mirrorBinPack;
+}
+
+bpAlgos['nfdh2'] = mirrorAlgo(nfdhBinPack);
+
+function bpLowerBound(items, binXLen, binYLen, rotation) {
     var area = 0;
     for(var i=1; i<items.length; ++i) {
         area += items[i].xLen * items[i].yLen;
     }
     var delta = 0.00000001;
     var rarea_lb = (area - delta) / (binXLen * binYLen);
-    var rarea_ub = (area + delta) / (binXLen * binYLen);
-    return [Math.ceil(rarea_lb), Math.ceil(4 * rarea_ub) + 1];
+    return Math.ceil(rarea_lb);
 }
