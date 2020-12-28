@@ -8,7 +8,7 @@ var aboutButton = document.getElementById('about-button');
 var ngForm = document.getElementById('ng-form');
 var solveMenu = document.getElementById('solve-menu');
 var solveList = document.getElementById('solve-list');
-var unpackButton = document.getElementById('unpack');
+var unpackButton = document.getElementById('unpack-button');
 var msgList = document.getElementById('msg-list');
 
 var aboutText = "This is a 2D geometric bin-packing game. You have to pack all items from "
@@ -111,7 +111,6 @@ function addExtraUIEventListeners() {
         });
     unpackButton.addEventListener('click', function(ev) {
             globalGame.putBack();
-            solveSuccess();
         });
 }
 

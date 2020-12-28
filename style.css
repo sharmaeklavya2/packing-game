@@ -259,7 +259,7 @@ body {
     font-family: monospace;
     font-size: 1.1rem;
 }
-#solve-menu > ul > li, #solve-menu > #unpack {
+#solve-menu > ul > li {
     cursor: pointer;
     padding: 0.5rem 1rem;
     display: flex;
@@ -268,10 +268,10 @@ body {
 #solve-menu > ul > li:last-child {
     border-radius: 0 0 0.5rem 0.5rem;
 }
-#solve-menu > ul > li:hover, #solve-menu > #unpack:hover {
+#solve-menu > ul > li:hover {
     background-color: rgba(128, 128, 128, 0.6);
 }
-#solve-menu > ul > li:active, #solve-menu > #unpack:active {
+#solve-menu > ul > li:active {
     background-color: rgba(128, 128, 128, 0.8);
 }
 

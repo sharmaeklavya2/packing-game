@@ -20,6 +20,10 @@
                 <svg class="icon" id="save-icon"><title>Save game</title>
                     <use xlink:href="sprites.svg#fa-save"/></svg>
             </li>
+            <li id="unpack-button" class="enabled" title="Clear">
+                <svg class="icon" id="unpack-icon"><title>Clear</title>
+                    <use xlink:href="sprites.svg#fa-broom"/></svg>
+            </li>
             <li id="solve-button" class="enabled" title="Show solutions">&#9654;</li>
             <!--
             <li id="export-img-button" class="disabled" title="Export as image">
@@ -54,8 +58,7 @@
             <button id="ng-submit" type="submit">Submit</button>
         </form>
         <div id="solve-menu" class="menu disabled">
-            <div class="heading">Auto-pack</div>
-            <div id="unpack">clear</div>
+            <div class="heading">View solution</div>
             <ul id="solve-list"></ul>
         </div>
         <ul id="msg-list"></ul>
