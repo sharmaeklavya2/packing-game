@@ -154,7 +154,8 @@ class Bin {
 }
 
 class ItemInfo {
-    constructor(xLen, yLen, profit, color) {
+    constructor(id, xLen, yLen, profit, color) {
+        this.id = id;
         this.xLen = xLen;
         this.yLen = yLen;
         this.profit = profit;
@@ -260,11 +261,11 @@ function downloadBlob(blob, filename, cleanup=false) {
 
 //==[ SerDe and Cleaning ]======================================================
 
-function itemInfoFromObject(j) {
+function itemInfoFromObject(j, id) {
     var reqProps = ['xLen', 'yLen'];
     var optProps = {'color': null, 'profit': 0};
     var o = readObjectPropsWithAssert(j, reqProps, optProps);
-    return new ItemInfo(o['xLen'], o['yLen'], o['profit'], o['color']);
+    return new ItemInfo(id, o['xLen'], o['yLen'], o['profit'], o['color']);
 }
 
 function serializeItemInfo(itemInfo) {
@@ -285,13 +286,14 @@ function processLevel(j) {
     var o = readObjectPropsWithAssert(j, reqProps, optProps);
     var items = [];
     console.assert(o.gameType === 'bp', "the only supported gameType is bp");
+    var id = 0;
     for(var itemObj of o['items']) {
         var n = itemObj.n;
         if(n === undefined) {
             n = 1;
         }
         for(var i=0; i<n; ++i) {
-            var item = itemInfoFromObject(itemObj);
+            var item = itemInfoFromObject(itemObj, id++);
             items.push(item);
         }
     }
@@ -353,14 +355,13 @@ class ItemUI {
         this.itemInfo = itemInfo;
         this.xPos = null;
         this.yPos = null;
-        this.id = id;
         this.binUI = null;
         this.scaleFactor = scaleFactor;
 
         // DOM
         var elem = document.createElement('div');
         elem.classList.add('item');
-        elem.setAttribute('data-item-id', this.id);
+        elem.setAttribute('data-item-id', this.itemInfo.id);
         elem.style.width = this.scaleFactor * this.itemInfo.xLen + 'px';
         elem.style.height = this.scaleFactor * this.itemInfo.yLen + 'px';
         if(itemInfo.color !== null) {
@@ -755,7 +756,7 @@ class Game {
         var coords = record.oldCoords;
 
         if(coords === null) {
-            this._moveItemToInventory(item.id);
+            this._moveItemToInventory(record.itemId);
             this.trimBins(1);
         }
         else if(coords[0] >= this.bins.length) {
@@ -778,7 +779,7 @@ class Game {
                 if(currCoords !== null) {
                     item.attach(this.bins[currCoords[0]], currCoords[1], currCoords[2]);
                 }
-                console.warn('undo failed: cannot move item ' + item.id
+                console.warn('undo failed: cannot move item ' + record.itemId
                     + ' to position ' + coords + '; invalidating history');
                 this.history = [];
             }
