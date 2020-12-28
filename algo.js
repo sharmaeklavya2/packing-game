@@ -170,7 +170,7 @@ bpAlgos['nfdh2'] = mirrorAlgo(nfdhBinPack);
 
 function bpLowerBound(items, binXLen, binYLen, rotation) {
     var area = 0;
-    for(var i=1; i<items.length; ++i) {
+    for(var i=0; i<items.length; ++i) {
         area += items[i].xLen * items[i].yLen;
     }
     var delta = 0.00000001;
