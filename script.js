@@ -299,7 +299,7 @@ function processLevel(j) {
     }
     o.items = items;
 
-    var ubAlgos = ['nfdh', 'nfdh2'];
+    var ubAlgos = ['nfdh', 'nfdh-mirror', 'ffdh-ff', 'ffdh-ff-mirror'];
     o.computed_ub = items.length;
     for(const algoName of ubAlgos) {
         if(o.solutions[algoName] === undefined || o.solutions[algoName] === null) {

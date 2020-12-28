@@ -41,6 +41,29 @@ function nextFitShelfPack(items, xLen) {
     return shelves;
 }
 
+function firstFitShelfPack(items, xLen) {
+    if(items.length == 0) {
+        return [];
+    }
+    let shelves = [];
+    for(var i=0; i < items.length; ++i) {
+        let packed = false;
+        const item = items[i];
+        for(var j=0; j < shelves.length; ++j) {
+            if(shelves[j].add(item)) {
+                packed = true;
+                break;
+            }
+        }
+        if(!packed) {
+            let shelf = new Shelf(shelves.length, xLen);
+            shelves.push(shelf);
+            shelf.add(item);
+        }
+    }
+    return shelves;
+}
+
 function RectComparator(item1, item2) {
     if(item1.yLen < item2.yLen) {
         return 1;
@@ -64,6 +87,11 @@ function nfdhShelfPack(items, xLen) {
     return nextFitShelfPack(sortedItems, xLen);
 }
 
+function ffdhShelfPack(items, xLen) {
+    var sortedItems = [...items].sort(RectComparator);
+    return firstFitShelfPack(sortedItems, xLen);
+}
+
 function packShelvesIntoStrip(shelves, stripXLen, output) {
     let yAgg=0;
     for(var i=0; i < shelves.length; ++i) {
@@ -83,6 +111,11 @@ function nfdhStripPack(items, stripXLen, output) {
     return packShelvesIntoStrip(shelves, stripXLen, output);
 }
 
+function ffdhStripPack(items, stripXLen, output) {
+    var shelves = ffdhShelfPack(items, stripXLen);
+    return packShelvesIntoStrip(shelves, stripXLen, output);
+}
+
 function nextFit1D(items, binSize, output) {
     var used = 0;
     var binId = 0;
@@ -94,6 +127,27 @@ function nextFit1D(items, binSize, output) {
         else {
             output[items[i].id] = [++binId, 0];
             used = items[i].size;
+        }
+    }
+    return output;
+}
+
+function firstFit1D(items, binSize, output) {
+    var usage = [];
+    for(var i=0; i < items.length; ++i) {
+        let itemSize = items[i].size;
+        let packed = false;
+        for(var j=0; j < usage.length; ++j) {
+            if(usage[j] + itemSize <= binSize) {
+                output[items[i].id] = [j, usage[j]];
+                usage[j] += itemSize;
+                packed = true;
+                break;
+            }
+        }
+        if(!packed) {
+            output[items[i].id] = [usage.length, 0];
+            usage.push(itemSize);
         }
     }
     return output;
@@ -117,8 +171,15 @@ function shelfBinPack(items, shelfAlgo, bpAlgo, binXLen, binYLen, output) {
 function nfdhBinPack(items, binXLen, binYLen, output) {
     return shelfBinPack(items, nfdhShelfPack, nextFit1D, binXLen, binYLen, output);
 }
-
 bpAlgos['nfdh'] = nfdhBinPack;
+function ffdhNfBinPack(items, binXLen, binYLen, output) {
+    return shelfBinPack(items, ffdhShelfPack, nextFit1D, binXLen, binYLen, output);
+}
+bpAlgos['ffdh-nf'] = ffdhNfBinPack;
+function ffdhFfBinPack(items, binXLen, binYLen, output) {
+    return shelfBinPack(items, ffdhShelfPack, firstFit1D, binXLen, binYLen, output);
+}
+bpAlgos['ffdh-ff'] = ffdhFfBinPack;
 
 function getStripDims(items, stripPackSol) {
     var xLen = 0, yLen = 0;
@@ -166,7 +227,18 @@ function mirrorAlgo(gbpAlgo) {
     return mirrorBinPack;
 }
 
-bpAlgos['nfdh2'] = mirrorAlgo(nfdhBinPack);
+function createMirrors() {
+    let algoNames = [];
+    for(let algoName of Object.keys(bpAlgos)) {
+        if(bpAlgos.hasOwnProperty(algoName) && !algoName.endsWith('-mirror')) {
+            algoNames.push(algoName);
+        }
+    }
+    for(let algoName of algoNames) {
+        bpAlgos[algoName + '-mirror'] = mirrorAlgo(bpAlgos[algoName]);
+    }
+}
+createMirrors();
 
 function bpLowerBound(items, binXLen, binYLen, rotation) {
     var area = 0;
