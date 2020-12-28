@@ -240,7 +240,7 @@ function createMirrors() {
 }
 createMirrors();
 
-function bpLowerBound(items, binXLen, binYLen, rotation) {
+function bpLowerBound(items, binXLen, binYLen) {
     var area = 0;
     for(var i=0; i<items.length; ++i) {
         area += items[i].xLen * items[i].yLen;

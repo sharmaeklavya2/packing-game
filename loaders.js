@@ -10,12 +10,35 @@ function hueToColor(hue) {
     return 'hsl(' + hue + ', 100%, 50%)';
 }
 
+class Parameter {
+    constructor(name, defaultValue, description, convert, validationMessage) {
+        this.name = name;
+        this.defaultValue = defaultValue;
+        this.description = description;
+        this.convert = convert;
+        this.validationMessage = validationMessage;
+    }
+}
+
+function toParamMap(paramList) {
+    let paramMap = new Map();
+    for(let param of paramList) {
+        paramMap.set(param.name, param);
+    }
+    return paramMap;
+}
+
+function positiveIntConverter(x) {
+    const i = parseInt(x);
+    return [!isNaN(i) && i > 0, i];
+}
+var positiveIntMessage = 'should be a positive integer.';
+
 function levelGenBP1(q) {
-    var n = parseInt(q.n), binXLen = parseInt(q.xLen), binYLen = parseInt(q.yLen);
+    var n = q.n, binXLen = q.xLen, binYLen = q.yLen;
     var items = [];
     var obj = {
         "binXLen": binXLen, "binYLen": binYLen,
-        "rotation": (q.rotation === 'true' || q.rotation === true),
         "gameType": "bp", "items": items,
     };
     for(var i=0; i<n; ++i) {
@@ -27,9 +50,13 @@ function levelGenBP1(q) {
     }
     return obj;
 }
-levelGenBP1.defaultValues = {'n': 25, 'xLen': 8, 'yLen': 8, 'rotation': false};
-levelGenBP1.info = 'Independently and randomly generate colors and dimensions of each item. '
-    + 'Parameters: n is the number of items, xLen is the bin width, yLen is the bin height.';
+
+levelGenBP1.paramMap = toParamMap([
+    new Parameter('n', 25, 'number of items', positiveIntConverter, positiveIntMessage),
+    new Parameter('xLen', 8, 'xLen of bin', positiveIntConverter, positiveIntMessage),
+    new Parameter('yLen', 8, 'yLen of bin', positiveIntConverter, positiveIntMessage),
+]);
+levelGenBP1.info = 'Independently and randomly generate colors and dimensions of each item.'
 levelGenerators.set('bp1', levelGenBP1);
 
 function applyToJsonResponse(url, hook, failHook) {
@@ -72,15 +99,37 @@ function loadGameFromUrl(url, scaleFactor=null, succHook=null, failHook=null) {
         failHook2);
 }
 
+function validateAndConvert(q, paramMap, failHook=null) {
+    for(let [paramName, param] of paramMap) {
+        if(q[paramName] === undefined || q[paramName] === null || q[paramName] === '') {
+            q[paramName] = param.defaultValue;
+        }
+        else {
+            let [convSucc, converted] = param.convert(q[paramName]);
+            if(convSucc) {
+                q[paramName] = converted;
+            }
+            else {
+                if(failHook !== null) {
+                    failHook(param.name + ' ' + param.validationMessage);
+                }
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 function loadGameFromGen(genName, q, scaleFactor=null, succHook=null, failHook=null) {
     var gen = levelGenerators.get(genName);
     if(gen === undefined) {
         throw new Error('level generator ' + genName + ' not found');
     }
     else {
-        addDefault(q, gen.defaultValues);
-        var level = gen(q);
-        loadGameFromRawLevel(level, scaleFactor, succHook, failHook);
+        if(validateAndConvert(q, gen.paramMap, failHook)) {
+            var level = gen(q);
+            loadGameFromRawLevel(level, scaleFactor, succHook, failHook);
+        }
     }
 }
 
@@ -90,9 +139,11 @@ function loadGameFromFile(file, scaleFactor=null, succHook=null, failHook=null) 
         var level = JSON.parse(ev.target.result);
         loadGameFromRawLevel(level, scaleFactor, succHook, failHook);
     });
-    reader.addEventListener('error', function(ev) {
-        failHook('failed to read ' + file.name + '.')
-    });
+    if(failHook !== null) {
+        reader.addEventListener('error', function(ev) {
+            failHook('failed to read ' + file.name + '.')
+        });
+    }
     reader.readAsText(file);
 }
 

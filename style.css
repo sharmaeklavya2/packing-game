@@ -238,11 +238,15 @@ body {
     display: flex;
     align-items: baseline;
 }
-.input-pair > input {
-    margin: 0;
+.input-pair > input[type="radio"] {
+    margin: 0 0.5rem 0 0;
+}
+.input-pair > input[type="text"] {
+    margin: 0 0 0 0.5rem;
+    flex-grow: 1;
 }
 .input-pair > label {
-    padding-left: 0.5rem;
+    flex-grow: 0;
 }
 #ng-submit {
     margin: 0.25rem 0 0.5rem 0;
@@ -252,6 +256,12 @@ body {
 }
 #ng-submit:not([disabled]) {
     cursor: pointer;
+}
+#ng-form-gen-params-wrapper.disabled {
+    display: none;
+}
+#ng-form-gen-params {
+    padding-left: 1rem;
 }
 #solve-menu.enabled {
     margin: 0;

@@ -175,14 +175,6 @@ function arraysEqual(a, b) {
     return true;
 }
 
-function addDefault(d, defaultValues) {
-    for(let [k, v] of Object.entries(defaultValues)) {
-        if(d[k] === undefined) {
-            d[k] = v;
-        }
-    }
-}
-
 function dictAssertAccess(d, key, name) {
     if(d.hasOwnProperty(key)) {
         return d[key];
@@ -281,7 +273,7 @@ function serializeItemInfo(itemInfo) {
 
 function processLevel(j) {
     var reqProps = ['binXLen', 'binYLen', 'items'];
-    var optProps = {'gameType': 'bp', 'startPos': [], 'rotation': false,
+    var optProps = {'gameType': 'bp', 'startPos': [],
         'lower_bound': null, 'upper_bound': null, 'solutions': {}};
     var o = readObjectPropsWithAssert(j, reqProps, optProps);
     var items = [];
@@ -311,7 +303,7 @@ function processLevel(j) {
         o.upper_bound = o.computed_ub;
     }
     if(o.lower_bound === null) {
-        o.lower_bound = bpLowerBound(items, o.binXLen, o.binYLen, o.rotation);
+        o.lower_bound = bpLowerBound(items, o.binXLen, o.binYLen);
     }
     return o;
 }
@@ -322,8 +314,8 @@ function serItemsEqual(a, b) {
 }
 
 function serializeLevel(level, pos=null) {
-    var o = {"binXLen": level.binXLen, "binYLen": level.binYLen, "gameType": level.gameType,
-        "rotation": level.rotation, "solutions": level.solutions,
+    var o = {"binXLen": level.binXLen, "binYLen": level.binYLen,
+        "gameType": level.gameType, "solutions": level.solutions,
         "lower_bound": level.lower_bound, "upper_bound": level.upper_bound};
     if(pos !== null && pos.length > 0) {o['startPos'] = pos;}
 
