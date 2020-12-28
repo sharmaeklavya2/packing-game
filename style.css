@@ -164,12 +164,8 @@ body {
 #nav {
     list-style: none;
     padding: 0;
-    margin-top: 0;
-    margin-bottom: 0;
-    margin-left: auto;
-    margin-right: auto;
+    margin: 0;
     display: flex;
-    top: 0;
     flex-wrap: wrap;
     align-self: center;
 }
