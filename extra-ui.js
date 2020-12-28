@@ -3,8 +3,12 @@
 var newGameButton = document.getElementById('new-game-button');
 var undoButton = document.getElementById('undo-button');
 var saveGameButton = document.getElementById('save-game-button');
+var solveButton = document.getElementById('solve-button');
 var aboutButton = document.getElementById('about-button');
 var ngForm = document.getElementById('ng-form');
+var solveMenu = document.getElementById('solve-menu');
+var solveList = document.getElementById('solve-list');
+var unpackButton = document.getElementById('unpack');
 var msgList = document.getElementById('msg-list');
 
 var aboutText = "This is a 2D geometric bin-packing game. You have to pack all items from "
@@ -41,6 +45,42 @@ function ngFormSubmitHandler(ev) {
     }
 }
 
+function solveSuccess() {
+    solveMenu.classList.add('disabled');
+    solveMenu.classList.remove('enabled');
+    solveButton.classList.remove('pressed');
+}
+
+function solveClickHandler(ev) {
+    ev.preventDefault();
+    var algoName = ev.target.innerHTML;
+    globalGame.selectSolution(algoName);
+    solveSuccess();
+}
+
+function repopulateSolveMenu() {
+    var solutions = globalGame.level.solutions;
+    var keys = new Set();
+    for(let key of Object.keys(solutions)) {
+        if(solutions.hasOwnProperty(key)) {
+            keys.add(key);
+        }
+    }
+    for(let key of Object.keys(bpAlgos)) {
+        if(bpAlgos.hasOwnProperty(key)) {
+            keys.add(key);
+        }
+    }
+
+    solveList.innerHTML = '';
+    for(let key of keys) {
+        var liElem = document.createElement('li');
+        liElem.innerHTML = key;
+        liElem.addEventListener('click', solveClickHandler);
+        solveList.appendChild(liElem);
+    }
+}
+
 function addExtraUIEventListeners() {
     undoButton.addEventListener('click', function(ev) {
             if(globalGame !== null) {globalGame.undo();}
@@ -58,6 +98,15 @@ function addExtraUIEventListeners() {
             newGameButton.classList.toggle('pressed');
         });
     ngForm.addEventListener('submit', ngFormSubmitHandler);
+    solveButton.addEventListener('click', function(ev) {
+            solveMenu.classList.toggle('disabled');
+            solveMenu.classList.toggle('enabled');
+            solveButton.classList.toggle('pressed');
+        });
+    unpackButton.addEventListener('click', function(ev) {
+            globalGame.putBack();
+            solveSuccess();
+        });
 }
 
 function disableUndoButton() {

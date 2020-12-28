@@ -608,6 +608,8 @@ class Game {
         // create bins and position items
         this.bins = [];
         this._createBinsAndPositionItems(this.level.startPos);
+
+        repopulateSolveMenu();
     }
 
     _assessBins() {
@@ -793,6 +795,15 @@ class Game {
         if(this.history.length === 0) {
             disableUndoButton();
         }
+    }
+
+    selectSolution(algoName) {
+        var solutions = this.level.solutions;
+        if(solutions[algoName] === undefined || solutions[algoName] === null) {
+            solutions[algoName] = bpAlgos[algoName](this.level.items, this.level.binXLen,
+                this.level.binYLen, []);
+        }
+        this.putBack(solutions[algoName]);
     }
 
     _destroyItems() {

@@ -18,16 +18,20 @@
         <svg class="icon" id="save-icon"><title>Save game</title>
             <use xlink:href="sprites.svg#fa-save"/></svg>
     </li>
+    <li id="solve-button" class="enabled" title="Show solutions">&#9654;</li>
+    <!--
     <li id="export-img-button" class="disabled" title="Export as image">
         <svg class="icon" id="export-img-icon"><title>Export as image</title>
             <use xlink:href="sprites.svg#fa-file-image"/></svg>
     </li>
+    -->
     <li id="about-button" class="enabled" title="About">?</li>
 </ul>
 <div id="arena-wrapper">
     <div id="pre-arena">
-        <form id="ng-form" class="disabled">
-            <div>
+        <form id="ng-form" class="menu disabled">
+            <div class="heading">Load a new game</div>
+            <div class="options">
                 <div>
                     <input type="radio" id="ng-radio-upload" name="ng-choice" value="upload:" />
                     <label for="ng-radio-upload">Choose file on disk</label>
@@ -49,8 +53,12 @@
             </div>
             <button id="ng-submit" type="submit">Submit</button>
         </form>
-        <ul id="msg-list">
-        </ul>
+        <div id="solve-menu" class="menu disabled">
+            <div class="heading">Auto-pack</div>
+            <div id="unpack">clear</div>
+            <ul id="solve-list"></ul>
+        </div>
+        <ul id="msg-list"></ul>
     </div>
     <div id="arena">
         <div id="hover-rect"></div>
