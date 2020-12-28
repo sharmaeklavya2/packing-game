@@ -565,9 +565,13 @@ class Game {
         for(var item of inputItems) {
             maxXLen = Math.max(maxXLen, item.xLen);
         }
-        var invXLen = Math.max(maxXLen, this.level.binXLen);
-        let [invYLen, nextFitSol] = nfdhStrip(inputItems, invXLen);
-        this.nextFitSol = nextFitSol;
+        const origInvXLen = Math.max(maxXLen, this.level.binXLen);
+        this.stripPackSol = nfdhStripPack(inputItems, origInvXLen, []);
+        var invXLen = 0, invYLen = 0;
+        for(var i=0; i < inputItems.length; ++i) {
+            invXLen = Math.max(invXLen, this.stripPackSol[i][0] + inputItems[i].xLen);
+            invYLen = Math.max(invYLen, this.stripPackSol[i][1] + inputItems[i].yLen);
+        }
 
         if(scaleFactor === null) {
             // infer scaleFactor from arenaWrapper's dims
@@ -686,8 +690,8 @@ class Game {
             if(firstTime) {
                 inventory.appendChild(item.domElem);
             }
-            setPos(item.domElem, xOff + this.nextFitSol[i][0] * this.scaleFactor,
-                yOff + this.nextFitSol[i][1] * this.scaleFactor);
+            setPos(item.domElem, xOff + this.stripPackSol[i][0] * this.scaleFactor,
+                yOff + this.stripPackSol[i][1] * this.scaleFactor);
             this.yAgg += item.itemInfo.yLen;
         }
     }
@@ -697,8 +701,8 @@ class Game {
         var yOff = inventory.getBoundingClientRect().y - arena.getBoundingClientRect().y;
         var item = this.items[itemId];
         item.detach();
-        setPos(item.domElem, xOff + this.nextFitSol[itemId][0] * this.scaleFactor,
-            yOff + this.nextFitSol[itemId][1] * this.scaleFactor);
+        setPos(item.domElem, xOff + this.stripPackSol[itemId][0] * this.scaleFactor,
+            yOff + this.stripPackSol[itemId][1] * this.scaleFactor);
     }
 
     _createBinsAndPositionItems(pos) {
@@ -808,7 +812,7 @@ class Game {
         this.stats.destroy();
         this.itemInfoBar.destroy();
         this.level = null;
-        this.nextFitSol = null;
+        this.stripPackSol = null;
         inventory.style.backgroundSize = null;
     }
 }

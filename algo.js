@@ -1,78 +1,84 @@
 'use strict';
 
-function nextFitStrip(items, stripXLen) {
+class Shelf {
+    constructor(id, xLen) {
+        this.id = id;
+        this.free = xLen;
+        this.items = [];
+        this.size = 0;
+    }
+
+    add(item) {
+        if(item.xLen <= this.free) {
+            this.size = Math.max(this.size, item.yLen);
+            this.free -= item.xLen;
+            this.items.push(item);
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+}
+
+function nextFitShelfPack(items, xLen) {
     if(items.length == 0) {
-        return [0, []];
+        return [];
     }
-    var sol = [[0, 0]];
-    var maxY = items[0].yLen;
-    var xSum = items[0].xLen, ySum = 0;
-    for(var i=1; i<items.length; ++i) {
+    var shelfId = 0;
+    var shelf = new Shelf(0, xLen);
+    var shelves = [shelf];
+    for(var i=0; i < items.length; ++i) {
         var item = items[i];
-        if(item.xLen <= stripXLen - xSum) {
-            sol.push([xSum, ySum]);
-            xSum += item.xLen;
-            maxY = Math.max(maxY, item.yLen);
-        }
-        else {
-            ySum += maxY;
-            sol.push([0, ySum]);
-            maxY = item.yLen;
-            xSum = item.xLen;
+        if(!shelf.add(item)) {
+            shelf = new Shelf(++shelfId, xLen);
+            shelves.push(shelf);
+            shelf.add(item);
         }
     }
-    ySum += maxY;
-    return [ySum, sol];
+    return shelves;
 }
 
-function keyFuncToCompareFunc(keyFunc) {
-    return function(x, y) {
-        let xKey = keyFunc(x), yKey = keyFunc(y);
-        if(xKey < yKey) {
-            return -1;
-        }
-        else if(xKey > yKey) {
-            return 1;
-        }
-        else {
-            return 0;
-        }
-    };
-}
-
-function sortMaps(a, compareFunc) {
-// returns (pi, piinv, sorted(a)) such that a[pi] = sorted(a)
-    var b = [], n = a.length;
-    for(var i=0; i<n; ++i) {
-        b.push([i, a[i]]);
+function RectComparator(item1, item2) {
+    if(item1.yLen < item2.yLen) {
+        return 1;
     }
-    b.sort(function(x, y) {
-        return compareFunc(x[1], y[1]);
-    });
-    var pi = [], sortedA = [], piinv = Array(n);
-    for(var i=0; i<n; ++i) {
-        pi.push(b[i][0]);
-        sortedA.push(b[i][1]);
-        piinv[b[i][0]] = i;
+    else if(item1.yLen > item2.yLen) {
+        return -1;
     }
-    b.length = 0;
-    return [pi, piinv, sortedA];
+    else if(item1.xLen < item2.xLen) {
+        return 1;
+    }
+    else if(item1.xLen > item2.xLen) {
+        return -1;
+    }
+    else {
+        return 0;
+    }
 }
 
-function applyIndexMap(a, pi) {
-    var b = [], n = a.length;
-    for(var i=0; i<n; ++i) {
-        b.push(a[pi[i]]);
-    }
-    return b;
+function nfdhShelfPack(items, xLen) {
+    var sortedItems = [...items].sort(RectComparator);
+    return nextFitShelfPack(sortedItems, xLen);
 }
 
-function nfdhStrip(items, stripXLen) {
-    var compareFunc = keyFuncToCompareFunc(function(x) {return -x.yLen;});
-    let [pi, piinv, itemsSorted] = sortMaps(items, compareFunc);
-    let [ySum, solSorted] = nextFitStrip(itemsSorted, stripXLen);
-    var sol = applyIndexMap(solSorted, piinv);
-    return [ySum, sol];
+function packShelvesIntoStrip(shelves, stripXLen, output) {
+    let yAgg=0;
+    for(var i=0; i < shelves.length; ++i) {
+        let items = shelves[i].items;
+        let xAgg = 0;
+        for(var j=0; j < items.length; ++j) {
+            output[items[j].id] = [xAgg, yAgg];
+            xAgg += items[j].xLen;
+        }
+        yAgg += shelves[i].size;
+    }
+    return output;
+}
+
+function nfdhStripPack(items, stripXLen, output) {
+    var shelves = nfdhShelfPack(items, stripXLen);
+    return packShelvesIntoStrip(shelves, stripXLen, output);
 }
 
 function bpBounds(items, binXLen, binYLen, rotation) {
