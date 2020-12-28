@@ -92,15 +92,21 @@ function addExtraUIEventListeners() {
             window.alert(aboutText);
         });
     newGameButton.addEventListener('click', function(ev) {
+            solveMenu.classList.add('disabled');
+            solveMenu.classList.remove('enabled');
             ngForm.classList.toggle('disabled');
             ngForm.classList.toggle('enabled');
             ngForm.classList.remove('loading');
+            solveButton.classList.remove('pressed');
             newGameButton.classList.toggle('pressed');
         });
     ngForm.addEventListener('submit', ngFormSubmitHandler);
     solveButton.addEventListener('click', function(ev) {
+            ngForm.classList.add('disabled');
+            ngForm.classList.remove('enabled');
             solveMenu.classList.toggle('disabled');
             solveMenu.classList.toggle('enabled');
+            newGameButton.classList.remove('pressed');
             solveButton.classList.toggle('pressed');
         });
     unpackButton.addEventListener('click', function(ev) {

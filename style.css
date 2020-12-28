@@ -145,8 +145,18 @@ body {
     display: none;
 }
 
-/* nav */
+/* controls */
 
+#controls {
+    display: flex;
+    flex-direction: column;
+    margin-top: calc(-4rem - 32px);
+    margin-bottom: 32px;
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+}
 .icon {
     max-height: 2.5rem;
     max-width: 2.5rem;
@@ -159,9 +169,7 @@ body {
     margin-left: auto;
     margin-right: auto;
     display: flex;
-    position: fixed;
     top: 0;
-    z-index: 40;
     flex-wrap: wrap;
     align-self: center;
 }
@@ -201,13 +209,7 @@ body {
     font-size: 2.25rem;
 }
 
-#pre-arena {
-    margin-top: -32px;
-    margin-bottom: 32px;
-    display: flex;
-    flex-direction: column;
-}
-#pre-arena .heading {
+#controls .heading {
     font-size: 1.2em;
     padding: 0.3rem 1rem;
     border-bottom: 1px solid rgba(128, 128, 128, 0.5);

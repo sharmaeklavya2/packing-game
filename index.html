@@ -8,27 +8,27 @@
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<ul id="nav">
-    <li id="new-game-button" class="enabled" title="New game">+</li>
-    <li id="undo-button" class="disabled" title="Undo">
-        <svg class="icon" id="undo-icon"><title>Undo</title>
-            <use xlink:href="sprites.svg#fa-undo"/></svg>
-    </li>
-    <li id="save-game-button" class="enabled" title="Save game">
-        <svg class="icon" id="save-icon"><title>Save game</title>
-            <use xlink:href="sprites.svg#fa-save"/></svg>
-    </li>
-    <li id="solve-button" class="enabled" title="Show solutions">&#9654;</li>
-    <!--
-    <li id="export-img-button" class="disabled" title="Export as image">
-        <svg class="icon" id="export-img-icon"><title>Export as image</title>
-            <use xlink:href="sprites.svg#fa-file-image"/></svg>
-    </li>
-    -->
-    <li id="about-button" class="enabled" title="About">?</li>
-</ul>
 <div id="arena-wrapper">
-    <div id="pre-arena">
+    <div id="controls">
+        <ul id="nav">
+            <li id="new-game-button" class="enabled" title="New game">+</li>
+            <li id="undo-button" class="disabled" title="Undo">
+                <svg class="icon" id="undo-icon"><title>Undo</title>
+                    <use xlink:href="sprites.svg#fa-undo"/></svg>
+            </li>
+            <li id="save-game-button" class="enabled" title="Save game">
+                <svg class="icon" id="save-icon"><title>Save game</title>
+                    <use xlink:href="sprites.svg#fa-save"/></svg>
+            </li>
+            <li id="solve-button" class="enabled" title="Show solutions">&#9654;</li>
+            <!--
+            <li id="export-img-button" class="disabled" title="Export as image">
+                <svg class="icon" id="export-img-icon"><title>Export as image</title>
+                    <use xlink:href="sprites.svg#fa-file-image"/></svg>
+            </li>
+            -->
+            <li id="about-button" class="enabled" title="About">?</li>
+        </ul>
         <form id="ng-form" class="menu disabled">
             <div class="heading">Load a new game</div>
             <div class="options">
