@@ -2,20 +2,35 @@
 
 var undoButton = document.getElementById('undo-button');
 var ngForm = document.getElementById('ng-form');
+var buttonToMenuMap = new Map([
+    ['new-game-button', 'ng-form'],
+    ['solve-button', 'solve-menu'],
+]);
+
+function toggleMenus(buttonId) {
+    for(const [buttonId2, menuId] of buttonToMenuMap.entries()) {
+        if(buttonId2 !== buttonId) {
+            document.getElementById(buttonId2).classList.remove('pressed');
+            document.getElementById(menuId).classList.add('disabled');
+        }
+        else {
+            document.getElementById(buttonId).classList.toggle('pressed');
+            document.getElementById(menuId).classList.toggle('disabled');
+        }
+    }
+}
 
 var aboutText = "This is a 2D geometric bin-packing game. You have to pack all items from "
     + "the left side into the minimum number of bins on the right side.";
 
-function ngFormSuccess() {
-    ngForm.classList.add('disabled');
-    ngForm.classList.remove('enabled');
-    ngForm.classList.remove('loading');
-    var newGameButton = document.getElementById('new-game-button');
-    newGameButton.classList.remove('pressed');
+function getPersistentHeaderHeight() {
+    return document.getElementById('main-toolbar').getBoundingClientRect().height;
 }
 
-function getPersistentHeaderHeight() {
-    return document.getElementById('toolbar').getBoundingClientRect().height;
+function ngFormSuccess() {
+    ngForm.classList.add('disabled');
+    ngForm.classList.remove('loading');
+    document.getElementById('new-game-button').classList.remove('pressed');
 }
 
 function ngFormCheckHandler(ev) {
@@ -94,11 +109,8 @@ function ngFormSubmitHandler(ev) {
 }
 
 function solveSuccess() {
-    var solveMenu = document.getElementById('solve-menu');
-    solveMenu.classList.add('disabled');
-    solveMenu.classList.remove('enabled');
-    var solveButton = document.getElementById('solve-button');
-    solveButton.classList.remove('pressed');
+    document.getElementById('solve-menu').classList.add('disabled');
+    document.getElementById('solve-button').classList.remove('pressed');
 }
 
 function solveClickHandler(ev) {
@@ -171,53 +183,38 @@ function populateNgForm() {
         document.getElementById('ng-form-gens').appendChild(div);
     }
 }
-populateNgForm();
 
 function addExtraUIEventListeners() {
+    document.getElementById('new-game-button').addEventListener('click', function(ev) {
+            toggleMenus('new-game-button');
+            ngForm.classList.remove('loading');
+        });
     undoButton.addEventListener('click', function(ev) {
             if(game !== null) {game.undo();}
         });
     document.getElementById('save-game-button').addEventListener('click', function(ev) {
             if(game !== null) {downloadProgress();}
         });
-    document.getElementById('about-button').addEventListener('click', function(ev) {
-            window.alert(aboutText);
-        });
-    var newGameButton = document.getElementById('new-game-button');
-    var solveButton = document.getElementById('solve-button');
-    var solveMenu = document.getElementById('solve-menu');
-    newGameButton.addEventListener('click', function(ev) {
-            solveMenu.classList.add('disabled');
-            solveMenu.classList.remove('enabled');
-            ngForm.classList.toggle('disabled');
-            ngForm.classList.toggle('enabled');
-            ngForm.classList.remove('loading');
-            solveButton.classList.remove('pressed');
-            newGameButton.classList.toggle('pressed');
-        });
-    ngForm.addEventListener('submit', ngFormSubmitHandler);
-    ngForm.addEventListener('change', ngFormCheckHandler);
-    ngForm.addEventListener('input', ngFormCheckHandler);
-    solveButton.addEventListener('click', function(ev) {
-            ngForm.classList.add('disabled');
-            ngForm.classList.remove('enabled');
-            solveMenu.classList.toggle('disabled');
-            solveMenu.classList.toggle('enabled');
-            newGameButton.classList.remove('pressed');
-            solveButton.classList.toggle('pressed');
-        });
     document.getElementById('unpack-button').addEventListener('click', function(ev) {
             game.putBack();
         });
+    document.getElementById('solve-button').addEventListener('click', function(ev) {
+            toggleMenus('solve-button');
+        });
+    document.getElementById('about-button').addEventListener('click', function(ev) {
+            window.alert(aboutText);
+        });
+
+    ngForm.addEventListener('submit', ngFormSubmitHandler);
+    ngForm.addEventListener('change', ngFormCheckHandler);
+    ngForm.addEventListener('input', ngFormCheckHandler);
 }
 
 function disableUndoButton() {
     undoButton.classList.add('disabled');
-    undoButton.classList.remove('enabled');
 }
 function enableUndoButton() {
     undoButton.classList.remove('disabled');
-    undoButton.classList.add('enabled');
 }
 
 function closeBtnClickHandler(ev) {

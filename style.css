@@ -157,7 +157,7 @@ header {
     max-height: 1.75rem;
     max-width: 1.75rem;
 }
-#toolbar {
+.toolbar {
     list-style: none;
     padding: 0;
     margin: 0;
@@ -165,7 +165,7 @@ header {
     flex-wrap: wrap;
     align-self: center;
 }
-#toolbar > li {
+.toolbar > li {
     display: flex;
     align-items: center;
     justify-content: space-around;
@@ -178,26 +178,26 @@ header {
     border-left: 1px solid black;
     border-bottom: 1px solid black;
 }
-#toolbar > li.enabled {
+.toolbar > li:not(.disabled) {
     cursor: pointer;
 }
-#toolbar > li.disabled {
+.toolbar > li.disabled {
     color: gray;
     fill: gray;
 }
-#toolbar > li.enabled:hover, #toolbar > li.enabled.pressed {
+.toolbar > li:not(.disabled):hover, .toolbar > li:not(.disabled).pressed {
     background-color: rgba(128, 128, 128, 0.6);
 }
-#toolbar > li.enabled:active, #toolbar > li.enabled.pressed:hover {
+.toolbar > li:not(.disabled):active, .toolbar > li:not(.disabled).pressed:hover {
     background-color: rgba(128, 128, 128, 0.8);
 }
-#toolbar > li.enabled.pressed:active {
+.toolbar > li:not(.disabled).pressed:active {
     background-color: rgba(128, 128, 128, 1);
 }
-#toolbar > li:last-child {
+.toolbar > li:last-child {
     border-right: 1px solid black;
 }
-#toolbar > li#solve-button {
+#main-toolbar > li#solve-button {
     font-size: 1.5rem;
 }
 
@@ -209,10 +209,10 @@ header .heading {
     display: flex;
     justify-content: space-around;
 }
-.menu.disabled {
+.menu.disabled, .toolbar.disabled {
     display: none;
 }
-.menu.enabled {
+.menu:not(.disabled) {
     background-color: rgba(128, 128, 128, 0.4);
     border-radius: 0.5rem;
     display: flex;
@@ -220,7 +220,7 @@ header .heading {
     align-self: center;
     align-items: stretch;
 }
-.menu.enabled.loading {
+.menu:not(.disabled).loading {
     background-color: rgba(128, 128, 128, 0.8);
     opacity: 0.5;
 }
@@ -259,7 +259,7 @@ header .heading {
 #ng-form-gen-params {
     padding-left: 1rem;
 }
-#solve-menu.enabled {
+#solve-menu:not(.disabled) {
     margin: 0;
     display: flex;
     flex-direction: column;

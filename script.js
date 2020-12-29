@@ -1126,5 +1126,6 @@ function addEventListeners() {
 window.addEventListener('load', function() {
     addEventListeners();
     loadGameFromQParams(getQParams());
+    populateNgForm();
     addExtraUIEventListeners();
 });
