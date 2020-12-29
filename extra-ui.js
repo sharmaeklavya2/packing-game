@@ -5,6 +5,7 @@ var ngForm = document.getElementById('ng-form');
 var buttonToMenuMap = new Map([
     ['new-game-button', 'ng-form'],
     ['solve-button', 'solve-menu'],
+    ['zoom-button', 'zoom-toolbar'],
 ]);
 
 function toggleMenus(buttonId) {
@@ -192,6 +193,9 @@ function addExtraUIEventListeners() {
     undoButton.addEventListener('click', function(ev) {
             if(game !== null) {game.undo();}
         });
+    document.getElementById('zoom-button').addEventListener('click', function(ev) {
+            toggleMenus('zoom-button');
+        });
     document.getElementById('save-game-button').addEventListener('click', function(ev) {
             if(game !== null) {downloadProgress();}
         });
@@ -208,6 +212,19 @@ function addExtraUIEventListeners() {
     ngForm.addEventListener('submit', ngFormSubmitHandler);
     ngForm.addEventListener('change', ngFormCheckHandler);
     ngForm.addEventListener('input', ngFormCheckHandler);
+
+    document.getElementById('zoom-in-button').addEventListener('click', function(ev) {
+            game.resize(game.scaleFactor * 1.1);
+        });
+    document.getElementById('zoom-out-button').addEventListener('click', function(ev) {
+            game.resize(game.scaleFactor / 1.1);
+        });
+    document.getElementById('zoom-x-button').addEventListener('click', function(ev) {
+            game.resize('x');
+        });
+    document.getElementById('zoom-y-button').addEventListener('click', function(ev) {
+            game.resize('y');
+        });
 }
 
 function disableUndoButton() {
