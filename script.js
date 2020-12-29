@@ -349,26 +349,32 @@ function setPos(domElem, xPos, yPos) {
 }
 
 class ItemUI {
-    constructor(itemInfo, id, scaleFactor) {
+    constructor(itemInfo, scaleFactor) {
         this.itemInfo = itemInfo;
         this.xPos = null;
         this.yPos = null;
         this.binUI = null;
-        this.scaleFactor = scaleFactor;
 
         // DOM
-        var elem = document.createElement('div');
-        elem.classList.add('item');
-        elem.setAttribute('data-item-id', this.itemInfo.id);
-        elem.style.width = this.scaleFactor * this.itemInfo.xLen + 'px';
-        elem.style.height = this.scaleFactor * this.itemInfo.yLen + 'px';
+        this.domElem = document.createElement('div');
+        this.domElem.classList.add('item');
+        this.domElem.setAttribute('data-item-id', this.itemInfo.id);
         if(itemInfo.color !== null) {
-            elem.style.backgroundColor = itemInfo.color;
+            this.domElem.style.backgroundColor = itemInfo.color;
         }
         else {
-            elem.style.backgroundColor = defaultItemColor;
+            this.domElem.style.backgroundColor = defaultItemColor;
         }
-        this.domElem = elem;
+        this.resize(scaleFactor);
+    }
+
+    resize(scaleFactor) {
+        this.scaleFactor = scaleFactor;
+        this.domElem.style.width = scaleFactor * this.itemInfo.xLen + 'px';
+        this.domElem.style.height = scaleFactor * this.itemInfo.yLen + 'px';
+        if(this.binUI !== null) {
+            setPos(this.domElem, scaleFactor * this.xPos, scaleFactor * this.yPos);
+        }
     }
 
     coords() {
@@ -422,16 +428,20 @@ class BinUI {
             this.bin = new Bin(xLen, yLen);
         }
         this.id = id;
-        this.scaleFactor = scaleFactor;
 
-        var elem = document.createElement('div');
-        elem.classList.add('bin');
-        elem.setAttribute('data-bin-id', this.id);
-        elem.style.width = this.bin.xLen * this.scaleFactor + 'px';
-        elem.style.height = this.bin.yLen * this.scaleFactor + 'px';
-        elem.style.backgroundSize = this.scaleFactor + 'px ' + this.scaleFactor + 'px';
-        this.domElem = elem;
+        this.domElem = document.createElement('div');
+        this.domElem.classList.add('bin');
+        this.domElem.setAttribute('data-bin-id', this.id);
+        this.resize(scaleFactor);
     }
+
+    resize(scaleFactor) {
+        // this.scaleFactor = scaleFactor;
+        this.domElem.style.width = this.bin.xLen * scaleFactor + 'px';
+        this.domElem.style.height = this.bin.yLen * scaleFactor + 'px';
+        this.domElem.style.backgroundSize = scaleFactor + 'px ' + scaleFactor + 'px';
+    }
+
     destroy() {
         if(this.bin.isEmpty()) {
             packingArea.removeChild(this.domElem);
@@ -548,82 +558,34 @@ class Stats {
     }
 }
 
+function inferScaleFactors(invXLen, invYLen, binXLen, binYLen, nBins=1) {
+    nBins = Math.max(1, nBins);
+    const arenaX = arenaWrapper.getBoundingClientRect().width;
+    const arenaY = arenaWrapper.getBoundingClientRect().height;
+    const scaleX = (arenaX - 4 * uiMargin) / (invXLen + binXLen);
+    const scaleY1 = (arenaY - 2 * uiMargin) / invYLen;
+    const scaleY2 = (arenaY - uiMargin * (nBins + 1)) / (nBins * binYLen);
+    console.debug("inferred scales:", scaleX, scaleY1, scaleY2);
+    return [scaleX, Math.min(scaleY1, scaleY2)];
+}
+
 class Game {
+
     constructor(level, scaleFactor=null) {
         globalGame = this;
         this.level = level;
+        this._computeInventoryDimsAndItemHomePositions();
         this.stats = new Stats(this.level.gameType, this.level.items,
             this.level.lower_bound, this.level.upper_bound);
         this.itemInfoBar = new ItemInfoBar(this.level.gameType);
         this.history = [];
-
-        // get inventory's dimensions
-        var maxXLen = 0;
-        var inputItems = this.level.items;
-        for(var item of inputItems) {
-            maxXLen = Math.max(maxXLen, item.xLen);
-        }
-        const origInvXLen = Math.max(maxXLen, this.level.binXLen);
-        this.stripPackSol = nfdhStripPack(inputItems, origInvXLen, []);
-        let [invXLen, invYLen] = getStripDims(inputItems, this.stripPackSol);
-
-        if(scaleFactor === null) {
-            // infer scaleFactor from arenaWrapper's dims
-            var arenaX = arenaWrapper.getBoundingClientRect().width;
-            var arenaY = arenaWrapper.getBoundingClientRect().height;
-            var scaleX = (arenaX - 4 * uiMargin) / (invXLen + this.level.binXLen);
-            var scaleY = (arenaY - 2 * uiMargin) / invYLen;
-            console.debug("inferred scale:", scaleX, scaleY);
-            this.scaleFactor = Math.min(scaleX, scaleY);
-        }
-        else {
-            this.scaleFactor = scaleFactor;
-            var expectedArenaX = (invXLen + this.level.binXLen) * this.scaleFactor + 4 * uiMargin;
-            var arenaWrapperX = arenaWrapper.getBoundingClientRect().width;
-            if(expectedArenaX >= arenaWrapperX) {
-                arena.classList.add('large');
-            }
-        }
-
-        // set inventory's dimensions
-        this._setInventoryDims(invXLen, invYLen);
-        inventory.style.backgroundSize = this.scaleFactor + 'px ' + this.scaleFactor + 'px';
-
-        // create items
-        this.items = [];
-        for(var i=0; i < inputItems.length; ++i) {
-            var itemUI = new ItemUI(inputItems[i], i, this.scaleFactor);
-            this.items.push(itemUI);
-        }
-        this._moveItemsToInventory(true);
-
-        // create bins and position items
         this.bins = [];
-        this._createBinsAndPositionItems(this.level.startPos);
+        this.items = [];
 
+        this._setScaleFactor(scaleFactor);
+        this._createItems();
+        this._createBinsAndPackItems(this.level.startPos);
         repopulateSolveMenu();
-    }
-
-    _assessBins() {
-        var lb = this.level.lower_bound, ub = this.level.upper_bound;
-        var used = 0;
-        for(var i=0; i<this.bins.length; ++i) {
-            var bin = this.bins[i];
-            if(!bin.bin.isEmpty()) {
-                used += 1
-                var binType = 'good';
-                if(used > ub) {
-                    binType = 'danger';
-                }
-                else if(used > lb) {
-                    binType = 'warning';
-                }
-                bin.domElem.setAttribute('data-bin-type', binType);
-            }
-            else {
-                bin.domElem.removeAttribute('data-bin-type', binType);
-            }
-        }
     }
 
     getItemPositions() {
@@ -643,6 +605,17 @@ class Game {
         return pos;
     }
 
+    putBack(pos=null) {
+        this._moveItemsToInventory(false);
+        this._destroyBins();
+        this.history = [];
+        disableUndoButton();
+        if(pos === null) {
+            pos = [];
+        }
+        this._createBinsAndPackItems(pos);
+    }
+
     addBins(nBin) {
         for(var i=0; i<nBin; ++i) {
             var bin = new BinUI(this.level.binXLen, this.level.binYLen, false,
@@ -650,13 +623,6 @@ class Game {
             this.bins.push(bin);
             packingArea.appendChild(bin.domElem);
         }
-    }
-
-    _setInventoryDims(xLen, yLen) {
-        this.invXLen = xLen;
-        this.invYLen = yLen;
-        inventory.style.width = xLen * this.scaleFactor + 'px';
-        inventory.style.height = yLen * this.scaleFactor + 'px';
     }
 
     trimBins(targetEmpty) {
@@ -672,78 +638,6 @@ class Game {
                 this.bins[nBins - i].destroy();
             }
             this.bins.length = nBins - nEmpty + targetEmpty;
-        }
-    }
-
-    _moveItemsToInventory(firstTime) {
-        var xOff = inventory.getBoundingClientRect().x - arena.getBoundingClientRect().x;
-        var yOff = inventory.getBoundingClientRect().y - arena.getBoundingClientRect().y;
-        this.yAgg = 0;
-        var n = this.items.length;
-        for(var i=0; i<n; ++i) {
-            var item = this.items[i];
-            item.detach();
-            if(firstTime) {
-                inventory.appendChild(item.domElem);
-            }
-            setPos(item.domElem, xOff + this.stripPackSol[i][0] * this.scaleFactor,
-                yOff + this.stripPackSol[i][1] * this.scaleFactor);
-            this.yAgg += item.itemInfo.yLen;
-        }
-    }
-
-    _moveItemToInventory(itemId) {
-        var xOff = inventory.getBoundingClientRect().x - arena.getBoundingClientRect().x;
-        var yOff = inventory.getBoundingClientRect().y - arena.getBoundingClientRect().y;
-        var item = this.items[itemId];
-        item.detach();
-        setPos(item.domElem, xOff + this.stripPackSol[itemId][0] * this.scaleFactor,
-            yOff + this.stripPackSol[itemId][1] * this.scaleFactor);
-    }
-
-    _createBinsAndPositionItems(pos) {
-        var binsNeeded = 1;
-        var inputItems = this.level.items;
-        for(var i=0; i < pos.length && i < inputItems.length; ++i) {
-            if(pos[i] !== null && pos[i] !== undefined) {
-                binsNeeded = Math.max(binsNeeded, pos[i][0] + 2);
-            }
-        }
-        this.addBins(binsNeeded);
-
-        // move items as per pos
-        for(var i=0; i < pos.length && i < inputItems.length; ++i) {
-            if(pos[i] !== null && pos[i] !== undefined) {
-                let [binId, xPos, yPos] = pos[i];
-                this.items[i].attach(this.bins[binId], xPos, yPos);
-            }
-        }
-    }
-
-    _destroyBins() {
-        for(var bin of this.bins) {
-            bin.destroy();
-        }
-        this.bins.length = 0;
-    }
-
-    putBack(pos=null) {
-        this._moveItemsToInventory(false);
-        this._destroyBins();
-        this.history = [];
-        disableUndoButton();
-        if(pos === null) {
-            pos = [];
-        }
-        this._createBinsAndPositionItems(pos);
-    }
-
-    _recordHistory(itemId, oldCoords, newCoords) {
-        if(!arraysEqual(oldCoords, newCoords)) {
-            this.history.push({'itemId': itemId, 'oldCoords': oldCoords, 'newCoords': newCoords});
-        }
-        if(this.history.length > 0) {
-            enableUndoButton();
         }
     }
 
@@ -798,19 +692,10 @@ class Game {
         this.putBack(solutions[algoName]);
     }
 
-    _destroyItems() {
-        this.yAgg = 0;
-        for(var item of this.items) {
-            item.detach();
-            inventory.removeChild(item.domElem);
-        }
-        this.items.length = 0;
-    }
-
     destroy() {
         this._destroyItems();
         this._destroyBins();
-        this._setInventoryDims(0, 0);
+        this._setInventoryDimsPx(0, 0);
         arena.classList.remove('large');
         this.history = [];
         disableUndoButton();
@@ -820,6 +705,151 @@ class Game {
         this.stripPackSol = null;
         inventory.style.backgroundSize = null;
     }
+
+    _assessBins() {
+        var lb = this.level.lower_bound, ub = this.level.upper_bound;
+        var used = 0;
+        for(var i=0; i<this.bins.length; ++i) {
+            var bin = this.bins[i];
+            if(!bin.bin.isEmpty()) {
+                used += 1
+                var binType = 'good';
+                if(used > ub) {
+                    binType = 'danger';
+                }
+                else if(used > lb) {
+                    binType = 'warning';
+                }
+                bin.domElem.setAttribute('data-bin-type', binType);
+            }
+            else {
+                bin.domElem.removeAttribute('data-bin-type', binType);
+            }
+        }
+    }
+
+    _recordHistory(itemId, oldCoords, newCoords) {
+        if(!arraysEqual(oldCoords, newCoords)) {
+            this.history.push({'itemId': itemId, 'oldCoords': oldCoords, 'newCoords': newCoords});
+        }
+        if(this.history.length > 0) {
+            enableUndoButton();
+        }
+    }
+
+    _computeInventoryDimsAndItemHomePositions() {
+        var maxXLen = 0;
+        var rawItems = this.level.items;
+        for(var item of rawItems) {
+            maxXLen = Math.max(maxXLen, item.xLen);
+        }
+        const origInvXLen = Math.max(maxXLen, this.level.binXLen);
+        this.stripPackSol = nfdhStripPack(rawItems, origInvXLen, []);
+        [this.invXLen, this.invYLen] = getStripDims(rawItems, this.stripPackSol);
+    }
+
+    _setScaleFactor(scaleFactor) {
+        let [inferredScaleX, inferredScaleY] = inferScaleFactors(
+            this.invXLen, this.invYLen, this.level.binXLen, this.level.binYLen,
+            this.level.lower_bound);
+        if(scaleFactor === 'x') {
+            this.scaleFactor = inferredScaleX;
+        }
+        else if(scaleFactor === 'y') {
+            this.scaleFactor = inferredScaleY;
+        }
+        else if(scaleFactor === null) {
+            this.scaleFactor = Math.min(inferredScaleX, inferredScaleY);
+        }
+        else {
+            this.scaleFactor = scaleFactor;
+        }
+        var expectedArenaX = (this.invXLen + this.level.binXLen) * this.scaleFactor + 4 * uiMargin;
+        var arenaWrapperX = arenaWrapper.getBoundingClientRect().width;
+        if(expectedArenaX >= arenaWrapperX) {
+            arena.classList.add('large');
+        }
+        else {
+            arena.classList.remove('large');
+        }
+        this._setInventoryDimsPx();
+    }
+
+    _setInventoryDimsPx() {
+        inventory.style.width = this.invXLen * this.scaleFactor + 'px';
+        inventory.style.height = this.invYLen * this.scaleFactor + 'px';
+        inventory.style.backgroundSize = this.scaleFactor + 'px ' + this.scaleFactor + 'px';
+    }
+
+    _createItems() {
+        var rawItems = this.level.items;
+        for(var i=0; i < rawItems.length; ++i) {
+            var itemUI = new ItemUI(rawItems[i], this.scaleFactor);
+            this.items.push(itemUI);
+        }
+        this._moveItemsToInventory(true);
+    }
+
+    _moveItemsToInventory(firstTime) {
+        var xOff = inventory.getBoundingClientRect().x - arena.getBoundingClientRect().x;
+        var yOff = inventory.getBoundingClientRect().y - arena.getBoundingClientRect().y;
+        this.yAgg = 0;
+        var n = this.items.length;
+        for(var i=0; i<n; ++i) {
+            var item = this.items[i];
+            item.detach();
+            if(firstTime) {
+                inventory.appendChild(item.domElem);
+            }
+            setPos(item.domElem, xOff + this.stripPackSol[i][0] * this.scaleFactor,
+                yOff + this.stripPackSol[i][1] * this.scaleFactor);
+            this.yAgg += item.itemInfo.yLen;
+        }
+    }
+
+    _moveItemToInventory(itemId) {
+        var xOff = inventory.getBoundingClientRect().x - arena.getBoundingClientRect().x;
+        var yOff = inventory.getBoundingClientRect().y - arena.getBoundingClientRect().y;
+        var item = this.items[itemId];
+        item.detach();
+        setPos(item.domElem, xOff + this.stripPackSol[itemId][0] * this.scaleFactor,
+            yOff + this.stripPackSol[itemId][1] * this.scaleFactor);
+    }
+
+    _createBinsAndPackItems(pos) {
+        var binsNeeded = 1;
+        var rawItems = this.level.items;
+        for(var i=0; i < pos.length && i < rawItems.length; ++i) {
+            if(pos[i] !== null && pos[i] !== undefined) {
+                binsNeeded = Math.max(binsNeeded, pos[i][0] + 2);
+            }
+        }
+        this.addBins(binsNeeded);
+
+        // move items as per pos
+        for(var i=0; i < pos.length && i < rawItems.length; ++i) {
+            if(pos[i] !== null && pos[i] !== undefined) {
+                let [binId, xPos, yPos] = pos[i];
+                this.items[i].attach(this.bins[binId], xPos, yPos);
+            }
+        }
+    }
+
+    _destroyBins() {
+        for(var bin of this.bins) {
+            bin.destroy();
+        }
+        this.bins.length = 0;
+    }
+
+    _destroyItems() {
+        this.yAgg = 0;
+        for(var item of this.items) {
+            item.detach();
+            inventory.removeChild(item.domElem);
+        }
+        this.items.length = 0;
+    }
 }
 
 function downloadProgress(filename='progress.json', cleanup=false) {
@@ -828,7 +858,7 @@ function downloadProgress(filename='progress.json', cleanup=false) {
     downloadBlob(blob, filename, cleanup);
 }
 
-function restartGame(newScaleFactor=null) {
+function redrawGame(newScaleFactor=null) {
     var level = globalGame.level;
     globalGame.destroy();
     globalGame = new Game(level, newScaleFactor);
@@ -924,25 +954,25 @@ function mousedownHandler(ev) {
     }
 }
 
-function getPos(ev, xLen, yLen, bin, binDomElem) {
+function getPos(ev, xLen, yLen, bin) {
     var dragData = DragData.get();
-    var binX = binDomElem.getBoundingClientRect().x;
-    var binY = binDomElem.getBoundingClientRect().y;
-    var xPos = (ev.clientX - binX - dragData.xOff) / bin.scaleFactor;
-    var yPos = (ev.clientY - binY - dragData.yOff) / bin.scaleFactor;
-    xPos = clip(Math.round(xPos), 0, bin.bin.xLen-xLen);
-    yPos = clip(Math.round(yPos), 0, bin.bin.yLen-yLen);
+    var binX = bin.domElem.getBoundingClientRect().x;
+    var binY = bin.domElem.getBoundingClientRect().y;
+    var xPos = (ev.clientX - binX - dragData.xOff) / globalGame.scaleFactor;
+    var yPos = (ev.clientY - binY - dragData.yOff) / globalGame.scaleFactor;
+    xPos = clip(Math.round(xPos), 0, bin.bin.xLen - xLen);
+    yPos = clip(Math.round(yPos), 0, bin.bin.yLen - yLen);
     return [xPos, yPos];
 }
 
-function moveHoverRect(bin, binDomElem, rect) {
+function moveHoverRect(bin, rect) {
     if((rect.xPos + rect.xLen > bin.bin.xLen) || (rect.yPos + rect.yLen > bin.bin.yLen)) {
         hoverRect.style.visibility = 'hidden';
     }
     else {
         setPos(hoverRect,
-            binDomElem.getBoundingClientRect().x + rect.xPos * bin.scaleFactor,
-            binDomElem.getBoundingClientRect().y + rect.yPos * bin.scaleFactor);
+            bin.domElem.getBoundingClientRect().x + rect.xPos * globalGame.scaleFactor,
+            bin.domElem.getBoundingClientRect().y + rect.yPos * globalGame.scaleFactor);
         hoverRect.style.visibility = 'visible';
     }
 }
@@ -981,10 +1011,9 @@ function mousemoveHandler(ev) {
         hoverRect.style.visibility = 'hidden';
     }
     else {
-        var binDomElem = bin.domElem;
-        let [xPos, yPos] = getPos(ev, item.itemInfo.xLen, item.itemInfo.yLen, bin, binDomElem);
+        let [xPos, yPos] = getPos(ev, item.itemInfo.xLen, item.itemInfo.yLen, bin);
         var newPosRect = new Rectangle(xPos, yPos, item.itemInfo.xLen, item.itemInfo.yLen);
-        moveHoverRect(bin, binDomElem, newPosRect);
+        moveHoverRect(bin, newPosRect);
         if(bin.bin.canFit(newPosRect)) {
             hoverRect.classList.add('success');
             hoverRect.classList.remove('failure');

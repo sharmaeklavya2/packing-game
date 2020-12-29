@@ -174,9 +174,16 @@ function loadGameFromQParams(q, succHook=null, failHook=null) {
     }
 
     var scaleFactor = null;
-    if(q.hasOwnProperty('scaleFactor')) {
-        scaleFactor = parseFloat(q.scaleFactor);
-        // check if scaleFactor is a valid float
+    if(q.hasOwnProperty('scaleFactor') && q.scaleFactor !== null && q.scaleFactor !== '') {
+        if(q.scaleFactor === 'x' || q.scaleFactor === 'y') {
+            scaleFactor = q.scaleFactor;
+        }
+        else {
+            scaleFactor = parseFloat(q.scaleFactor);
+            if(isNaN(scaleFactor) || scaleFactor <= 0) {
+                scaleFactor = null;
+            }
+        }
     }
     var srctype = dictAssertAccess(q, 'srctype', 'querystring');
 
