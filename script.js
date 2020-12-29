@@ -692,6 +692,20 @@ class Game {
         this.putBack(solutions[algoName]);
     }
 
+    resize(scaleFactor) {
+        this._setScaleFactor(scaleFactor);
+        for(let bin of this.bins) {
+            bin.resize(this.scaleFactor);
+        }
+        for(var i=0; i < this.items.length; ++i) {
+            let item = this.items[i];
+            item.resize(this.scaleFactor);
+            if(item.binUI === null) {
+                this._moveItemToInventory(i);
+            }
+        }
+    }
+
     destroy() {
         this._destroyItems();
         this._destroyBins();
@@ -856,12 +870,6 @@ function downloadProgress(filename='progress.json', cleanup=false) {
     var level = serializeLevel(globalGame.level, globalGame.getItemPositions());
     var blob = new Blob([JSON.stringify(level)], {type: 'application/json'});
     downloadBlob(blob, filename, cleanup);
-}
-
-function redrawGame(newScaleFactor=null) {
-    var level = globalGame.level;
-    globalGame.destroy();
-    globalGame = new Game(level, newScaleFactor);
 }
 
 function clearGame() {
