@@ -82,7 +82,7 @@ function applyToJsonResponse(url, hook, failHook) {
 
 function loadGameFromRawLevel(level, scaleFactor=null, succHook=null, failHook=null) {
     clearGame();
-    globalGame = new Game(processLevel(level), scaleFactor);
+    game = new Game(processLevel(level), scaleFactor);
     if(succHook !== null) {
         succHook();
     }
@@ -164,7 +164,7 @@ function loadGameFromUpload(scaleFactor=null, succHook=null, failHook=null) {
     uploadInfo['scaleFactor'] = scaleFactor;
     uploadInfo['succHook'] = succHook;
     uploadInfo['failHook'] = failHook;
-    levelLoaderElem.click();
+    document.getElementById('level-loader').click();
 }
 
 function loadGameFromQParams(q, succHook=null, failHook=null) {

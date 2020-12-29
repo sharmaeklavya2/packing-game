@@ -3,18 +3,13 @@
 var arenaWrapper = document.getElementById('arena-wrapper');
 var arena = document.getElementById('arena');
 var inventory = document.getElementById('inventory');
-var packingArea = document.getElementById('packing-area');
 var hoverRect = document.getElementById('hover-rect');
-var statsBar = document.getElementById('stats-bar');
-var itemInfoBar = document.getElementById('item-info-bar');
-var levelLoaderElem = document.getElementById('level-loader');
-var downloaderElem = document.getElementById('downloader');
 
 var uiMargin = 10;  // margin between arena and the elements inside it, in px.
 var defaultItemColor = 'blue';
 
 var handleKeyPresses = true;
-var globalGame = null;
+var game = null;
 var globalDragData = null;
 var uploadInfo = {'scaleFactor': null, 'succHook': null, 'failHook': null};
 
@@ -239,6 +234,7 @@ function toQueryString(obj) {
 
 function downloadBlob(blob, filename, cleanup=false) {
     var url = URL.createObjectURL(blob);
+    var downloaderElem = document.getElementById('downloader');
     downloaderElem.href = url;
     downloaderElem.download = filename;
     downloaderElem.click();
@@ -392,10 +388,10 @@ class ItemUI {
                 this.itemInfo.xLen, this.itemInfo.yLen));
             this.binUI.domElem.removeChild(this.domElem);
             this.domElem.classList.remove('packed');
-            globalGame.stats.reportDetach(this.itemInfo, this.binUI.bin.isEmpty());
+            game.stats.reportDetach(this.itemInfo, this.binUI.bin.isEmpty());
             this.binUI = null;
             inventory.appendChild(this.domElem);
-            globalGame._assessBins();
+            game._assessBins();
         }
     }
 
@@ -408,9 +404,9 @@ class ItemUI {
             this.yPos = yPos;
             this.domElem.classList.add('packed');
             setPos(this.domElem, this.scaleFactor * xPos, this.scaleFactor * yPos);
-            globalGame.stats.reportAttach(this.itemInfo, wasEmpty);
+            game.stats.reportAttach(this.itemInfo, wasEmpty);
             this.binUI.domElem.appendChild(this.domElem);
-            globalGame._assessBins();
+            game._assessBins();
             return true;
         }
         else {
@@ -444,6 +440,7 @@ class BinUI {
 
     destroy() {
         if(this.bin.isEmpty()) {
+            let packingArea = document.getElementById('packing-area');
             packingArea.removeChild(this.domElem);
             this.bin = null;
             this.domElem = null;
@@ -494,6 +491,7 @@ class Stats {
         else if(this.gameType == 'ks') {
             domElemNames.push('profit');
         }
+        var statsBar = document.getElementById('stats-bar');
         this.domElems = createBarItems(statsBar, domElemNames);
         this.refreshDom();
     }
@@ -553,6 +551,7 @@ class Stats {
     }
 
     destroy() {
+        var statsBar = document.getElementById('stats-bar');
         statsBar.innerHTML = '';
         this.domElems = null;
     }
@@ -572,7 +571,7 @@ function inferScaleFactors(invXLen, invYLen, binXLen, binYLen, nBins=1) {
 class Game {
 
     constructor(level, scaleFactor=null) {
-        globalGame = this;
+        game = this;
         this.level = level;
         this._computeInventoryDimsAndItemHomePositions();
         this.stats = new Stats(this.level.gameType, this.level.items,
@@ -621,6 +620,7 @@ class Game {
             var bin = new BinUI(this.level.binXLen, this.level.binYLen, false,
                 this.bins.length, this.scaleFactor);
             this.bins.push(bin);
+            let packingArea = document.getElementById('packing-area');
             packingArea.appendChild(bin.domElem);
         }
     }
@@ -867,15 +867,15 @@ class Game {
 }
 
 function downloadProgress(filename='progress.json', cleanup=false) {
-    var level = serializeLevel(globalGame.level, globalGame.getItemPositions());
+    var level = serializeLevel(game.level, game.getItemPositions());
     var blob = new Blob([JSON.stringify(level)], {type: 'application/json'});
     downloadBlob(blob, filename, cleanup);
 }
 
 function clearGame() {
-    if(globalGame !== null) {
-        globalGame.destroy();
-        globalGame = null;
+    if(game !== null) {
+        game.destroy();
+        game = null;
     }
 }
 
@@ -888,7 +888,8 @@ class ItemInfoBar {
         if(this.gameType == 'ks') {
             domElemNames.push('profit');
         }
-        this.domElems = createBarItems(itemInfoBar, domElemNames);
+        this.barDom = document.getElementById('item-info-bar');
+        this.domElems = createBarItems(this.barDom, domElemNames);
     }
 
     activate(item) {
@@ -899,18 +900,18 @@ class ItemInfoBar {
                 domElem.innerHTML = value;
             }
         }
-        itemInfoBar.style.visibility = 'visible';
+        this.barDom.style.visibility = 'visible';
     }
 
     deactivate() {
         for(let [key, domElem] of Object.entries(this.domElems)) {
             domElem.innerHTML = '';
         }
-        itemInfoBar.style.visibility = 'hidden';
+        this.barDom.style.visibility = 'hidden';
     }
 
     destroy() {
-        itemInfoBar.innerHTML = '';
+        this.barDom.innerHTML = '';
         this.domElems = null;
     }
 }
@@ -930,12 +931,12 @@ class DragData {
             throw new Error('globalDragData is already set');
         }
         globalDragData = dragData;
-        globalGame.itemInfoBar.activate(globalGame.items[dragData.itemId].itemInfo);
+        game.itemInfoBar.activate(game.items[dragData.itemId].itemInfo);
         // ev.dataTransfer.setData('text/html', null);
     }
     static unset() {
         globalDragData = null;
-        globalGame.itemInfoBar.deactivate();
+        game.itemInfoBar.deactivate();
     }
 }
 
@@ -950,7 +951,7 @@ function mousedownHandler(ev) {
         var itemXOff = ev.clientX - originalXPos;
         var itemYOff = ev.clientY - originalYPos;
         var itemId = parseInt(itemDomElem.getAttribute('data-item-id'));
-        var item = globalGame.items[itemId];
+        var item = game.items[itemId];
         DragData.set(new DragData(itemId, item.coords(), itemXOff, itemYOff));
 
         item.detach();
@@ -966,8 +967,8 @@ function getPos(ev, xLen, yLen, bin) {
     var dragData = DragData.get();
     var binX = bin.domElem.getBoundingClientRect().x;
     var binY = bin.domElem.getBoundingClientRect().y;
-    var xPos = (ev.clientX - binX - dragData.xOff) / globalGame.scaleFactor;
-    var yPos = (ev.clientY - binY - dragData.yOff) / globalGame.scaleFactor;
+    var xPos = (ev.clientX - binX - dragData.xOff) / game.scaleFactor;
+    var yPos = (ev.clientY - binY - dragData.yOff) / game.scaleFactor;
     xPos = clip(Math.round(xPos), 0, bin.bin.xLen - xLen);
     yPos = clip(Math.round(yPos), 0, bin.bin.yLen - yLen);
     return [xPos, yPos];
@@ -979,8 +980,8 @@ function moveHoverRect(bin, rect) {
     }
     else {
         setPos(hoverRect,
-            bin.domElem.getBoundingClientRect().x + rect.xPos * globalGame.scaleFactor,
-            bin.domElem.getBoundingClientRect().y + rect.yPos * globalGame.scaleFactor);
+            bin.domElem.getBoundingClientRect().x + rect.xPos * game.scaleFactor,
+            bin.domElem.getBoundingClientRect().y + rect.yPos * game.scaleFactor);
         hoverRect.style.visibility = 'visible';
     }
 }
@@ -991,7 +992,7 @@ function inRect(xPos, yPos, domRect) {
 }
 
 function getMouseBin(ev) {
-    for(var bin of globalGame.bins) {
+    for(var bin of game.bins) {
         if(inRect(ev.clientX, ev.clientY, bin.domElem.getBoundingClientRect())) {
             return bin;
         }
@@ -1008,7 +1009,7 @@ function mousemoveHandler(ev) {
     }
 
     // move item
-    var item = globalGame.items[dragData.itemId];
+    var item = game.items[dragData.itemId];
     var arenaX = arena.getBoundingClientRect().x;
     var arenaY = arena.getBoundingClientRect().y;
     setPos(item.domElem, ev.clientX - dragData.xOff - arenaX, ev.clientY - dragData.yOff - arenaY);
@@ -1038,11 +1039,11 @@ function endDrag() {
     var dragData = DragData.get();
     if(dragData !== null) {
         var oldCoords = dragData.coords;
-        var item = globalGame.items[dragData.itemId];
-        globalGame._recordHistory(dragData.itemId, oldCoords, item.coords());
+        var item = game.items[dragData.itemId];
+        game._recordHistory(dragData.itemId, oldCoords, item.coords());
     }
     DragData.unset();
-    globalGame.trimBins(1);
+    game.trimBins(1);
 }
 
 function mouseupHandler(ev) {
@@ -1055,7 +1056,7 @@ function mouseupHandler(ev) {
     }
 
     var itemId = dragData.itemId;
-    var item = globalGame.items[dragData.itemId]
+    var item = game.items[dragData.itemId]
     var bin = getMouseBin(ev);
 
     // attach item to bin
@@ -1080,7 +1081,7 @@ function mouseleaveHandler(ev) {
 function keydownHandler(ev) {
     if(handleKeyPresses && !ev.defaultPrevented) {
         if(ev.key == 'z' && (ev.metaKey || ev.ctrlKey)) {
-            globalGame.undo();
+            game.undo();
             ev.preventDefault();
         }
     }
@@ -1100,7 +1101,7 @@ function addEventListeners() {
     arena.addEventListener('pointerleave', mouseleaveHandler);
     window.addEventListener('keydown', keydownHandler);
 
-    levelLoaderElem.addEventListener('change', function(ev) {
+    document.getElementById('level-loader').addEventListener('change', function(ev) {
             loadGameFromFiles(ev.target.files, uploadInfo['scaleFactor'],
                 uploadInfo['succHook'], uploadInfo['failHook']);
         });

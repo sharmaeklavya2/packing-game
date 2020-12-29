@@ -1,20 +1,7 @@
 'use strict';
 
-var newGameButton = document.getElementById('new-game-button');
 var undoButton = document.getElementById('undo-button');
-var saveGameButton = document.getElementById('save-game-button');
-var solveButton = document.getElementById('solve-button');
-var aboutButton = document.getElementById('about-button');
 var ngForm = document.getElementById('ng-form');
-var ngFormSubmitButton = document.getElementById('ng-submit');
-var ngFormLevels = document.getElementById('ng-form-levels');
-var ngFormGens = document.getElementById('ng-form-gens');
-var ngFormGenParams = document.getElementById('ng-form-gen-params');
-var ngFormGenParamsWrapper = document.getElementById('ng-form-gen-params-wrapper');
-var solveMenu = document.getElementById('solve-menu');
-var solveList = document.getElementById('solve-list');
-var unpackButton = document.getElementById('unpack-button');
-var msgList = document.getElementById('msg-list');
 
 var aboutText = "This is a 2D geometric bin-packing game. You have to pack all items from "
     + "the left side into the minimum number of bins on the right side.";
@@ -23,12 +10,16 @@ function ngFormSuccess() {
     ngForm.classList.add('disabled');
     ngForm.classList.remove('enabled');
     ngForm.classList.remove('loading');
+    var newGameButton = document.getElementById('new-game-button');
     newGameButton.classList.remove('pressed');
 }
 
 function ngFormCheckHandler(ev) {
     const formData = new FormData(ngForm);
     var choice = formData.get('ng-choice');
+    var ngFormSubmitButton = document.getElementById('ng-submit');
+    var ngFormGenParams = document.getElementById('ng-form-gen-params');
+    var ngFormGenParamsWrapper = document.getElementById('ng-form-gen-params-wrapper');
     if(choice === null) {
         ngFormSubmitButton.setAttribute('disabled', 'disabled');
         ngFormGenParamsWrapper.classList.add('disabled');
@@ -99,20 +90,22 @@ function ngFormSubmitHandler(ev) {
 }
 
 function solveSuccess() {
+    var solveMenu = document.getElementById('solve-menu');
     solveMenu.classList.add('disabled');
     solveMenu.classList.remove('enabled');
+    var solveButton = document.getElementById('solve-button');
     solveButton.classList.remove('pressed');
 }
 
 function solveClickHandler(ev) {
     ev.preventDefault();
     var algoName = ev.target.innerHTML;
-    globalGame.selectSolution(algoName);
+    game.selectSolution(algoName);
     solveSuccess();
 }
 
 function repopulateSolveMenu() {
-    var solutions = globalGame.level.solutions;
+    var solutions = game.level.solutions;
     var keys = new Set();
     for(let key of Object.keys(solutions)) {
         if(solutions.hasOwnProperty(key)) {
@@ -125,6 +118,7 @@ function repopulateSolveMenu() {
         }
     }
 
+    var solveList = document.getElementById('solve-list');
     solveList.innerHTML = '';
     for(let key of keys) {
         var liElem = document.createElement('li');
@@ -154,7 +148,7 @@ function populateNgForm() {
         div.appendChild(inputElem);
         div.appendChild(labelElem);
         div.classList.add('input-pair');
-        ngFormLevels.appendChild(div);
+        document.getElementById('ng-form-levels').appendChild(div);
     }
     for(const [genName, gen] of levelGenerators) {
         let id = 'ng-radio-gen-' + genName;
@@ -170,21 +164,24 @@ function populateNgForm() {
         div.appendChild(inputElem);
         div.appendChild(labelElem);
         div.classList.add('input-pair');
-        ngFormGens.appendChild(div);
+        document.getElementById('ng-form-gens').appendChild(div);
     }
 }
 populateNgForm();
 
 function addExtraUIEventListeners() {
     undoButton.addEventListener('click', function(ev) {
-            if(globalGame !== null) {globalGame.undo();}
+            if(game !== null) {game.undo();}
         });
-    saveGameButton.addEventListener('click', function(ev) {
-            if(globalGame !== null) {downloadProgress();}
+    document.getElementById('save-game-button').addEventListener('click', function(ev) {
+            if(game !== null) {downloadProgress();}
         });
-    aboutButton.addEventListener('click', function(ev) {
+    document.getElementById('about-button').addEventListener('click', function(ev) {
             window.alert(aboutText);
         });
+    var newGameButton = document.getElementById('new-game-button');
+    var solveButton = document.getElementById('solve-button');
+    var solveMenu = document.getElementById('solve-menu');
     newGameButton.addEventListener('click', function(ev) {
             solveMenu.classList.add('disabled');
             solveMenu.classList.remove('enabled');
@@ -205,8 +202,8 @@ function addExtraUIEventListeners() {
             newGameButton.classList.remove('pressed');
             solveButton.classList.toggle('pressed');
         });
-    unpackButton.addEventListener('click', function(ev) {
-            globalGame.putBack();
+    document.getElementById('unpack-button').addEventListener('click', function(ev) {
+            game.putBack();
         });
 }
 
@@ -222,6 +219,7 @@ function enableUndoButton() {
 function closeBtnClickHandler(ev) {
     var closeBtn = ev.target;
     var LiElem = closeBtn.parentElement;
+    var msgList = document.getElementById('msg-list');
     msgList.removeChild(LiElem);
 }
 
@@ -237,5 +235,6 @@ function addMsg(type, text) {
     closeButton.innerHTML = '&times;';
     closeButton.addEventListener('click', closeBtnClickHandler);
     liElem.appendChild(closeButton);
+    var msgList = document.getElementById('msg-list');
     msgList.appendChild(liElem);
 }
