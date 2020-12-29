@@ -15,7 +15,6 @@ body {
     display: flex;
     align-self: center;
     align-items: flex-start;
-    touch-action: none;
     margin: 32px 32px 0 32px;
 }
 #arena.large {
@@ -55,6 +54,7 @@ footer {
     position: absolute;
     z-index: 30;
     box-sizing: border-box;
+    touch-action: none;
 }
 .item.packed {
     z-index: 10;
