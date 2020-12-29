@@ -4,44 +4,48 @@ html {
 body {
     min-height: 100%;
     width: 100%;
-    padding-top: 4rem;
-    padding-bottom: 2em;
+    padding: 0;
     margin: 0;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-}
-
-#arena-wrapper {
-    margin: 32px;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    align-self: stretch;
 }
 #arena {
     position: relative;
-    display: inline-flex;
+    display: flex;
     align-self: center;
     align-items: flex-start;
     touch-action: none;
+    margin: 32px 32px 0 32px;
 }
 #arena.large {
     align-self: flex-start;
 }
+#gas {
+    flex-grow: 1;
+}
+footer {
+    position: sticky;
+    bottom: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    z-index: 15;
+}
 
 #inventory {
     margin: 10px;
+    flex-shrink: 0;
 }
 #packing-area {
     padding-top: 5px;
     padding-bottom: 5px;
     display: flex;
-    justify-content: space-between;
     align-items: flex-start;
     flex-direction: column;
 }
+
 .bin {
     position: relative;
     margin: 5px 10px 5px 10px;
@@ -62,25 +66,19 @@ body {
     z-index: 20;
 }
 
-#stats-bar {
-    bottom: 0;
-}
 #item-info-bar {
     bottom: 2em;
     visibility: hidden;
 }
 .bar {
-    position: fixed;
-    width: 100%;
     display: flex;
     flex-wrap: wrap;
     justify-content: space-around;
-    z-index: 15;
-    height: 2em;
 }
 .bar-entry {
     display: flex;
     align-items: center;
+    height: 2em;
 }
 .bar-label::after {
     content: ":";
@@ -147,11 +145,9 @@ body {
 
 /* controls */
 
-#controls {
+header {
     display: flex;
     flex-direction: column;
-    margin-top: calc(-4rem - 32px);
-    margin-bottom: 32px;
     position: -webkit-sticky;
     position: sticky;
     top: 0;
@@ -161,7 +157,7 @@ body {
     max-height: 2.5rem;
     max-width: 2.5rem;
 }
-#nav {
+#toolbar {
     list-style: none;
     padding: 0;
     margin: 0;
@@ -169,7 +165,7 @@ body {
     flex-wrap: wrap;
     align-self: center;
 }
-#nav > li {
+#toolbar > li {
     display: flex;
     align-items: center;
     justify-content: space-around;
@@ -182,30 +178,30 @@ body {
     border-left: 1px solid black;
     border-bottom: 1px solid black;
 }
-#nav > li.enabled {
+#toolbar > li.enabled {
     cursor: pointer;
 }
-#nav > li.disabled {
+#toolbar > li.disabled {
     color: gray;
     fill: gray;
 }
-#nav > li.enabled:hover, #nav > li.enabled.pressed {
+#toolbar > li.enabled:hover, #toolbar > li.enabled.pressed {
     background-color: rgba(128, 128, 128, 0.6);
 }
-#nav > li.enabled:active, #nav > li.enabled.pressed:hover {
+#toolbar > li.enabled:active, #toolbar > li.enabled.pressed:hover {
     background-color: rgba(128, 128, 128, 0.8);
 }
-#nav > li.enabled.pressed:active {
+#toolbar > li.enabled.pressed:active {
     background-color: rgba(128, 128, 128, 1);
 }
-#nav > li:last-child {
+#toolbar > li:last-child {
     border-right: 1px solid black;
 }
-#nav > li#solve-button {
+#toolbar > li#solve-button {
     font-size: 2.25rem;
 }
 
-#controls .heading {
+header .heading {
     font-size: 1.2em;
     padding: 0.3rem 1rem;
     border-bottom: 1px solid rgba(128, 128, 128, 0.5);

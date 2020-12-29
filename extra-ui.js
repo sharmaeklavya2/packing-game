@@ -14,6 +14,10 @@ function ngFormSuccess() {
     newGameButton.classList.remove('pressed');
 }
 
+function getPersistentHeaderHeight() {
+    return document.getElementById('toolbar').getBoundingClientRect().height;
+}
+
 function ngFormCheckHandler(ev) {
     const formData = new FormData(ngForm);
     var choice = formData.get('ng-choice');

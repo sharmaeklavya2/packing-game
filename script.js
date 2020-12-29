@@ -1,11 +1,11 @@
 'use strict';
 
-var arenaWrapper = document.getElementById('arena-wrapper');
 var arena = document.getElementById('arena');
 var inventory = document.getElementById('inventory');
 var hoverRect = document.getElementById('hover-rect');
 
-var uiMargin = 10;  // margin between arena and the elements inside it, in px.
+var innerMargin = 10;  // margin between arena and the elements inside it, in px.
+var outerMargin = 32;  // margin between arena and containing page.
 var defaultItemColor = 'blue';
 
 var handleKeyPresses = true;
@@ -559,11 +559,13 @@ class Stats {
 
 function inferScaleFactors(invXLen, invYLen, binXLen, binYLen, nBins=1) {
     nBins = Math.max(1, nBins);
-    const arenaX = arenaWrapper.getBoundingClientRect().width;
-    const arenaY = arenaWrapper.getBoundingClientRect().height;
-    const scaleX = (arenaX - 4 * uiMargin) / (invXLen + binXLen);
-    const scaleY1 = (arenaY - 2 * uiMargin) / invYLen;
-    const scaleY2 = (arenaY - uiMargin * (nBins + 1)) / (nBins * binYLen);
+    const arenaX = window.innerWidth - 2 * outerMargin;
+    const persistentFooterHeight = 32;
+    const arenaY = window.innerHeight - 2 * outerMargin - persistentFooterHeight
+        - getPersistentHeaderHeight();
+    const scaleX = (arenaX - 4 * innerMargin) / (invXLen + binXLen);
+    const scaleY1 = (arenaY - 2 * innerMargin) / invYLen;
+    const scaleY2 = (arenaY - innerMargin * (nBins + 1)) / (nBins * binYLen);
     console.debug("inferred scales:", scaleX, scaleY1, scaleY2);
     return [scaleX, Math.min(scaleY1, scaleY2)];
 }
@@ -778,9 +780,9 @@ class Game {
         else {
             this.scaleFactor = scaleFactor;
         }
-        var expectedArenaX = (this.invXLen + this.level.binXLen) * this.scaleFactor + 4 * uiMargin;
-        var arenaWrapperX = arenaWrapper.getBoundingClientRect().width;
-        if(expectedArenaX >= arenaWrapperX) {
+        var actualArenaWidth = (this.invXLen + this.level.binXLen) * this.scaleFactor + 4 * innerMargin;
+        var spaceForArenaWidth = window.innerWidth - 2 * outerMargin;
+        if(actualArenaWidth >= spaceForArenaWidth) {
             arena.classList.add('large');
         }
         else {
@@ -1105,12 +1107,12 @@ function addEventListeners() {
             loadGameFromFiles(ev.target.files, uploadInfo['scaleFactor'],
                 uploadInfo['succHook'], uploadInfo['failHook']);
         });
-    arenaWrapper.addEventListener('dragover', function(ev) {
+    document.body.addEventListener('dragover', function(ev) {
             ev.stopPropagation();
             ev.preventDefault();
             ev.dataTransfer.dropEffect = 'copy';
         });
-    arenaWrapper.addEventListener('drop', function(ev) {
+    document.body.addEventListener('drop', function(ev) {
             ev.stopPropagation();
             ev.preventDefault();
             ev.dataTransfer.dropEffect = 'copy';
@@ -1118,3 +1120,11 @@ function addEventListeners() {
                 uploadInfo['succHook'], uploadInfo['failHook']);
         });
 }
+
+//==[ Main ]====================================================================
+
+window.addEventListener('load', function() {
+    addEventListeners();
+    loadGameFromQParams(getQParams());
+    addExtraUIEventListeners();
+});
