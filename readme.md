@@ -1,12 +1,11 @@
 # Packing Game
 
 This is a 2D geometric bin-packing game that can be played in the browser.
-This game is currently a minimal prototype.
 
 ## How to play
 
 Drag-and-drop rectangles from the left side (arena)
-to the minimum number of bins on the right side.
+into the minimum number of bins on the right side.
 
 ## How to contribute
 
@@ -41,8 +40,7 @@ Later when implementing the event handlers, I just call `attach` at the appropri
 
 Similarly, for loading the game, functions like `loadGameFromGen`, `loadGameFromUrl`
 and `loadGameFromUpload` are available.
-The game currently lacks a UI (perhaps a toolbar) to call these functions,
-so they can alternatively be called from the developer console.
+The 'new game' button in the toolbar simply calls these functions.
 
 ## Using the querystring
 
@@ -80,6 +78,6 @@ so to find out which generators are available, look at the keys of `levelGenerat
 For each value `v` of `levelGenerators`, `v.info` gives a brief summary
 of what the generator does.
 
-The output of generators can often be tuned by giving additional parameters in the querystring.
-For each value `v` of `levelGenerators`, see `v.defaultValues` to know what parameters
-are available and what their default values are.
+The output of generators can often be tuned by additional parameters in the querystring.
+For each value `v` of `levelGenerators`, see `v.paramMap` to know what parameters
+are available, their description, and what their default values are.
