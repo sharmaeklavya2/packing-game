@@ -63,8 +63,9 @@ function ngFormCheckHandler(ev) {
                     inputElem.setAttribute('id', id);
                     inputElem.setAttribute('name', paramName);
                     inputElem.setAttribute('autocomplete', 'off');
-                    inputElem.setAttribute('value', param.defaultValue);
-                    inputElem.setAttribute('placeholder', param.defaultValue);
+                    if(param.defaultValue !== null) {
+                        inputElem.setAttribute('placeholder', param.defaultValue);
+                    }
                     let labelElem = document.createElement('label');
                     labelElem.innerHTML = paramName;
                     labelElem.setAttribute('for', id);
@@ -81,31 +82,35 @@ function ngFormCheckHandler(ev) {
 
 function ngFormSubmitHandler(ev) {
     ev.preventDefault();
+    ngForm.classList.add('loading');
+
     const formData = new FormData(ngForm);
     var choice = formData.get('ng-choice');
     let [srctype, src] = choice.split(':');
-    ngForm.classList.add('loading');
+    var q = {'srctype': srctype, 'src': src};
+    for(let [key, value] of formData.entries()) {
+        if(key !== 'ng-choice' && value !== '') {
+            q[key] = value;
+        }
+    }
+    var qs = toQueryString(q);
+
     function failHook(msg) {addMsg('error', msg); ngFormSuccess();}
+    function succHook() {
+        window.history.replaceState({}, null, '?' + qs);
+        ngFormSuccess();
+    }
+
     if(srctype == 'upload') {
         loadGameFromUpload(null, null, failHook);
         ngFormSuccess();
         window.history.replaceState({}, null, '?');
     }
     else if(srctype == 'url') {
-        loadGameFromUrl(src, null, ngFormSuccess, failHook);
-        var qs = toQueryString({'srctype': srctype, 'src': src});
-        window.history.replaceState({}, null, '?' + qs);
+        loadGameFromUrl(src, null, succHook, failHook);
     }
     else if(srctype == 'gen') {
-        var q = {'srctype': srctype, 'src': src};
-        for(let [key, value] of formData.entries()) {
-            if(key !== 'ng-choice') {
-                q[key] = value;
-            }
-        }
-        loadGameFromGen(src, q, null, ngFormSuccess, failHook);
-        var qs = toQueryString(q);
-        window.history.replaceState({}, null, '?' + qs);
+        loadGameFromGen(src, q, null, succHook, failHook);
     }
 }
 
