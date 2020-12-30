@@ -33,6 +33,9 @@ function positiveIntConverter(x) {
     return [!isNaN(i) && i > 0, i];
 }
 var positiveIntMessage = 'should be a positive integer.';
+function urlEncodeIdemp(x) {
+    return [x.match(/^[0-9a-zA-Z_.~-]+$/), x];
+}
 
 function levelGenBP1(q) {
     var n = q.n, binXLen = q.xLen, binYLen = q.yLen;
@@ -41,11 +44,12 @@ function levelGenBP1(q) {
         "binXLen": binXLen, "binYLen": binYLen,
         "gameType": "bp", "items": items,
     };
+    var rand = getRandGen(q.seed);
     for(var i=0; i<n; ++i) {
         items.push({
-            "xLen": 1 + Math.floor(Math.pow(Math.random(), 3) * binXLen),
-            "yLen": 1 + Math.floor(Math.pow(Math.random(), 3) * binYLen),
-            "color": hueToColor(Math.floor(Math.random() * 360)),
+            "xLen": 1 + Math.floor(Math.pow(rand(), 3) * binXLen),
+            "yLen": 1 + Math.floor(Math.pow(rand(), 3) * binYLen),
+            "color": hueToColor(Math.floor(rand() * 360)),
         });
     }
     return obj;
@@ -55,6 +59,8 @@ levelGenBP1.paramMap = toParamMap([
     new Parameter('n', 25, 'number of items', positiveIntConverter, positiveIntMessage),
     new Parameter('xLen', 8, 'xLen of bin', positiveIntConverter, positiveIntMessage),
     new Parameter('yLen', 8, 'yLen of bin', positiveIntConverter, positiveIntMessage),
+    new Parameter('seed', null, 'seed for random number generator',
+        urlEncodeIdemp, 'should only contain letters, numbers, dot, hyphen, underscore, tilde.'),
 ]);
 levelGenBP1.info = 'Independently and randomly generate colors and dimensions of each item.'
 levelGenerators.set('bp1', levelGenBP1);
