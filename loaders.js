@@ -44,6 +44,9 @@ function levelGenBP1(q) {
         "binXLen": binXLen, "binYLen": binYLen,
         "gameType": "bp", "items": items,
     };
+    if(q.seed === null) {
+        q.seed = getRandomSeed();
+    }
     var rand = getRandGen(q.seed);
     for(var i=0; i<n; ++i) {
         items.push({

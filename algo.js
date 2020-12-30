@@ -4,6 +4,8 @@
 
 // From https://stackoverflow.com/a/47593316/10294000
 
+var seeds = [];
+
 function xmur3(str) {
     for(var i = 0, h = 1779033703 ^ str.length; i < str.length; i++)
         h = Math.imul(h ^ str.charCodeAt(i), 3432918353),
@@ -24,13 +26,14 @@ function mulberry32(a) {
     }
 }
 
+function getRandomSeed() {
+    const seed = 'r' + Math.random().toString().substr(2, 12);
+    seeds.push(seed);
+    return seed;
+}
+
 function getRandGen(seed) {
-    if(seed === null) {
-        return Math.random;
-    }
-    else {
-        return mulberry32(xmur3(seed)());
-    }
+    return mulberry32(xmur3(seed)());
 }
 
 //==[ Packing algorithms ]======================================================
