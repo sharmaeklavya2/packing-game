@@ -289,17 +289,23 @@ function processLevel(j) {
 
     var ubAlgos = ['nfdh', 'nfdh-mirror', 'ffdh-ff', 'ffdh-ff-mirror'];
     o.computed_ub = items.length;
+    o.computed_ub_reason = null;
     for(const algoName of ubAlgos) {
         if(o.solutions[algoName] === undefined || o.solutions[algoName] === null) {
             o.solutions[algoName] = bpAlgos[algoName](items, o.binXLen, o.binYLen, []);
         }
-        o.computed_ub = Math.min(o.computed_ub, countUsedBins(o.solutions[algoName]));
+        const nBins = countUsedBins(o.solutions[algoName]);
+        if(nBins < o.computed_ub) {
+            o.computed_ub_reason = algoName;
+            o.computed_ub = nBins;
+        }
     }
     if(o.upper_bound === null) {
         o.upper_bound = o.computed_ub;
     }
     if(o.lower_bound === null) {
-        o.lower_bound = bpLowerBound(items, o.binXLen, o.binYLen);
+        [o.computed_lb, o.computed_lb_reason] = bpLowerBound(items, o.binXLen, o.binYLen, false);
+        o.lower_bound = o.computed_lb;
     }
     return o;
 }

@@ -278,12 +278,136 @@ function createMirrors() {
 }
 createMirrors();
 
-function bpLowerBound(items, binXLen, binYLen) {
-    var area = 0;
-    for(var i=0; i<items.length; ++i) {
-        area += items[i].xLen * items[i].yLen;
+
+function dff1(x, xMax) {
+    // identity function
+    return x / xMax;
+}
+
+function dff2(x, xMax) {
+    // step at 0.5
+    const x2 = x * 2;
+    if(x2 == xMax) {
+        return 0.5;
     }
-    var delta = 0.00000001;
-    var rarea_lb = (area - delta) / (binXLen * binYLen);
-    return Math.ceil(rarea_lb);
+    else if(x2 < xMax) {
+        return 0;
+    }
+    else {
+        return 1;
+    }
+}
+
+function dff3a(x, xMax) {
+    // step at 1/3 and 2/3
+    let x3 = x * 3;
+    if(x3 <= xMax) {
+        return 0;
+    }
+    else if(x3 < 2 * xMax) {
+        return 0.5;
+    }
+    else {
+        return 1;
+    }
+}
+
+function dff3b(x, xMax) {
+    // step at 1/3 and 2/3
+    let xRel = x / xMax;
+    let x3 = x * 3;
+    if(x3 <= xMax) {
+        return 0;
+    }
+    else if(x3 < 2 * xMax) {
+        return 3 * xRel - 1;
+    }
+    else {
+        return 1;
+    }
+}
+
+function dffkGen(k) {
+    function dffk(x, xMax) {
+        // step at 1/k, 2/k, ..., (k-1)/k.
+        const kx = k * x;
+        for(let i=1; i < k; ++i) {
+            if(kx <= i * xMax) {
+                return (i-1) / (k-1);
+            }
+        }
+        return 1;
+    }
+    return dffk;
+}
+
+var dffMap = new Map([
+    ['id', dff1],
+    ['f2', dff2],
+    ['f3a', dff3a],
+    ['f3b', dff3b],
+    ['f4', dffkGen(4)],
+    ['f5', dffkGen(5)],
+]);
+
+function getDffAgg(items, binXLen, binYLen, rotation) {
+    let names = [];
+    for(let name1 of dffMap.keys()) {
+        if(rotation) {
+            names.push('dffpair(' + name1 + ', ' + name1 + ')');
+        }
+        else {
+            for(let name2 of dffMap.keys()) {
+                names.push('dffpair(' + name1 + ', ' + name2 + ')');
+            }
+        }
+    }
+
+    let cumAreas = new Array(names.length).fill(0);
+    for(let i=0; i < items.length; ++i) {
+        let [xLen, yLen] = [items[i].xLen, items[i].yLen];
+        let xs = [], ys = [];
+        for(let f of dffMap.values()) {
+            xs.push(f(xLen, binXLen));
+            ys.push(f(yLen, binYLen));
+        }
+        let areas = [];
+        if(rotation) {
+            for(let j=0; j < xs.length; ++j) {
+                areas.push(xs[j] * ys[j]);
+            }
+        }
+        else {
+            for(let x of xs) {
+                for(let y of ys) {
+                    areas.push(x * y);
+                }
+            }
+        }
+        console.assert(areas.length === cumAreas.length, 'areas.length != cumAreas.length');
+        for(let j=0; j < cumAreas.length; ++j) {
+            cumAreas[j] += areas[j];
+        }
+    }
+    let pairs = [];
+    for(let j=0; j < names.length; ++j) {
+        pairs.push([names[j], cumAreas[j]]);
+    }
+    return new Map(pairs);
+}
+
+function bpLowerBound(items, binXLen, binYLen, rotation) {
+    const delta = 0.00000001;
+
+    let cumAreas = getDffAgg(items, binXLen, binYLen, rotation);
+    let lb = 0;
+    let reason = null;
+    for(let [name, cumArea] of cumAreas.entries()) {
+        let lbj = Math.ceil(cumArea - delta);
+        if(lbj > lb) {
+            lb = lbj;
+            reason = name;
+        }
+    }
+    return [lb, reason];
 }
