@@ -90,8 +90,9 @@ function applyToJsonResponse(url, hook, failHook) {
 }
 
 function loadGameFromRawLevel(level, scaleFactor=null, succHook=null, failHook=null) {
+    let processedLevel = processLevel(level);
     clearGame();
-    game = new Game(processLevel(level), scaleFactor);
+    game = new Game(processedLevel, scaleFactor);
     if(succHook !== null) {
         succHook();
     }
