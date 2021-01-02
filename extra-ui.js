@@ -2,6 +2,7 @@
 
 var undoButton = document.getElementById('undo-button');
 var ngForm = document.getElementById('ng-form');
+var ngFormRawTextarea = document.getElementById('ng-raw');
 var buttonToMenuMap = new Map([
     ['new-game-button', 'ng-form'],
     ['solve-button', 'solve-menu'],
@@ -38,7 +39,6 @@ function ngFormCheckHandler(ev) {
     const formData = new FormData(ngForm);
     var choice = formData.get('ng-choice');
     var ngFormSubmitButton = document.getElementById('ng-submit');
-    var ngFormGenParams = document.getElementById('ng-form-gen-params');
     var ngFormGenParamsWrapper = document.getElementById('ng-form-gen-params-wrapper');
     if(choice === null) {
         ngFormSubmitButton.setAttribute('disabled', 'disabled');
@@ -47,6 +47,19 @@ function ngFormCheckHandler(ev) {
     else {
         ngFormSubmitButton.removeAttribute('disabled');
         let [srctype, src] = choice.split(':');
+        if(srctype === 'raw') {
+            ngFormRawTextarea.setAttribute('required', 'required');
+            let disAttr = ngFormRawTextarea.getAttribute('disabled');
+            if(disAttr !== null) {
+                ngFormRawTextarea.removeAttribute('disabled');
+                ngFormRawTextarea.setAttribute('rows', 6);
+                ngFormRawTextarea.setAttribute('cols', 80);
+                ngFormRawTextarea.focus();
+            }
+        }
+        else {
+            ngFormRawTextarea.removeAttribute('required');
+        }
         if(srctype !== 'gen') {
             ngFormGenParamsWrapper.classList.add('disabled');
         }
@@ -54,6 +67,7 @@ function ngFormCheckHandler(ev) {
             ngFormGenParamsWrapper.classList.remove('disabled');
             var oldSrc = ngFormGenParamsWrapper.getAttribute('data-gen');
             if(oldSrc !== src) {
+                let ngFormGenParams = document.getElementById('ng-form-gen-params');
                 ngFormGenParamsWrapper.setAttribute('data-gen', src);
                 ngFormGenParams.innerHTML = '';
                 for(const [paramName, param] of levelGenerators.get(src).paramMap) {
@@ -88,12 +102,7 @@ function ngFormSubmitHandler(ev) {
     var choice = formData.get('ng-choice');
     let [srctype, src] = choice.split(':');
     var q = {'srctype': srctype, 'src': src};
-    for(let [key, value] of formData.entries()) {
-        if(key !== 'ng-choice' && value !== '') {
-            q[key] = value;
-        }
-    }
-    var qs = toQueryString(q);
+    var qs = '';
 
     function failHook(msg) {addMsg('error', msg); ngFormSuccess();}
     function succHook() {
@@ -101,15 +110,26 @@ function ngFormSubmitHandler(ev) {
         ngFormSuccess();
     }
 
-    if(srctype == 'upload') {
+    if(srctype === 'raw') {
+        let j = formData.get('ng-raw');
+        let level = JSON.parse(j);
+        loadGameFromRawLevel(level, null, succHook, failHook);
+    }
+    else if(srctype === 'upload') {
         loadGameFromUpload(null, null, failHook);
-        ngFormSuccess();
-        window.history.replaceState({}, null, '?');
+        succHook();
     }
     else if(srctype == 'url') {
+        qs = toQueryString(q);
         loadGameFromUrl(src, null, succHook, failHook);
     }
     else if(srctype == 'gen') {
+        for(let [key, value] of formData.entries()) {
+            if(!(key.startsWith('ng-')) && value !== '') {
+                q[key] = value;
+            }
+        }
+        qs = toQueryString(q);
         loadGameFromGen(src, q, null, succHook, failHook);
     }
 }
@@ -217,6 +237,14 @@ function addExtraUIEventListeners() {
     ngForm.addEventListener('submit', ngFormSubmitHandler);
     ngForm.addEventListener('change', ngFormCheckHandler);
     ngForm.addEventListener('input', ngFormCheckHandler);
+
+    ngFormRawTextarea.addEventListener('focus', function() {
+            handleKeyPresses = false;
+            document.getElementById('ng-radio-raw').click();
+        });
+    ngFormRawTextarea.addEventListener('blur', function() {
+            handleKeyPresses = true;
+        });
 
     document.getElementById('zoom-in-button').addEventListener('click', function(ev) {
             game.resize(game.scaleFactor * 1.1);

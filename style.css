@@ -244,6 +244,10 @@ header .heading {
 .input-pair > label {
     flex-grow: 0;
 }
+textarea {
+    width: calc(100% - 1rem);
+    margin-left: 1rem;
+}
 #ng-submit {
     margin: 0.25rem 0 0.5rem 0;
     align-self: center;

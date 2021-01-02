@@ -39,10 +39,6 @@
     <form id="ng-form" class="menu disabled">
         <div class="heading">Load a new game</div>
         <div class="options">
-            <div class="input-pair">
-                <input type="radio" id="ng-radio-upload" name="ng-choice" value="upload:" />
-                <label for="ng-radio-upload">Choose file on disk</label>
-            </div>
             <p>Levels:</p>
             <div id="ng-form-levels"></div>
             <p>Generators:</p>
@@ -51,6 +47,17 @@
                 <p id="ng-form-gen-params-header">Generator parameters:</p>
                 <div id="ng-form-gen-params"></div>
             </div>
+            <p>Custom:</p>
+            <div class="input-pair">
+                <input type="radio" id="ng-radio-upload" name="ng-choice" value="upload:" />
+                <label for="ng-radio-upload">Choose file on disk</label>
+            </div>
+            <div class="input-pair">
+                <input type="radio" id="ng-radio-raw" name="ng-choice" value="raw:" />
+                <label for="ng-radio-raw">JSON text:</label>
+            </div>
+            <textarea id="ng-raw" name="ng-raw" rows="2" cols="10" disabled="disabled"
+                autocapitalize="none" autocomplete="off" spellcheck="false"></textarea>
         </div>
         <button id="ng-submit" type="submit" disabled="disabled">Submit</button>
     </form>
