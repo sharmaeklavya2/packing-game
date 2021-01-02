@@ -191,14 +191,14 @@ function clip(x, lo, hi) {
     }
 }
 
-function readObjectPropsWithAssert(input, reqProps, optProps) {
+function readObjectPropsWithAssert(input, reqProps, optProps, objname) {
     var o = {};
     for(var prop of reqProps) {
         if(input.hasOwnProperty(prop)) {
             o[prop] = input[prop];
         }
         else {
-            throw new InputError(prop + ' is missing');
+            throw new InputError("property '" + prop + "' is missing for " + objname);
         }
     }
     if(optProps.constructor == Object) {
@@ -250,10 +250,23 @@ function downloadBlob(blob, filename, cleanup=false) {
 //==[ SerDe and Cleaning ]======================================================
 
 function itemInfoFromObject(j, id) {
-    var reqProps = ['xLen', 'yLen'];
-    var optProps = {'color': null, 'profit': 0};
-    var o = readObjectPropsWithAssert(j, reqProps, optProps);
-    return new ItemInfo(id, o['xLen'], o['yLen'], o['profit'], o['color']);
+    if(Array.isArray(j)) {
+        if(j.length < 2) {
+            throw new InputError('invalid input for item ' + id +
+                ': array of length ' + j.length);
+        }
+        let [xLen, yLen, profit] = j;
+        if(profit === undefined) {
+            profit = 0;
+        }
+        return new ItemInfo(id, xLen, yLen, profit, null);
+    }
+    else {
+        var reqProps = ['xLen', 'yLen'];
+        var optProps = {'color': null, 'profit': 0};
+        var o = readObjectPropsWithAssert(j, reqProps, optProps, 'item ' + id);
+        return new ItemInfo(id, o['xLen'], o['yLen'], o['profit'], o['color']);
+    }
 }
 
 function serializeItemInfo(itemInfo) {
@@ -271,7 +284,7 @@ function processLevel(j) {
     var reqProps = ['binXLen', 'binYLen', 'items'];
     var optProps = {'gameType': 'bp', 'startPos': [],
         'lower_bound': null, 'upper_bound': null, 'solutions': {}};
-    var o = readObjectPropsWithAssert(j, reqProps, optProps);
+    var o = readObjectPropsWithAssert(j, reqProps, optProps, 'level');
     var items = [];
     console.assert(o.gameType === 'bp', "the only supported gameType is bp");
     var id = 0;
