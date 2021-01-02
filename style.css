@@ -55,6 +55,12 @@ footer {
     z-index: 30;
     box-sizing: border-box;
     touch-action: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}
+.show-id .item::after {
+    content: attr(data-item-id);
 }
 .item.packed {
     z-index: 10;
