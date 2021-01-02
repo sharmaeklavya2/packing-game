@@ -1089,7 +1089,7 @@ function mouseleaveHandler(ev) {
 function keydownHandler(ev) {
     if(handleKeyPresses && !ev.defaultPrevented) {
         if(ev.key == 'z' && (ev.metaKey || ev.ctrlKey)) {
-            game.undo();
+            if(game !== null) {game.undo();}
             ev.preventDefault();
         }
     }
