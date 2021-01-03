@@ -7,6 +7,7 @@ var hoverRect = document.getElementById('hover-rect');
 var innerMargin = 10;  // margin between arena and the elements inside it, in px.
 var outerMargin = 32;  // margin between arena and containing page.
 var defaultItemColor = 'hsl(210, 100%, 60%)';
+var defaultItemColorTikz = '3399ff';
 
 var handleKeyPresses = true;
 var game = null;
@@ -1138,6 +1139,123 @@ function addEventListeners() {
             loadGameFromFiles(ev.dataTransfer.files, uploadInfo['scaleFactor'],
                 uploadInfo['succHook'], uploadInfo['failHook']);
         });
+}
+
+//==[ Export ]==================================================================
+
+function getItemColor(itemId) {
+    if(game === null) {
+        return null;
+    }
+    else {
+        let colorCode = window.getComputedStyle(game.items[itemId].domElem).backgroundColor;
+        let [red, green, blue] = colorCode.match(/\d+/g).map(function(x) {return parseInt(x);});
+        return ((1 << 24) + (red << 16) + (green << 8) + blue).toString(16).substr(1);
+    }
+}
+
+var defaultTikzOptions = {
+    'cellSize': '1cm',
+    'margin': '0.1cm',
+    'mirror': true,
+    'wrap': true,
+};
+
+function getCellAndMarginSize() {
+    var pxInCm = window.outerWidth / 21;
+    var margin = (innerMargin / 2 / pxInCm) + 'cm';
+    var cellSize = (game.scaleFactor / pxInCm) + 'cm';
+    return [cellSize, margin];
+}
+
+function binsToTikz(level, pos, options={}) {
+    if(pos.length === 0) {
+        console.warn('binsToTikz: no packed items.');
+    }
+    const n = level.items.length;
+    let m = 0;
+    let children = [];
+    for(let i=0; i < pos.length && i < n; ++i) {
+        let [binId, xPos, yPos] = pos[i];
+        m = Math.max(m, binId+1);
+        if(children[binId] === undefined) {
+            children[binId] = [];
+        }
+        children[binId].push(i);
+    }
+    for(let j=0; j<m; ++j) {
+        if(children[j] === undefined) {
+            children[j] = [];
+        }
+    }
+
+    if(game !== null) {
+        let [computedCellSize, computedMargin] = getCellAndMarginSize();
+        if(options['cellSize'] === undefined) {
+            options['cellSize'] = computedCellSize;
+        }
+        if(options['margin'] === undefined) {
+            options['margin'] = computedMargin;
+        }
+    }
+    for(let key in defaultTikzOptions) {
+        if(defaultTikzOptions.hasOwnProperty(key)) {
+            if(options[key] === undefined) {
+                options[key] = defaultTikzOptions[key];
+            }
+        }
+    }
+
+    let lines = [
+'\\ifcsname pGameL\\endcsname\\else\\newlength{\\pGameL}\\fi',
+'\\ifcsname pGameM\\endcsname\\else\\newlength{\\pGameM}\\fi',
+`\\setlength{\\pGameL}{${options['cellSize']}}`,
+`\\setlength{\\pGameM}{${options['margin']}}`,
+`\\definecolor{defaultItemColor}{HTML}{${defaultItemColorTikz}}`,
+'\\tikzset{bin/.style={draw,thick}}',
+'\\tikzset{binGrid/.style={draw,step=1\\pGameL,{black!20}}}',
+'\\tikzset{item/.style={draw,fill=defaultItemColor}}',
+];
+    for(let j=0; j<m; ++j) {
+        lines.push('\\begin{tikzpicture}');
+        lines.push('\\path (-\\pGameM, -\\pGameM) rectangle '
+            + `(${level.binXLen}\\pGameL+\\pGameM, ${level.binYLen}\\pGameL+\\pGameM);`);
+        lines.push('\\path[binGrid] (0\\pGameL, 0\\pGameL) grid '
+            + `(${level.binXLen}\\pGameL, ${level.binYLen}\\pGameL);`);
+        for(let i of children[j]) {
+            const xLen = level.items[i].xLen;
+            const yLen = level.items[i].yLen;
+            let [binId, xPos, yPos] = pos[i];
+            if(options['mirror']) {
+                yPos = level.binYLen - yPos - yLen;
+            }
+            let colorStyleStr = '';
+            if(level.items[i].color !== null) {
+                const color = getItemColor(i);
+                if(color !== null) {
+                    lines.push(`\\definecolor{currentItemColor}{HTML}{${color}}`);
+                    colorStyleStr = ',fill=currentItemColor';
+                }
+            }
+            lines.push(`\\path[item${colorStyleStr}] (${xPos}\\pGameL, ${yPos}\\pGameL) rectangle `
+                + `+(${xLen}\\pGameL, ${yLen}\\pGameL);`);
+        }
+        lines.push('\\path[bin] (0\\pGameL, 0\\pGameL) rectangle '
+            + `(${level.binXLen}\\pGameL, ${level.binYLen}\\pGameL);`);
+        if(options['wrap']) {
+            lines.push('\\end{tikzpicture}');
+        }
+        else {
+            lines.push('\\end{tikzpicture}%');
+        }
+    }
+    return lines.join('\n');
+}
+
+function downloadBinsToTikz(options={}, filename='bins.tikz', cleanup=false) {
+    var tikz = binsToTikz(game.level, game.getItemPositions(), options);
+    var blob = new Blob([tikz], {type: 'application/x-tex'});
+    downloadBlob(blob, filename, cleanup);
 }
 
 //==[ Main ]====================================================================
