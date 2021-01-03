@@ -33,13 +33,24 @@ footer {
     z-index: 15;
 }
 
+.show-bins-only header, .show-bins-only footer, .show-bins-only #inventory,
+    .show-bins-only .bin:empty {
+    display: none;
+}
+.show-bins-only #packing-area {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+.show-bins-only #arena {
+    box-shadow: none;
+    margin: 0;
+}
 #inventory {
     margin: 10px;
     flex-shrink: 0;
 }
 #packing-area {
-    padding-top: 5px;
-    padding-bottom: 5px;
+    padding: 5px;
     display: flex;
     align-items: flex-start;
     flex-direction: column;
@@ -47,7 +58,7 @@ footer {
 
 .bin {
     position: relative;
-    margin: 5px 10px 5px 10px;
+    margin: 5px;
 }
 
 .item {
