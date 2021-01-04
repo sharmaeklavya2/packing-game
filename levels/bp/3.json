@@ -1,0 +1,25 @@
+{
+    "binXLen": 5,
+    "binYLen": 5,
+    "gameType": "bp",
+    "rotation": false,
+    "lower_bound": 1,
+    "upper_bound": 1,
+    "items": [
+        {"xLen": 1, "yLen": 3, "n": 1, "color": "hsl(190,100%,55%)"},
+        {"xLen": 1, "yLen": 2, "n": 2, "color": "hsl(200,100%,55%)"},
+        {"xLen": 2, "yLen": 2, "n": 2, "color": "hsl(240,100%,55%)"},
+        {"xLen": 4, "yLen": 1, "n": 2, "color": "hsl(280,100%,55%)"}
+    ],
+    "solutions": {
+        "solution": [
+            [0, 2, 1],
+            [0, 0, 0],
+            [0, 4, 3],
+            [0, 0, 2],
+            [0, 3, 1],
+            [0, 0, 4],
+            [0, 1, 0]
+        ]
+    }
+}

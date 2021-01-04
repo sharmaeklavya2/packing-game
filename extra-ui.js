@@ -174,6 +174,7 @@ function populateNgForm() {
     var levels = [
         ['levels/bp/1.json', 'Level 1'],
         ['levels/bp/2.json', 'Level 2'],
+        ['levels/bp/3.json', 'Level 3'],
     ];
     for(var i=0; i < levels.length; ++i) {
         let [url, label] = levels[i];
