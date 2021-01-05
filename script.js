@@ -364,6 +364,18 @@ function setPos(domElem, xPos, yPos) {
     domElem.style.left = xPos + 'px';
 }
 
+function createItemDom(item) {
+    let domElem = document.createElement('div');
+    domElem.classList.add('item');
+    domElem.setAttribute('data-item-id', this.itemInfo.id);
+    if(itemInfo.color !== null) {
+        domElem.style.backgroundColor = itemInfo.color;
+    }
+    else {
+        domElem.style.backgroundColor = defaultItemColor;
+    }
+}
+
 class ItemUI {
     constructor(itemInfo, scaleFactor) {
         this.itemInfo = itemInfo;
@@ -371,16 +383,7 @@ class ItemUI {
         this.yPos = null;
         this.binUI = null;
 
-        // DOM
-        this.domElem = document.createElement('div');
-        this.domElem.classList.add('item');
-        this.domElem.setAttribute('data-item-id', this.itemInfo.id);
-        if(itemInfo.color !== null) {
-            this.domElem.style.backgroundColor = itemInfo.color;
-        }
-        else {
-            this.domElem.style.backgroundColor = defaultItemColor;
-        }
+        this.domElem = createItemDom(itemInfo);
         this.resize(scaleFactor);
     }
 
@@ -595,13 +598,14 @@ class Game {
     constructor(level, scaleFactor=null) {
         game = this;
         this.level = level;
+        this.packing = new Packing(level.items, {});
         this._computeInventoryDimsAndItemHomePositions();
         this.stats = new Stats(this.level.gameType, this.level.items,
             this.level.lower_bound, this.level.upper_bound);
         this.itemInfoBar = new ItemInfoBar(this.level.gameType);
         this.history = [];
-        this.bins = [];
-        this.items = [];
+        this.itemDoms = [];
+        this.binDoms = [];
 
         this._setScaleFactor(scaleFactor);
         this._createItems();
@@ -817,11 +821,22 @@ class Game {
         inventory.style.backgroundSize = this.scaleFactor + 'px ' + this.scaleFactor + 'px';
     }
 
+    _resizeItemDom(itemId, scaleFactor) {
+        const rawItem = this.level.itemInfo[itemId];
+        this.itemDoms[itemId].style.width = scaleFactor * rawItem.xLen + 'px';
+        this.itemDoms[itemId].style.height = scaleFactor * rawItem.yLen + 'px';
+        const itemPos = this.packing.getItemPosition(itemId);
+        if(itemPos !== null) {
+            const [binId, xPos, yPos] = itemPos;
+            setPos(this.itemDoms[itemId], scaleFactor * xPos, scaleFactor * yPos);
+        }
+    }
+
     _createItems() {
-        var rawItems = this.level.items;
-        for(var i=0; i < rawItems.length; ++i) {
-            var itemUI = new ItemUI(rawItems[i], this.scaleFactor);
-            this.items.push(itemUI);
+        const rawItems = this.level.items;
+        for(let i=0; i < rawItems.length; ++i) {
+            this.itemDoms[i] = createItemDom(rawItems[i]);
+            this._resizeItemDom(itemId, this.scaleFactor);
         }
         this._moveItemsToInventory(true);
     }
