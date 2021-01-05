@@ -1,6 +1,7 @@
 'use strict';
 
 var undoButton = document.getElementById('undo-button');
+var redoButton = document.getElementById('redo-button');
 var ngForm = document.getElementById('ng-form');
 var ngFormRawTextarea = document.getElementById('ng-raw');
 var buttonToMenuMap = new Map([
@@ -219,6 +220,9 @@ function addExtraUIEventListeners() {
     undoButton.addEventListener('click', function(ev) {
             if(game !== null) {game.undo();}
         });
+    redoButton.addEventListener('click', function(ev) {
+            if(game !== null) {game.redo();}
+        });
     document.getElementById('zoom-button').addEventListener('click', function(ev) {
             toggleMenus('zoom-button');
         });
@@ -266,6 +270,12 @@ function disableUndoButton() {
 }
 function enableUndoButton() {
     undoButton.classList.remove('disabled');
+}
+function disableRedoButton() {
+    redoButton.classList.add('disabled');
+}
+function enableRedoButton() {
+    redoButton.classList.remove('disabled');
 }
 
 function closeBtnClickHandler(ev) {

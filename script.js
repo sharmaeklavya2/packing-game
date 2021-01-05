@@ -600,6 +600,7 @@ class Game {
             this.level.lower_bound, this.level.upper_bound);
         this.itemInfoBar = new ItemInfoBar(this.level.gameType);
         this.history = [];
+        this.historyLength = 0;
         this.bins = [];
         this.items = [];
 
@@ -630,7 +631,9 @@ class Game {
         this._moveItemsToInventory(false);
         this._destroyBins();
         this.history = [];
+        this.historyLength = 0;
         disableUndoButton();
+        disableRedoButton();
         if(pos === null) {
             pos = [];
         }
@@ -663,13 +666,27 @@ class Game {
         }
     }
 
-    undo() {
-        if(this.history.length === 0) {
+    undo() {this._undoOrRedo(true);}
+    redo() {this._undoOrRedo(false);}
+
+    _undoOrRedo(undo) {
+        if(undo && this.historyLength === 0) {
             return;
         }
-        const record = this.history.pop();
-        var item = this.items[record.itemId];
-        var coords = record.oldCoords;
+        if(!undo && this.historyLength == this.history.length) {
+            return;
+        }
+
+        let record, coords;
+        if(undo) {
+            record = this.history[--this.historyLength];
+            coords = record.oldCoords;
+        }
+        else {
+            record = this.history[this.historyLength++];
+            coords = record.newCoords;
+        }
+        const item = this.items[record.itemId];
 
         if(coords === null) {
             this._moveItemToInventory(record.itemId);
@@ -698,10 +715,17 @@ class Game {
                 console.warn('undo failed: cannot move item ' + record.itemId
                     + ' to position ' + coords + '; invalidating history');
                 this.history = [];
+                this.historyLength = 0;
             }
         }
-        if(this.history.length === 0) {
+        if(this.historyLength === 0) {
             disableUndoButton();
+        }
+        if(this.historyLength === this.history.length) {
+            disableRedoButton();
+        }
+        else {
+            enableRedoButton();
         }
     }
 
@@ -734,6 +758,7 @@ class Game {
         this._setInventoryDimsPx(0, 0);
         arena.classList.remove('large');
         this.history = [];
+        this.historyLength = 0;
         disableUndoButton();
         this.stats.destroy();
         this.itemInfoBar.destroy();
@@ -766,11 +791,14 @@ class Game {
 
     _recordHistory(itemId, oldCoords, newCoords) {
         if(!arraysEqual(oldCoords, newCoords)) {
-            this.history.push({'itemId': itemId, 'oldCoords': oldCoords, 'newCoords': newCoords});
+            this.history[this.historyLength++] = {'itemId': itemId,
+                'oldCoords': oldCoords, 'newCoords': newCoords};
+            this.history.length = this.historyLength;
         }
         if(this.history.length > 0) {
             enableUndoButton();
         }
+        disableRedoButton();
     }
 
     _computeInventoryDimsAndItemHomePositions() {
@@ -1103,7 +1131,7 @@ function mouseleaveHandler(ev) {
 function keydownHandler(ev) {
     if(handleKeyPresses && !ev.defaultPrevented) {
         if(ev.key == 'z' && (ev.metaKey || ev.ctrlKey)) {
-            if(game !== null) {game.undo();}
+            if(game !== null) {game._undoOrRedo(!ev.shiftKey);}
             ev.preventDefault();
         }
     }
