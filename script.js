@@ -1219,12 +1219,14 @@ function binsToTikz(level, pos, options={}) {
     let m = 0;
     let children = [];
     for(let i=0; i < pos.length && i < n; ++i) {
-        let [binId, xPos, yPos] = pos[i];
-        m = Math.max(m, binId+1);
-        if(children[binId] === undefined) {
-            children[binId] = [];
+        if(pos[i] !== undefined && pos[i] !== null) {
+            let [binId, xPos, yPos] = pos[i];
+            m = Math.max(m, binId+1);
+            if(children[binId] === undefined) {
+                children[binId] = [];
+            }
+            children[binId].push(i);
         }
-        children[binId].push(i);
     }
     for(let j=0; j<m; ++j) {
         if(children[j] === undefined) {
