@@ -782,6 +782,16 @@ class Game {
         inventory.style.backgroundSize = null;
     }
 
+    usedBins() {
+        let count = 0;
+        for(let i=0; i<this.bins.length; ++i) {
+            if(!this.bins[i].bin.isEmpty()) {
+                count += 1;
+            }
+        }
+        return count;
+    }
+
     _assessBins() {
         var lb = this.level.lower_bound, ub = this.level.upper_bound;
         var used = 0;

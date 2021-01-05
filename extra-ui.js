@@ -8,6 +8,7 @@ var buttonToMenuMap = new Map([
     ['new-game-button', 'ng-form'],
     ['solutions-button', 'solutions-menu'],
     ['auto-pack-button', 'auto-pack-menu'],
+    ['export-button', 'export-menu'],
     ['zoom-button', 'zoom-toolbar'],
 ]);
 
@@ -271,6 +272,9 @@ function addExtraUIEventListeners() {
     document.getElementById('auto-pack-button').addEventListener('click', function(ev) {
             toggleMenus('auto-pack-button');
         });
+    document.getElementById('export-button').addEventListener('click', function(ev) {
+            toggleMenus('export-button');
+        });
     document.getElementById('about-button').addEventListener('click', function(ev) {
             window.alert(aboutText);
         });
@@ -298,6 +302,26 @@ function addExtraUIEventListeners() {
         });
     document.getElementById('zoom-y-button').addEventListener('click', function(ev) {
             game.resize('y');
+        });
+
+    document.getElementById('export-li-tikz').addEventListener('click', function(ev) {
+            if(game.usedBins() == 0) {
+                addMsg('error', 'No bins have been used; nothing to export.');
+            }
+            document.getElementById('export-button').classList.remove('pressed');
+            document.getElementById('export-menu').classList.add('disabled');
+        });
+    document.getElementById('export-li-pdf').addEventListener('click', function(ev) {
+            if(game.usedBins() == 0) {
+                addMsg('error', 'No bins have been used; nothing to export.');
+            }
+            else {
+                document.body.classList.add('show-bins-only');
+                window.print();
+                setTimeout(function() {document.body.classList.remove('show-bins-only');}, 0);
+            }
+            document.getElementById('export-button').classList.remove('pressed');
+            document.getElementById('export-menu').classList.add('disabled');
         });
 }
 

@@ -36,12 +36,10 @@
                 <use xlink:href="sprites.svg#fa-eye"/></svg>
         </li>
         <li id="auto-pack-button" title="Run algorithms">&#9654;</li>
-        <!--
-        <li id="export-img-button" class="disabled" title="Export as image">
-            <svg class="icon" id="export-img-icon"><title>Export as image</title>
+        <li id="export-button" title="Export as figure">
+            <svg class="icon" id="export-img-icon"><title>Export as figure</title>
                 <use xlink:href="sprites.svg#fa-file-image"/></svg>
         </li>
-        -->
         <li id="about-button" title="About">?</li>
     </ul>
     <form id="ng-form" class="menu disabled">
@@ -76,6 +74,13 @@
     <div id="auto-pack-menu" class="menu disabled">
         <div class="heading">Run algorithms</div>
         <ul id="auto-pack-list"></ul>
+    </div>
+    <div id="export-menu" class="menu disabled">
+        <div class="heading">Export bins as figure</div>
+        <ul id="export-list">
+            <li id="export-li-tikz">TikZ</li>
+            <li id="export-li-pdf">PDF</li>
+        </ul>
     </div>
     <ul id="zoom-toolbar" class="toolbar disabled">
         <li id="zoom-in-button" title="Zoom in">
