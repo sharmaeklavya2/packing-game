@@ -31,7 +31,11 @@
             <svg class="icon" id="unpack-icon"><title>Clear</title>
                 <use xlink:href="sprites.svg#fa-broom"/></svg>
         </li>
-        <li id="solve-button" title="Show solutions">&#9654;</li>
+        <li id="solutions-button" title="View solution">
+            <svg class="icon" id="solutions-icon"><title>View solution</title>
+                <use xlink:href="sprites.svg#fa-eye"/></svg>
+        </li>
+        <li id="auto-pack-button" title="Run algorithms">&#9654;</li>
         <!--
         <li id="export-img-button" class="disabled" title="Export as image">
             <svg class="icon" id="export-img-icon"><title>Export as image</title>
@@ -65,9 +69,13 @@
         </div>
         <button id="ng-submit" type="submit" disabled="disabled">Submit</button>
     </form>
-    <div id="solve-menu" class="menu disabled">
-        <div class="heading">View solution</div>
-        <ul id="solve-list"></ul>
+    <div id="solutions-menu" class="menu disabled">
+        <div class="heading">View solutions</div>
+        <ul id="solutions-list"></ul>
+    </div>
+    <div id="auto-pack-menu" class="menu disabled">
+        <div class="heading">Run algorithms</div>
+        <ul id="auto-pack-list"></ul>
     </div>
     <ul id="zoom-toolbar" class="toolbar disabled">
         <li id="zoom-in-button" title="Zoom in">

@@ -6,7 +6,8 @@ var ngForm = document.getElementById('ng-form');
 var ngFormRawTextarea = document.getElementById('ng-raw');
 var buttonToMenuMap = new Map([
     ['new-game-button', 'ng-form'],
-    ['solve-button', 'solve-menu'],
+    ['solutions-button', 'solutions-menu'],
+    ['auto-pack-button', 'auto-pack-menu'],
     ['zoom-button', 'zoom-toolbar'],
 ]);
 
@@ -135,39 +136,61 @@ function ngFormSubmitHandler(ev) {
     }
 }
 
-function solveSuccess() {
-    document.getElementById('solve-menu').classList.add('disabled');
-    document.getElementById('solve-button').classList.remove('pressed');
+function showSolutionSuccess() {
+    document.getElementById('solutions-menu').classList.add('disabled');
+    document.getElementById('solutions-button').classList.remove('pressed');
 }
 
-function solveClickHandler(ev) {
+function autoPackSuccess() {
+    document.getElementById('auto-pack-menu').classList.add('disabled');
+    document.getElementById('auto-pack-button').classList.remove('pressed');
+}
+
+function solutionsClickHandler(ev) {
+    ev.preventDefault();
+    var solnName = ev.target.innerHTML;
+    game.selectSolution(solnName);
+    showSolutionSuccess();
+}
+
+function autoPackClickHandler(ev) {
     ev.preventDefault();
     var algoName = ev.target.innerHTML;
-    game.selectSolution(algoName);
-    solveSuccess();
+    game.selectAutoPack(algoName);
+    autoPackSuccess();
 }
 
 function repopulateSolveMenu() {
-    var solutions = game.level.solutions;
-    var keys = new Set();
-    for(let key of Object.keys(solutions)) {
-        if(solutions.hasOwnProperty(key)) {
-            keys.add(key);
+    let a = [[game.level.solutions, 'solutions', solutionsClickHandler],
+        [bpAlgos, 'auto-pack', autoPackClickHandler]];
+    for(let [solMap, domKey, clickHandler] of a) {
+        let listDomElem = document.getElementById(domKey + '-list');
+        listDomElem.innerHTML = '';
+        let button = document.getElementById(domKey + '-button');
+        if(solMap.size === 0) {
+            button.classList.add('disabled');
+        }
+        else {
+            button.classList.remove('disabled');
+        }
+        for(let key of solMap.keys()) {
+            let liElem = document.createElement('li');
+            liElem.innerHTML = key;
+            liElem.addEventListener('click', clickHandler);
+            listDomElem.appendChild(liElem);
         }
     }
-    for(let key of Object.keys(bpAlgos)) {
-        if(bpAlgos.hasOwnProperty(key)) {
-            keys.add(key);
-        }
-    }
+}
 
-    var solveList = document.getElementById('solve-list');
-    solveList.innerHTML = '';
-    for(let key of keys) {
+function repopulateAutoPackMenu() {
+    var autoPack = game.level.autoPack;
+    var autoPackList = document.getElementById('auto-pack-list');
+    autoPackList.innerHTML = '';
+    for(let key of bpAlgos.keys()) {
         var liElem = document.createElement('li');
         liElem.innerHTML = key;
-        liElem.addEventListener('click', solveClickHandler);
-        solveList.appendChild(liElem);
+        liElem.addEventListener('click', autoPackClickHandler);
+        autoPackList.appendChild(liElem);
     }
 }
 
@@ -232,8 +255,21 @@ function addExtraUIEventListeners() {
     document.getElementById('unpack-button').addEventListener('click', function(ev) {
             game.putBack();
         });
-    document.getElementById('solve-button').addEventListener('click', function(ev) {
-            toggleMenus('solve-button');
+    let solutionsButton = document.getElementById('solutions-button');
+    solutionsButton.addEventListener('click', function(ev) {
+            if(!solutionsButton.classList.contains('disabled') && game !== null) {
+                if(game.level.solutions.size === 1) {
+                    for(const key of game.level.solutions.keys()) {
+                        game.selectSolution(key);
+                    }
+                }
+                else {
+                    toggleMenus('solutions-button');
+                }
+            }
+        });
+    document.getElementById('auto-pack-button').addEventListener('click', function(ev) {
+            toggleMenus('auto-pack-button');
         });
     document.getElementById('about-button').addEventListener('click', function(ev) {
             window.alert(aboutText);

@@ -214,7 +214,7 @@ header {
 .toolbar > li:last-child {
     border-right: 1px solid black;
 }
-#main-toolbar > li#solve-button {
+#main-toolbar > li#auto-pack-button {
     font-size: 1.5rem;
 }
 
@@ -280,33 +280,33 @@ textarea {
 #ng-form-gen-params {
     padding-left: 1rem;
 }
-#solve-menu:not(.disabled) {
+.menu:not(.disabled) {
     margin: 0;
     display: flex;
     flex-direction: column;
 }
-#solve-menu > ul {
+.menu > ul {
     list-style-type: none;
     margin: 0;
     padding: 0;
 }
-#solve-menu > ul > li {
+.menu > ul > li {
     font-family: monospace;
     font-size: 1.1rem;
 }
-#solve-menu > ul > li {
+.menu > ul > li {
     cursor: pointer;
     padding: 0.5rem 1rem;
     display: flex;
     justify-content: space-around;
 }
-#solve-menu > ul > li:last-child {
+.menu > ul > li:last-child {
     border-radius: 0 0 0.5rem 0.5rem;
 }
-#solve-menu > ul > li:hover {
+.menu > ul > li:hover {
     background-color: rgba(128, 128, 128, 0.6);
 }
-#solve-menu > ul > li:active {
+.menu > ul > li:active {
     background-color: rgba(128, 128, 128, 0.8);
 }
 

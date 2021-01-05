@@ -38,7 +38,7 @@ function getRandGen(seed) {
 
 //==[ Packing algorithms ]======================================================
 
-var bpAlgos = {};
+var bpAlgos = new Map();
 
 class Shelf {
     constructor(id, xLen) {
@@ -206,18 +206,18 @@ function shelfBinPack(items, shelfAlgo, bpAlgo, binXLen, binYLen, output) {
     return output;
 }
 
-function nfdhBinPack(items, binXLen, binYLen, output) {
-    return shelfBinPack(items, nfdhShelfPack, nextFit1D, binXLen, binYLen, output);
-}
-bpAlgos['nfdh'] = nfdhBinPack;
-function ffdhNfBinPack(items, binXLen, binYLen, output) {
-    return shelfBinPack(items, ffdhShelfPack, nextFit1D, binXLen, binYLen, output);
-}
-bpAlgos['ffdh-nf'] = ffdhNfBinPack;
 function ffdhFfBinPack(items, binXLen, binYLen, output) {
     return shelfBinPack(items, ffdhShelfPack, firstFit1D, binXLen, binYLen, output);
 }
-bpAlgos['ffdh-ff'] = ffdhFfBinPack;
+bpAlgos.set('ffdh-ff', ffdhFfBinPack);
+function nfdhBinPack(items, binXLen, binYLen, output) {
+    return shelfBinPack(items, nfdhShelfPack, nextFit1D, binXLen, binYLen, output);
+}
+bpAlgos.set('nfdh', nfdhBinPack);
+function ffdhNfBinPack(items, binXLen, binYLen, output) {
+    return shelfBinPack(items, ffdhShelfPack, nextFit1D, binXLen, binYLen, output);
+}
+bpAlgos.set('ffdh-nf', ffdhNfBinPack);
 
 function getStripDims(items, stripPackSol) {
     var xLen = 0, yLen = 0;
@@ -267,13 +267,13 @@ function mirrorAlgo(gbpAlgo) {
 
 function createMirrors() {
     let algoNames = [];
-    for(let algoName of Object.keys(bpAlgos)) {
-        if(bpAlgos.hasOwnProperty(algoName) && !algoName.endsWith('-mirror')) {
+    for(let algoName of bpAlgos.keys()) {
+        if(!algoName.endsWith('-mirror')) {
             algoNames.push(algoName);
         }
     }
     for(let algoName of algoNames) {
-        bpAlgos[algoName + '-mirror'] = mirrorAlgo(bpAlgos[algoName]);
+        bpAlgos.set(algoName + '-mirror', mirrorAlgo(bpAlgos.get(algoName)));
     }
 }
 createMirrors();

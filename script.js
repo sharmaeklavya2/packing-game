@@ -283,8 +283,8 @@ function serializeItemInfo(itemInfo) {
 
 function processLevel(j) {
     var reqProps = ['binXLen', 'binYLen', 'items'];
-    var optProps = {'gameType': 'bp', 'startPos': [],
-        'lower_bound': null, 'upper_bound': null, 'solutions': {}};
+    var optProps = {'gameType': 'bp', 'startPos': [], 'solution': null,
+        'lower_bound': null, 'upper_bound': null, 'solutions': null};
     var o = readObjectPropsWithAssert(j, reqProps, optProps, 'level');
     var items = [];
     console.assert(o.gameType === 'bp', "the only supported gameType is bp");
@@ -300,15 +300,26 @@ function processLevel(j) {
         }
     }
     o.items = items;
+    if(o.solutions === null) {
+        if(o.solution !== null) {
+            o.solutions = {'solution': o.solution};
+        }
+        else {
+            o.solutions = {};
+        }
+    }
+    o.solutions = new Map(Object.entries(o.solutions));
 
-    var ubAlgos = ['nfdh', 'nfdh-mirror', 'ffdh-ff', 'ffdh-ff-mirror'];
+    var ubAlgos = ['ffdh-ff', 'ffdh-ff-mirror'];
     o.computed_ub = items.length;
     o.computed_ub_reason = null;
+    o.autoPack = new Map();
+    o.autoPackNBins = new Map();
     for(const algoName of ubAlgos) {
-        if(o.solutions[algoName] === undefined || o.solutions[algoName] === null) {
-            o.solutions[algoName] = bpAlgos[algoName](items, o.binXLen, o.binYLen, []);
-        }
-        const nBins = countUsedBins(o.solutions[algoName]);
+        let algo = bpAlgos.get(algoName);
+        o.autoPack.set(algoName, algo(items, o.binXLen, o.binYLen, []));
+        const nBins = countUsedBins(o.autoPack.get(algoName));
+        o.autoPackNBins.set(algoName, nBins);
         if(nBins < o.computed_ub) {
             o.computed_ub_reason = algoName;
             o.computed_ub = nBins;
@@ -331,7 +342,7 @@ function serItemsEqual(a, b) {
 
 function serializeLevel(level, pos=null) {
     var o = {"binXLen": level.binXLen, "binYLen": level.binYLen,
-        "gameType": level.gameType, "solutions": level.solutions,
+        "gameType": level.gameType, "solutions": Object.fromEntries(level.solutions.entries()),
         "lower_bound": level.lower_bound, "upper_bound": level.upper_bound};
     if(pos !== null && pos.length > 0) {o['startPos'] = pos;}
 
@@ -729,13 +740,17 @@ class Game {
         }
     }
 
-    selectSolution(algoName) {
-        var solutions = this.level.solutions;
-        if(solutions[algoName] === undefined || solutions[algoName] === null) {
-            solutions[algoName] = bpAlgos[algoName](this.level.items, this.level.binXLen,
-                this.level.binYLen, []);
+    selectAutoPack(algoName) {
+        const autoPack = this.level.autoPack;
+        if(autoPack.get(algoName) === undefined) {
+            autoPack.set(algoName, bpAlgos.get(algoName)(this.level.items, this.level.binXLen,
+                this.level.binYLen, []));
         }
-        this.putBack(solutions[algoName]);
+        this.putBack(autoPack.get(algoName));
+    }
+
+    selectSolution(solnName) {
+        this.putBack(this.level.solutions.get(solnName));
     }
 
     resize(scaleFactor) {
