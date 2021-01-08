@@ -300,9 +300,9 @@ class Game {
         this.profit = 0;
 
         this._setScaleFactor(scaleFactor);
+        this._createStatsBar();
         this._createItems();
         this._createBinsAndPackItems(this.level.startPos);
-        this._createStatsBar();
         this._refreshStatsDom();
         repopulateSolveMenu(this.level.solutions);
     }
@@ -407,7 +407,7 @@ class Game {
             item.xPos = xPos;
             item.yPos = yPos;
             item.domElem.classList.add('packed');
-            setPos(item.domElem, game.scaleFactor * xPos, game.scaleFactor * yPos);
+            setPos(item.domElem, this.scaleFactor * xPos, this.scaleFactor * yPos);
             this.nItemsPacked++;
             this.profit += item.itemInfo.profit;
             if(wasEmpty) {
