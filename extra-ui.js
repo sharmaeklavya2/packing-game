@@ -323,14 +323,14 @@ function addExtraUIEventListeners() {
         });
 
     document.getElementById('export-li-tikz').addEventListener('click', function(ev) {
-            if(game.usedBins() == 0) {
+            if(game.nBinsUsed == 0) {
                 addMsg('error', 'No bins have been used; nothing to export.');
             }
             document.getElementById('export-button').classList.remove('pressed');
             document.getElementById('export-menu').classList.add('disabled');
         });
     document.getElementById('export-li-pdf').addEventListener('click', function(ev) {
-            if(game.usedBins() == 0) {
+            if(game.nBinsUsed == 0) {
                 addMsg('error', 'No bins have been used; nothing to export.');
             }
             else {

@@ -457,94 +457,6 @@ function createBarItems(domParent, names) {
     return domElems;
 }
 
-class Stats {
-    constructor(gameType, items, lb, ub) {
-        // items are ItemInfo objects
-        this.gameType = gameType;
-        this.nItems = 0;
-        this.nItemsPacked = 0;
-        this.nBins = 0;
-        this.profit = 0;
-        this.lb = lb;
-        this.ub = ub;
-        for(var item of items) {
-            this.nItems++;
-            this.profit += item.profit;
-        }
-
-        var domElemNames = ['packed', 'unpacked'];
-        if(this.gameType == 'bp') {
-            domElemNames.push('bins used');
-        }
-        else if(this.gameType == 'ks') {
-            domElemNames.push('profit');
-        }
-        var statsBar = document.getElementById('stats-bar');
-        this.domElems = createBarItems(statsBar, domElemNames);
-        this.refreshDom();
-    }
-
-    reportAttach(item, wasEmpty) {
-        this.nItemsPacked++;
-        this.profit += item.profit;
-        if(wasEmpty) {
-            this.nBins++;
-        }
-        this.refreshDom();
-    }
-
-    reportDetach(item, isEmpty) {
-        this.nItemsPacked--;
-        this.profit -= item.profit;
-        if(isEmpty) {
-            this.nBins--;
-        }
-        this.refreshDom();
-    }
-
-    refreshDom() {
-        var d = {
-            'packed': this.nItemsPacked,
-            'unpacked': this.nItems - this.nItemsPacked,
-            'bins used': this.nBins,
-            'profit': this.profit,
-        };
-        for(let [key, value] of Object.entries(d)) {
-            var domElem = this.domElems[key];
-            if(domElem !== undefined) {
-                domElem.innerHTML = value;
-            }
-        }
-        if(d['unpacked'] === 0) {
-            this.domElems['packed'].classList.add('success');
-            this.domElems['unpacked'].classList.add('success');
-        }
-        else {
-            this.domElems['packed'].classList.remove('success');
-            this.domElems['unpacked'].classList.remove('success');
-        }
-        var binsUsedDomElem = this.domElems['bins used'];
-        binsUsedDomElem.classList.remove('success');
-        binsUsedDomElem.classList.remove('error');
-        binsUsedDomElem.classList.remove('warning');
-        if(this.nBins > this.ub) {
-            binsUsedDomElem.classList.add('error');
-        }
-        else if(this.nBins > this.lb) {
-            binsUsedDomElem.classList.add('warning');
-        }
-        else {
-            binsUsedDomElem.classList.add('success');
-        }
-    }
-
-    destroy() {
-        var statsBar = document.getElementById('stats-bar');
-        statsBar.innerHTML = '';
-        this.domElems = null;
-    }
-}
-
 function inferScaleFactors(invXLen, invYLen, binXLen, binYLen, nBins=1) {
     nBins = Math.max(1, nBins);
     const arenaX = window.innerWidth - 2 * outerMargin;
@@ -563,17 +475,20 @@ class Game {
     constructor(level, scaleFactor=null) {
         this.level = level;
         this._computeInventoryDimsAndItemHomePositions();
-        this.stats = new Stats(this.level.gameType, this.level.items,
-            this.level.lower_bound, this.level.upper_bound);
         this.itemInfoBar = new ItemInfoBar(this.level.gameType);
         this.history = [];
         this.historyLength = 0;
         this.bins = [];
         this.items = [];
+        this.nItemsPacked = 0;
+        this.nBinsUsed = 0;
+        this.profit = 0;
 
         this._setScaleFactor(scaleFactor);
         this._createItems();
         this._createBinsAndPackItems(this.level.startPos);
+        this._createStatsBar();
+        this._refreshStatsDom();
         repopulateSolveMenu(this.level.solutions);
     }
 
@@ -650,10 +565,15 @@ class Game {
                 item.itemInfo.xLen, item.itemInfo.yLen));
             item.binUI.domElem.removeChild(item.domElem);
             item.domElem.classList.remove('packed');
-            this.stats.reportDetach(item.itemInfo, item.binUI.bin.isEmpty());
+            this.nItemsPacked--;
+            this.profit -= item.itemInfo.profit;
+            if(item.binUI.bin.isEmpty()) {
+                this.nBinsUsed--;
+            }
             item.binUI = null;
             inventory.appendChild(item.domElem);
             this._assessBins();
+            this._refreshStatsDom();
         }
     }
 
@@ -673,9 +593,14 @@ class Game {
             item.yPos = yPos;
             item.domElem.classList.add('packed');
             setPos(item.domElem, game.scaleFactor * xPos, game.scaleFactor * yPos);
-            this.stats.reportAttach(item.itemInfo, wasEmpty);
+            this.nItemsPacked++;
+            this.profit += item.itemInfo.profit;
+            if(wasEmpty) {
+                this.nBinsUsed++;
+            }
             item.binUI.domElem.appendChild(item.domElem);
             this._assessBins();
+            this._refreshStatsDom();
             return true;
         }
         else {
@@ -781,21 +706,45 @@ class Game {
         this.history = [];
         this.historyLength = 0;
         disableUndoButton();
-        this.stats.destroy();
+        this._destroyStatsBar();
         this.itemInfoBar.destroy();
         this.level = null;
         this.stripPackSol = null;
         inventory.style.backgroundSize = null;
     }
 
-    usedBins() {
-        let count = 0;
-        for(let i=0; i<this.bins.length; ++i) {
-            if(!this.bins[i].bin.isEmpty()) {
-                count += 1;
+    _refreshStatsDom() {
+        let d = {
+            'packed': this.nItemsPacked,
+            'unpacked': this.items.length - this.nItemsPacked,
+            'bins used': this.nBinsUsed,
+            'profit': this.profit,
+        };
+        for(let [key, value] of Object.entries(d)) {
+            let domElem = this.statsDomElems[key];
+            if(domElem !== undefined) {
+                domElem.innerHTML = value;
             }
         }
-        return count;
+        if(d['unpacked'] === 0) {
+            this.statsDomElems['packed'].classList.add('success');
+            this.statsDomElems['unpacked'].classList.add('success');
+        }
+        else {
+            this.statsDomElems['packed'].classList.remove('success');
+            this.statsDomElems['unpacked'].classList.remove('success');
+        }
+        let binsUsedDomElem = this.statsDomElems['bins used'];
+        binsUsedDomElem.classList.remove('success', 'error', 'warning');
+        if(this.nBinsUsed > this.level.upper_bound) {
+            binsUsedDomElem.classList.add('error');
+        }
+        else if(this.nBinsUsed > this.level.lower_bound) {
+            binsUsedDomElem.classList.add('warning');
+        }
+        else {
+            binsUsedDomElem.classList.add('success');
+        }
     }
 
     _assessBins() {
@@ -885,6 +834,22 @@ class Game {
         this._moveItemsToInventory(true);
     }
 
+    _createStatsBar() {
+        let domElemNames = ['packed', 'unpacked'];
+        if(this.level.gameType == 'bp') {
+            domElemNames.push('bins used');
+        }
+        else if(this.level.gameType == 'ks') {
+            domElemNames.push('profit');
+        }
+        this.statsDomElems = createBarItems(document.getElementById('stats-bar'), domElemNames);
+    }
+
+    _destroyStatsBar() {
+        document.getElementById('stats-bar').innerHTML = '';
+        this.statsDomElems = null;
+    }
+
     _moveItemsToInventory(firstTime) {
         var xOff = inventory.getBoundingClientRect().x - arena.getBoundingClientRect().x;
         var yOff = inventory.getBoundingClientRect().y - arena.getBoundingClientRect().y;
@@ -965,9 +930,8 @@ function clearGame() {
 
 class ItemInfoBar {
     constructor(gameType) {
-        this.gameType = gameType;
         var domElemNames = ['width', 'height'];
-        if(this.gameType == 'ks') {
+        if(gameType == 'ks') {
             domElemNames.push('profit');
         }
         this.barDom = document.getElementById('item-info-bar');
