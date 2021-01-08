@@ -7,7 +7,6 @@ var hoverRect = document.getElementById('hover-rect');
 var innerMargin = 10;  // margin between arena and the elements inside it, in px.
 var outerMargin = 32;  // margin between arena and containing page.
 var defaultItemColor = 'hsl(210, 100%, 60%)';
-var defaultItemColorTikz = '3399ff';
 
 var handleKeyPresses = true;
 var game = null;
@@ -171,15 +170,6 @@ function arraysEqual(a, b) {
     return true;
 }
 
-function dictAssertAccess(d, key, name) {
-    if(d.hasOwnProperty(key)) {
-        return d[key];
-    }
-    else {
-        throw new InputError(name + ': missing ' + key);
-    }
-}
-
 function clip(x, lo, hi) {
     if (x <= lo) {
         return lo;
@@ -190,181 +180,6 @@ function clip(x, lo, hi) {
     else {
         return x;
     }
-}
-
-function readObjectPropsWithAssert(input, reqProps, optProps, objname) {
-    var o = {};
-    for(var prop of reqProps) {
-        if(input.hasOwnProperty(prop)) {
-            o[prop] = input[prop];
-        }
-        else {
-            throw new InputError("property '" + prop + "' is missing for " + objname);
-        }
-    }
-    if(optProps.constructor === Object) {
-        for(let [prop, value] of Object.entries(optProps)) {
-            if(input.hasOwnProperty(prop)) {
-                o[prop] = input[prop];
-            }
-            else {
-                o[prop] = value;
-            }
-        }
-    }
-    return o;
-}
-
-function toQueryString(obj) {
-    var strs = [];
-    for(let [key, value] of Object.entries(obj)) {
-        strs.push(encodeURIComponent(key) + "=" + encodeURIComponent(value));
-    }
-    return strs.join("&");
-}
-
-function downloadBlob(blob, filename, cleanup=false) {
-    var url = URL.createObjectURL(blob);
-    var downloaderElem = document.getElementById('downloader');
-    downloaderElem.href = url;
-    downloaderElem.download = filename;
-    downloaderElem.click();
-    if(cleanup) {
-        setTimeout(function() {
-                downloaderElem.removeAttribute('href');
-                downloaderElem.removeAttribute('download');
-                window.URL.revokeObjectURL(url);
-            }, 0);
-    }
-}
-
-//==[ SerDe and Cleaning ]======================================================
-
-function itemInfoFromObject(j, id) {
-    if(Array.isArray(j)) {
-        if(j.length < 2) {
-            throw new InputError('invalid input for item ' + id +
-                ': array of length ' + j.length);
-        }
-        let [xLen, yLen, profit] = j;
-        if(profit === undefined) {
-            profit = 0;
-        }
-        return new ItemInfo(id, xLen, yLen, profit, null);
-    }
-    else {
-        var reqProps = ['xLen', 'yLen'];
-        var optProps = {'color': null, 'profit': 0};
-        var o = readObjectPropsWithAssert(j, reqProps, optProps, 'item ' + id);
-        return new ItemInfo(id, o['xLen'], o['yLen'], o['profit'], o['color']);
-    }
-}
-
-function serializeItemInfo(itemInfo) {
-    var o = {"xLen": itemInfo.xLen, "yLen": itemInfo.yLen};
-    if(itemInfo.color !== null) {
-        o['color'] = itemInfo.color;
-    }
-    if(itemInfo.profit !== null && itemInfo.profit !== 0) {
-        o['profit'] = itemInfo.profit;
-    }
-    return o;
-}
-
-function processLevel(j) {
-    var reqProps = ['binXLen', 'binYLen', 'items'];
-    var optProps = {'gameType': 'bp', 'startPos': [], 'solution': null,
-        'lower_bound': null, 'upper_bound': null, 'solutions': null};
-    var o = readObjectPropsWithAssert(j, reqProps, optProps, 'level');
-    var items = [];
-    if(o.gameType !== 'bp') {
-        throw new InputError("the only supported gameType is bp");
-    }
-    var id = 0;
-    for(var itemObj of o['items']) {
-        var n = itemObj.n;
-        if(n === undefined) {
-            n = 1;
-        }
-        for(var i=0; i<n; ++i) {
-            var item = itemInfoFromObject(itemObj, id++);
-            items.push(item);
-        }
-    }
-    o.items = items;
-    if(o.solutions === null) {
-        if(o.solution !== null) {
-            o.solutions = {'solution': o.solution};
-        }
-        else {
-            o.solutions = {};
-        }
-    }
-    o.solutions = new Map(Object.entries(o.solutions));
-
-    var ubAlgos = ['ffdh-ff', 'ffdh-ff-mirror'];
-    o.computed_ub = items.length;
-    o.computed_ub_reason = null;
-    o.autoPack = new Map();
-    o.autoPackNBins = new Map();
-    for(const [solnName, soln] of o.solutions.entries()) {
-        const nBins = countUsedBins(soln);
-        if(nBins < o.computed_ub) {
-            o.computed_ub_reason = solnName;
-            o.computed_ub = nBins;
-        }
-    }
-    for(const algoName of ubAlgos) {
-        let algo = bpAlgos.get(algoName);
-        o.autoPack.set(algoName, algo(items, o.binXLen, o.binYLen, []));
-        const nBins = countUsedBins(o.autoPack.get(algoName));
-        o.autoPackNBins.set(algoName, nBins);
-        if(nBins < o.computed_ub) {
-            o.computed_ub_reason = algoName;
-            o.computed_ub = nBins;
-        }
-    }
-    if(o.upper_bound === null) {
-        o.upper_bound = o.computed_ub;
-    }
-    if(o.lower_bound === null) {
-        [o.computed_lb, o.computed_lb_reason] = bpLowerBound(items, o.binXLen, o.binYLen, false);
-        o.lower_bound = o.computed_lb;
-    }
-    return o;
-}
-
-function serItemsEqual(a, b) {
-    return (a.xPos === b.xPos && a.yPos === b.yPos
-        && a.profit === b.profit && a.color === b.color);
-}
-
-function serializeLevel(level, pos=null) {
-    var o = {"binXLen": level.binXLen, "binYLen": level.binYLen,
-        "gameType": level.gameType, "solutions": Object.fromEntries(level.solutions.entries()),
-        "lower_bound": level.lower_bound, "upper_bound": level.upper_bound};
-    if(pos !== null && pos.length > 0) {o['startPos'] = pos;}
-
-    var serItems = [];
-    o['items'] = serItems;
-    var prevSerItem = null;
-    for(var i=0; i < level.items.length; ++i) {
-        var serItem = serializeItemInfo(level.items[i]);
-        if(prevSerItem !== null && serItemsEqual(prevSerItem, serItem)) {
-            var n = prevSerItem['n'];
-            if(n === undefined) {
-                prevSerItem['n'] = 2;
-            }
-            else {
-                prevSerItem['n'] = n+1;
-            }
-        }
-        else {
-            serItems.push(serItem);
-            prevSerItem = serItem;
-        }
-    }
-    return o;
 }
 
 //==[ UI Layer ]================================================================
@@ -915,12 +730,6 @@ class Game {
     }
 }
 
-function downloadProgress(filename='progress.json', cleanup=false) {
-    var level = serializeLevel(game.level, game.getItemPositions());
-    var blob = new Blob([JSON.stringify(level)], {type: 'application/json'});
-    downloadBlob(blob, filename, cleanup);
-}
-
 function clearGame() {
     if(game !== null) {
         game.destroy();
@@ -1169,125 +978,6 @@ function addEventListeners() {
             loadGameFromFiles(ev.dataTransfer.files, uploadInfo['scaleFactor'],
                 uploadInfo['succHook'], uploadInfo['failHook']);
         });
-}
-
-//==[ Export ]==================================================================
-
-function getItemColor(itemId) {
-    if(game === null) {
-        return null;
-    }
-    else {
-        let colorCode = window.getComputedStyle(game.items[itemId].domElem).backgroundColor;
-        let [red, green, blue] = colorCode.match(/\d+/g).map(function(x) {return parseInt(x);});
-        return ((1 << 24) + (red << 16) + (green << 8) + blue).toString(16).substr(1);
-    }
-}
-
-var defaultTikzOptions = {
-    'cellSize': '1cm',
-    'margin': '0.1cm',
-    'mirror': true,
-    'wrap': true,
-};
-
-function getCellAndMarginSize() {
-    var pxInCm = window.outerWidth / 21;
-    var margin = (innerMargin / 2 / pxInCm) + 'cm';
-    var cellSize = (game.scaleFactor / pxInCm) + 'cm';
-    return [cellSize, margin];
-}
-
-function binsToTikz(level, pos, options={}) {
-    if(pos.length === 0) {
-        console.warn('binsToTikz: no packed items.');
-    }
-    const n = level.items.length;
-    let m = 0;
-    let children = [];
-    for(let i=0; i < pos.length && i < n; ++i) {
-        if(pos[i] !== undefined && pos[i] !== null) {
-            let [binId, xPos, yPos] = pos[i];
-            m = Math.max(m, binId+1);
-            if(children[binId] === undefined) {
-                children[binId] = [];
-            }
-            children[binId].push(i);
-        }
-    }
-    for(let j=0; j<m; ++j) {
-        if(children[j] === undefined) {
-            children[j] = [];
-        }
-    }
-
-    if(game !== null) {
-        let [computedCellSize, computedMargin] = getCellAndMarginSize();
-        if(options['cellSize'] === undefined) {
-            options['cellSize'] = computedCellSize;
-        }
-        if(options['margin'] === undefined) {
-            options['margin'] = computedMargin;
-        }
-    }
-    for(let key in defaultTikzOptions) {
-        if(defaultTikzOptions.hasOwnProperty(key)) {
-            if(options[key] === undefined) {
-                options[key] = defaultTikzOptions[key];
-            }
-        }
-    }
-
-    let lines = [
-'\\ifcsname pGameL\\endcsname\\else\\newlength{\\pGameL}\\fi',
-'\\ifcsname pGameM\\endcsname\\else\\newlength{\\pGameM}\\fi',
-`\\setlength{\\pGameL}{${options['cellSize']}}`,
-`\\setlength{\\pGameM}{${options['margin']}}`,
-`\\definecolor{defaultItemColor}{HTML}{${defaultItemColorTikz}}`,
-'\\tikzset{bin/.style={draw,thick}}',
-'\\tikzset{binGrid/.style={draw,step=1\\pGameL,{black!20}}}',
-'\\tikzset{item/.style={draw,fill=defaultItemColor}}',
-];
-    for(let j=0; j<m; ++j) {
-        lines.push('\\begin{tikzpicture}');
-        lines.push('\\path (-\\pGameM, -\\pGameM) rectangle '
-            + `(${level.binXLen}\\pGameL+\\pGameM, ${level.binYLen}\\pGameL+\\pGameM);`);
-        lines.push('\\path[binGrid] (0\\pGameL, 0\\pGameL) grid '
-            + `(${level.binXLen}\\pGameL, ${level.binYLen}\\pGameL);`);
-        for(let i of children[j]) {
-            const xLen = level.items[i].xLen;
-            const yLen = level.items[i].yLen;
-            let [binId, xPos, yPos] = pos[i];
-            if(options['mirror']) {
-                yPos = level.binYLen - yPos - yLen;
-            }
-            let colorStyleStr = '';
-            if(level.items[i].color !== null) {
-                const color = getItemColor(i);
-                if(color !== null) {
-                    lines.push(`\\definecolor{currentItemColor}{HTML}{${color}}`);
-                    colorStyleStr = ',fill=currentItemColor';
-                }
-            }
-            lines.push(`\\path[item${colorStyleStr}] (${xPos}\\pGameL, ${yPos}\\pGameL) rectangle `
-                + `+(${xLen}\\pGameL, ${yLen}\\pGameL);`);
-        }
-        lines.push('\\path[bin] (0\\pGameL, 0\\pGameL) rectangle '
-            + `(${level.binXLen}\\pGameL, ${level.binYLen}\\pGameL);`);
-        if(options['wrap']) {
-            lines.push('\\end{tikzpicture}');
-        }
-        else {
-            lines.push('\\end{tikzpicture}%');
-        }
-    }
-    return lines.join('\n');
-}
-
-function downloadBinsToTikz(options={}, filename='bins.tikz', cleanup=false) {
-    var tikz = binsToTikz(game.level, game.getItemPositions(), options);
-    var blob = new Blob([tikz], {type: 'application/x-tex'});
-    downloadBlob(blob, filename, cleanup);
 }
 
 //==[ Main ]====================================================================

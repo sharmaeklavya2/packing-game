@@ -116,6 +116,14 @@ function ngFormCheckHandler(ev) {
     }
 }
 
+function toQueryString(obj) {
+    var strs = [];
+    for(let [key, value] of Object.entries(obj)) {
+        strs.push(encodeURIComponent(key) + "=" + encodeURIComponent(value));
+    }
+    return strs.join("&");
+}
+
 function ngFormSubmitHandler(ev) {
     ev.preventDefault();
     ngForm.classList.add('loading');
