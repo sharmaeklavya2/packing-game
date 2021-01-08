@@ -701,7 +701,9 @@ class Game {
     destroy() {
         this._destroyItems();
         this._destroyBins();
-        this._setInventoryDimsPx(0, 0);
+        this.invXLen = 0;
+        this.invYLen = 0;
+        this._setInventoryDimsPx();
         arena.classList.remove('large');
         this.history = [];
         this.historyLength = 0;
