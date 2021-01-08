@@ -265,6 +265,64 @@ levelGenBP1.paramMap = toParamMap([
 levelGenBP1.info = 'Independently and randomly generate colors and dimensions of each item.'
 levelGenerators.set('bp1', levelGenBP1);
 
+function distinctChoose(xMin, xMax, rand) {
+    /* Randomly choose two numbers x and y such that xMin <= x < y <= xMax */
+    let x = xMin + Math.floor(rand() * (xMax - xMin));
+    let y = xMin + Math.floor(rand() * (xMax - xMin));
+    if(y < x) {
+        [x, y] = [y, x];
+    }
+    y += 1;
+    return [x, y];
+}
+
+function levelGen4in1(q) {
+    const n = q.n, binXLen = q.xLen, binYLen = q.yLen;
+    if(2 * q.xMargin >= binXLen) {
+        throw new InputError('2 * xMargin should be less than xLen.');
+    }
+    if(2 * q.yMargin >= binYLen) {
+        throw new InputError('2 * yMargin should be less than yLen.');
+    }
+    let items = [], solution = [];
+    let obj = {
+        "binXLen": binXLen, "binYLen": binYLen, "gameType": "bp",
+        "items": items, "solution": solution,
+    };
+    if(q.seed === null) {
+        q.seed = getRandomSeed();
+    }
+    let rand = getRandGen(q.seed);
+    for(let i=0; i<n; ++i) {
+        let [x1, x2] = distinctChoose(q.xMargin, binXLen - q.xMargin, rand);
+        let [y1, y2] = distinctChoose(q.yMargin, binYLen - q.yMargin, rand);
+        let x3 = binXLen - x2, y3 = binYLen - y2;
+        items.push([x1, y2], [x2, binYLen - y2],
+            [binXLen - x2, binYLen - y1], [binXLen - x1, y1]);
+        solution.push([i, 0, 0], [i, 0, y2], [i, x2, y1], [i, x1, 0]);
+        if(q.fillCenter) {
+            items.push([x2 - x1, y2 - y1]);
+            solution.push([i, x1, y1]);
+        }
+    }
+    return obj;
+}
+
+levelGen4in1.paramMap = toParamMap([
+    new Parameter('n', 1, 'number of bins', positiveIntConverter, positiveIntMessage),
+    new Parameter('xLen', 8, 'xLen of bin', positiveIntConverter, positiveIntMessage),
+    new Parameter('yLen', 8, 'yLen of bin', positiveIntConverter, positiveIntMessage),
+    new Parameter('fillCenter', true, 'fill center?', boolConverter, boolMessage, boolOptions),
+    new Parameter('xMargin', 1, 'minimum xLen of vertical items',
+        positiveIntConverter, positiveIntMessage),
+    new Parameter('yMargin', 1, 'minimum yLen of horizontal item',
+        positiveIntConverter, positiveIntMessage),
+    new Parameter('seed', null, 'seed for random number generator',
+        urlEncodeIdemp, urlEncodeIdempMessage),
+]);
+levelGen4in1.info = 'Generate an instance where each bin contains 4 interlocked items.'
+levelGenerators.set('4in1', levelGen4in1);
+
 //==[ Loading game ]============================================================
 
 function applyToHttpResponse(url, hook, failHook) {
