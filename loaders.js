@@ -4,6 +4,10 @@ class InputError extends Error {
     constructor(message) {super(message);}
 }
 
+function throwInputError(msg) {
+    throw new InputError(msg);
+}
+
 var levelGenerators = new Map();
 
 function hueToColor(hue) {
@@ -85,14 +89,13 @@ levelGenBP1.paramMap = toParamMap([
 levelGenBP1.info = 'Independently and randomly generate colors and dimensions of each item.'
 levelGenerators.set('bp1', levelGenBP1);
 
-function applyToJsonResponse(url, hook, failHook) {
+function applyToHttpResponse(url, hook, failHook) {
     var xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
         if(this.readyState == 4) {
             if(this.status >= 200 && this.status <= 299) {
                 console.debug('received response for ' + url);
-                var json = JSON.parse(this.responseText);
-                hook(json);
+                hook(this.responseText);
             }
             else {
                 console.error('status code for ' + url + ':', this.status);
@@ -106,29 +109,65 @@ function applyToJsonResponse(url, hook, failHook) {
     xhttp.send();
 }
 
+function handleWithFailHook(e, failHook) {
+    if(e instanceof InputError && failHook !== null) {
+        failHook(e.message);
+    }
+    else {
+        throw e;
+    }
+}
+
 function loadGameFromRawLevel(level, scaleFactor=null, succHook=null, failHook=null) {
-    let processedLevel = processLevel(level);
-    clearGame();
-    game = new Game(processedLevel, scaleFactor);
-    if(succHook !== null) {
-        succHook();
+    let processedLevel = null;
+    try {
+        processedLevel = processLevel(level);
+    }
+    catch (e) {
+        handleWithFailHook(e, failHook);
+    }
+    if(processedLevel !== null) {
+        clearGame();
+        game = new Game(processedLevel, scaleFactor);
+        if(succHook !== null) {
+            succHook();
+        }
+    }
+}
+
+function loadGameFromJsonString(levelString, scaleFactor=null, succHook=null, failHook=null) {
+    let level = null;
+    try {
+        level = JSON.parse(levelString);
+    }
+    catch (e) {
+        if(failHook !== null) {
+            failHook('Invalid JSON: ' + e.message);
+        }
+        else {
+            throw e;
+        }
+    }
+    if(level !== null) {
+        loadGameFromRawLevel(level, null, succHook, failHook);
     }
 }
 
 function loadGameFromUrl(url, scaleFactor=null, succHook=null, failHook=null) {
     var failHook2 = null;
     if(failHook !== null) {
-        failHook2 = function(statusCode) {failHook("could not retrieve " + url
+        failHook2 = function(statusCode) {failHook("Network error: could not retrieve " + url
             + "; status code " + statusCode);};
     }
-    applyToJsonResponse(url, function(json) {
-            loadGameFromRawLevel(json, scaleFactor, succHook, failHook);},
+    applyToHttpResponse(url, function(text) {
+            loadGameFromJsonString(text, scaleFactor, succHook, failHook);},
         failHook2);
 }
 
-function validateAndConvert(q, paramMap, failHook=null) {
+function validateAndConvert(q, paramMap) {
+    let errors = [];
     for(let [paramName, param] of paramMap) {
-        if(q[paramName] === undefined || q[paramName] === null || q[paramName] === '') {
+        if(q[paramName] === undefined || q[paramName] === null) {
             q[paramName] = param.defaultValue;
         }
         else {
@@ -137,25 +176,37 @@ function validateAndConvert(q, paramMap, failHook=null) {
                 q[paramName] = converted;
             }
             else {
-                if(failHook !== null) {
-                    failHook(param.name + ' ' + param.validationMessage);
-                }
-                return false;
+                errors.push(param.name + ' ' + param.validationMessage);
             }
         }
     }
-    return true;
+    return errors;
 }
 
 function loadGameFromGen(genName, q, scaleFactor=null, succHook=null, failHook=null) {
-    var gen = levelGenerators.get(genName);
+    const gen = levelGenerators.get(genName);
+    if(failHook === null) {
+        failHook = throwInputError;
+    }
     if(gen === undefined) {
-        throw new Error('level generator ' + genName + ' not found');
+        failHook('level generator ' + genName + ' not found');
     }
     else {
-        if(validateAndConvert(q, gen.paramMap, failHook)) {
-            var level = gen(q);
-            loadGameFromRawLevel(level, scaleFactor, succHook, failHook);
+        let errors = validateAndConvert(q, gen.paramMap);
+        if(errors.length === 0) {
+            let level = null;
+            try {
+                level = gen(q);
+            }
+            catch (e) {
+                handleWithFailHook(e, failHook);
+            }
+            if(level !== null) {
+                loadGameFromRawLevel(level, scaleFactor, succHook, failHook);
+            }
+        }
+        else {
+            failHook(errors);
         }
     }
 }
@@ -163,8 +214,7 @@ function loadGameFromGen(genName, q, scaleFactor=null, succHook=null, failHook=n
 function loadGameFromFile(file, scaleFactor=null, succHook=null, failHook=null) {
     const reader = new FileReader();
     reader.addEventListener('load', function(ev) {
-        var level = JSON.parse(ev.target.result);
-        loadGameFromRawLevel(level, scaleFactor, succHook, failHook);
+        loadGameFromJsonString(ev.target.result, scaleFactor, succHook, failHook);
     });
     if(failHook !== null) {
         reader.addEventListener('error', function(ev) {
@@ -195,13 +245,13 @@ function loadGameFromUpload(scaleFactor=null, succHook=null, failHook=null) {
 }
 
 function loadGameFromQParams(q, succHook=null, failHook=null) {
-    if(Object.keys(q).length == 0) {
+    if(Object.keys(q).length === 0) {
         q['srctype'] = 'gen';
         q['src'] = 'bp1';
     }
 
-    var scaleFactor = null;
-    if(q.hasOwnProperty('scaleFactor') && q.scaleFactor !== null && q.scaleFactor !== '') {
+    let scaleFactor = null;
+    if(q.hasOwnProperty('scaleFactor')) {
         if(q.scaleFactor === 'x' || q.scaleFactor === 'y') {
             scaleFactor = q.scaleFactor;
         }
@@ -212,18 +262,23 @@ function loadGameFromQParams(q, succHook=null, failHook=null) {
             }
         }
     }
-    var srctype = dictAssertAccess(q, 'srctype', 'querystring');
+    try {
+        const srctype = dictAssertAccess(q, 'srctype', 'querystring');
 
-    if(srctype == 'url') {
-        var url = dictAssertAccess(q, 'src', 'querystring');
-        loadGameFromUrl(url, scaleFactor, succHook, failHook);
+        if(srctype === 'url') {
+            const url = dictAssertAccess(q, 'src', 'querystring');
+            loadGameFromUrl(url, scaleFactor, succHook, failHook);
+        }
+        else if(srctype === 'gen') {
+            const genName = dictAssertAccess(q, 'src', 'querystring');
+            loadGameFromGen(genName, q, scaleFactor, succHook, failHook);
+        }
+        else {
+            throw new InputError('unknown srctype: ' + srctype);
+        }
     }
-    else if(srctype == 'gen') {
-        var genName = dictAssertAccess(q, 'src', 'querystring');
-        loadGameFromGen(genName, q, scaleFactor, succHook, failHook);
-    }
-    else {
-        throw new InputError('unknown srctype: ' + srctype);
+    catch (e) {
+        handleWithFailHook(e, failHook);
     }
 }
 
@@ -231,7 +286,9 @@ function getQParams() {
     var params = new URLSearchParams(window.location.search);
     var d = {};
     for(let [key, value] of params.entries()) {
-        d[key] = value;
+        if(value !== '') {
+            d[key] = value;
+        }
     }
     console.debug('query params:', JSON.stringify(d));
     return d;

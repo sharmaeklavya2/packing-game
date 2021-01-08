@@ -202,23 +202,13 @@ function readObjectPropsWithAssert(input, reqProps, optProps, objname) {
             throw new InputError("property '" + prop + "' is missing for " + objname);
         }
     }
-    if(optProps.constructor == Object) {
+    if(optProps.constructor === Object) {
         for(let [prop, value] of Object.entries(optProps)) {
             if(input.hasOwnProperty(prop)) {
                 o[prop] = input[prop];
             }
             else {
                 o[prop] = value;
-            }
-        }
-    }
-    else {
-        for(var prop of optProps) {
-            if(input.hasOwnProperty(prop)) {
-                o[prop] = input[prop];
-            }
-            else {
-                o[prop] = null;
             }
         }
     }
@@ -287,7 +277,9 @@ function processLevel(j) {
         'lower_bound': null, 'upper_bound': null, 'solutions': null};
     var o = readObjectPropsWithAssert(j, reqProps, optProps, 'level');
     var items = [];
-    console.assert(o.gameType === 'bp', "the only supported gameType is bp");
+    if(o.gameType !== 'bp') {
+        throw new InputError("the only supported gameType is bp");
+    }
     var id = 0;
     for(var itemObj of o['items']) {
         var n = itemObj.n;
@@ -1324,7 +1316,7 @@ function downloadBinsToTikz(options={}, filename='bins.tikz', cleanup=false) {
 
 window.addEventListener('load', function() {
     addEventListeners();
-    loadGameFromQParams(getQParams());
+    loadGameFromQParams(getQParams(), null, function(msg) {addMsg('error', msg);});
     populateNgForm();
     addExtraUIEventListeners();
 });

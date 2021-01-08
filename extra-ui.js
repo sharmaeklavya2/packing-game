@@ -134,18 +134,17 @@ function ngFormSubmitHandler(ev) {
 
     if(srctype === 'raw') {
         let j = formData.get('ng-raw');
-        let level = JSON.parse(j);
-        loadGameFromRawLevel(level, null, succHook, failHook);
+        loadGameFromJsonString(j, null, succHook, failHook);
     }
     else if(srctype === 'upload') {
         loadGameFromUpload(null, null, failHook);
         succHook();
     }
-    else if(srctype == 'url') {
+    else if(srctype === 'url') {
         qs = toQueryString(q);
         loadGameFromUrl(src, null, succHook, failHook);
     }
-    else if(srctype == 'gen') {
+    else if(srctype === 'gen') {
         for(let [key, value] of formData.entries()) {
             if(!(key.startsWith('ng-')) && value !== '') {
                 q[key] = value;
@@ -365,17 +364,26 @@ function closeBtnClickHandler(ev) {
 }
 
 function addMsg(type, text) {
-    var liElem = document.createElement('li');
-    liElem.classList.add(type);
-    var msgSpan = document.createElement('span');
-    msgSpan.classList.add('msg-text');
-    msgSpan.innerHTML = text;
-    liElem.appendChild(msgSpan);
-    var closeButton = document.createElement('span');
-    closeButton.classList.add('msg-close-btn');
-    closeButton.innerHTML = '&times;';
-    closeButton.addEventListener('click', closeBtnClickHandler);
-    liElem.appendChild(closeButton);
-    var msgList = document.getElementById('msg-list');
-    msgList.appendChild(liElem);
+    let textArray;
+    if(Array.isArray(text)) {
+        textArray = text;
+    }
+    else {
+        textArray = [text];
+    }
+    for(const text of textArray) {
+        var liElem = document.createElement('li');
+        liElem.classList.add(type);
+        var msgSpan = document.createElement('span');
+        msgSpan.classList.add('msg-text');
+        msgSpan.innerHTML = text;
+        liElem.appendChild(msgSpan);
+        var closeButton = document.createElement('span');
+        closeButton.classList.add('msg-close-btn');
+        closeButton.innerHTML = '&times;';
+        closeButton.addEventListener('click', closeBtnClickHandler);
+        liElem.appendChild(closeButton);
+        var msgList = document.getElementById('msg-list');
+        msgList.appendChild(liElem);
+    }
 }
