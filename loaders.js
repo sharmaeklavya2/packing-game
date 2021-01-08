@@ -11,12 +11,13 @@ function hueToColor(hue) {
 }
 
 class Parameter {
-    constructor(name, defaultValue, description, convert, validationMessage) {
+    constructor(name, defaultValue, description, convert, validationMessage, options=null) {
         this.name = name;
         this.defaultValue = defaultValue;
         this.description = description;
         this.convert = convert;
         this.validationMessage = validationMessage;
+        this.options = options;
     }
 }
 
@@ -32,10 +33,26 @@ function positiveIntConverter(x) {
     const i = parseInt(x);
     return [!isNaN(i) && i > 0, i];
 }
-var positiveIntMessage = 'should be a positive integer.';
+const positiveIntMessage = 'should be a positive integer.';
+
+function boolConverter(x) {
+    if(x === '1' || x === 'true') {
+        return [true, true];
+    }
+    else if(x === '0' || x === 'false') {
+        return [true, false];
+    }
+    else {
+        return [false, null];
+    }
+}
+const boolMessage = 'should be true or false.';
+const boolOptions = ['true', 'false'];
+
 function urlEncodeIdemp(x) {
     return [x.match(/^[0-9a-zA-Z_.~-]+$/), x];
 }
+const urlEncodeIdempMessage = 'should only contain letters, numbers, dot, hyphen, underscore, tilde.'
 
 function levelGenBP1(q) {
     var n = q.n, binXLen = q.xLen, binYLen = q.yLen;
@@ -63,7 +80,7 @@ levelGenBP1.paramMap = toParamMap([
     new Parameter('xLen', 8, 'xLen of bin', positiveIntConverter, positiveIntMessage),
     new Parameter('yLen', 8, 'yLen of bin', positiveIntConverter, positiveIntMessage),
     new Parameter('seed', null, 'seed for random number generator',
-        urlEncodeIdemp, 'should only contain letters, numbers, dot, hyphen, underscore, tilde.'),
+        urlEncodeIdemp, urlEncodeIdempMessage),
 ]);
 levelGenBP1.info = 'Independently and randomly generate colors and dimensions of each item.'
 levelGenerators.set('bp1', levelGenBP1);
