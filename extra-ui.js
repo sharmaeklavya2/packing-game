@@ -179,8 +179,8 @@ function autoPackClickHandler(ev) {
     autoPackSuccess();
 }
 
-function repopulateSolveMenu() {
-    let a = [[game.level.solutions, 'solutions', solutionsClickHandler],
+function repopulateSolveMenu(solutions) {
+    let a = [[solutions, 'solutions', solutionsClickHandler],
         [bpAlgos, 'auto-pack', autoPackClickHandler]];
     for(let [solMap, domKey, clickHandler] of a) {
         let listDomElem = document.getElementById(domKey + '-list');
