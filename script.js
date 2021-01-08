@@ -315,6 +315,13 @@ function processLevel(j) {
     o.computed_ub_reason = null;
     o.autoPack = new Map();
     o.autoPackNBins = new Map();
+    for(const [solnName, soln] of o.solutions.entries()) {
+        const nBins = countUsedBins(soln);
+        if(nBins < o.computed_ub) {
+            o.computed_ub_reason = solnName;
+            o.computed_ub = nBins;
+        }
+    }
     for(const algoName of ubAlgos) {
         let algo = bpAlgos.get(algoName);
         o.autoPack.set(algoName, algo(items, o.binXLen, o.binYLen, []));
