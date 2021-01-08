@@ -946,18 +946,19 @@ class ItemInfoBar {
                 domElem.innerHTML = value;
             }
         }
-        this.barDom.style.visibility = 'visible';
+        this.barDom.classList.remove('disabled');
     }
 
     deactivate() {
         for(let [key, domElem] of Object.entries(this.domElems)) {
             domElem.innerHTML = '';
         }
-        this.barDom.style.visibility = 'hidden';
+        this.barDom.classList.add('disabled');
     }
 
     destroy() {
         this.barDom.innerHTML = '';
+        this.barDom.classList.add('disabled');
         this.domElems = null;
     }
 }

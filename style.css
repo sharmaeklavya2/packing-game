@@ -92,7 +92,9 @@ footer {
 
 #item-info-bar {
     bottom: 2em;
-    visibility: hidden;
+}
+#item-info-bar.disabled {
+    display: none;
 }
 .bar {
     display: flex;
