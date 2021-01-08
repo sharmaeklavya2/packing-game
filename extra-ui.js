@@ -38,6 +38,45 @@ function ngFormSuccess() {
     document.getElementById('new-game-button').classList.remove('pressed');
 }
 
+function createGenParamsInputs(src) {
+    let ngFormGenParams = document.getElementById('ng-form-gen-params');
+    ngFormGenParams.innerHTML = '';
+    for(const [paramName, param] of levelGenerators.get(src).paramMap) {
+        let div = document.createElement('div');
+        div.classList.add('input-pair');
+        let id = 'ng-gen-param-' + paramName;
+        let labelElem = document.createElement('label');
+        labelElem.innerHTML = paramName;
+        labelElem.setAttribute('for', id);
+        div.appendChild(labelElem);
+
+        let inputElem = document.createElement('input');
+        inputElem.setAttribute('type', 'text');
+        inputElem.setAttribute('id', id);
+        inputElem.setAttribute('name', paramName);
+        inputElem.setAttribute('autocomplete', 'off');
+        if(param.defaultValue !== null) {
+            inputElem.setAttribute('placeholder', param.defaultValue);
+        }
+        div.appendChild(inputElem);
+
+        if(param.options !== null) {
+            let datalist = document.createElement('datalist');
+            const listId = 'ng-gen-paramoptions-' + paramName;
+            datalist.setAttribute('id', listId);
+            for(const optionName of param.options) {
+                let option = document.createElement('option');
+                option.setAttribute('value', optionName);
+                datalist.appendChild(option);
+            }
+            inputElem.setAttribute('list', listId);
+            div.appendChild(datalist);
+        }
+
+        ngFormGenParams.appendChild(div);
+    }
+}
+
 function ngFormCheckHandler(ev) {
     const formData = new FormData(ngForm);
     var choice = formData.get('ng-choice');
@@ -70,28 +109,8 @@ function ngFormCheckHandler(ev) {
             ngFormGenParamsWrapper.classList.remove('disabled');
             var oldSrc = ngFormGenParamsWrapper.getAttribute('data-gen');
             if(oldSrc !== src) {
-                let ngFormGenParams = document.getElementById('ng-form-gen-params');
                 ngFormGenParamsWrapper.setAttribute('data-gen', src);
-                ngFormGenParams.innerHTML = '';
-                for(const [paramName, param] of levelGenerators.get(src).paramMap) {
-                    let id = 'ng-gen-param-' + paramName;
-                    let inputElem = document.createElement('input');
-                    inputElem.setAttribute('type', 'text');
-                    inputElem.setAttribute('id', id);
-                    inputElem.setAttribute('name', paramName);
-                    inputElem.setAttribute('autocomplete', 'off');
-                    if(param.defaultValue !== null) {
-                        inputElem.setAttribute('placeholder', param.defaultValue);
-                    }
-                    let labelElem = document.createElement('label');
-                    labelElem.innerHTML = paramName;
-                    labelElem.setAttribute('for', id);
-                    let div = document.createElement('div');
-                    div.appendChild(labelElem);
-                    div.appendChild(inputElem);
-                    div.classList.add('input-pair');
-                    ngFormGenParams.appendChild(div);
-                }
+                createGenParamsInputs(src);
             }
         }
     }
