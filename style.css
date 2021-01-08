@@ -9,6 +9,13 @@ body {
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    --tint: rgba(0, 0, 0, 0.1);
+    --heavy-tint: rgba(0, 0, 0, 0.2);
+    --menu-color: rgba(192, 192, 192, 0.8);
+    --menu-color-loading: rgba(192, 192, 192, 1);
+    --menu-color-heavy: rgba(192, 192, 192, 1);
+    --menu-color-heavy2: rgba(176, 176, 176, 1);
+    --menu-color-heavy3: rgba(160, 160, 160, 1);
 }
 #arena {
     position: relative;
@@ -134,7 +141,7 @@ footer {
     box-shadow: 0 0 3px 1px rgb(191, 0, 0);
 }
 .bar {
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--menu-color);
 }
 
 .item {
@@ -191,7 +198,7 @@ header {
     font-size: 2.25rem;
     user-select: none;
     height: 3rem;
-    background-color: rgba(128, 128, 128, 0.4);
+    background-color: var(--menu-color);
     border-left: 1px solid black;
     border-bottom: 1px solid black;
 }
@@ -203,13 +210,13 @@ header {
     fill: gray;
 }
 .toolbar > li:not(.disabled):hover, .toolbar > li:not(.disabled).pressed {
-    background-color: rgba(128, 128, 128, 0.6);
+    background-color: var(--menu-color-heavy);
 }
 .toolbar > li:not(.disabled):active, .toolbar > li:not(.disabled).pressed:hover {
-    background-color: rgba(128, 128, 128, 0.8);
+    background-color: var(--menu-color-heavy2);
 }
 .toolbar > li:not(.disabled).pressed:active {
-    background-color: rgba(128, 128, 128, 1);
+    background-color: var(--menu-color-heavy3);
 }
 .toolbar > li:last-child {
     border-right: 1px solid black;
@@ -221,7 +228,7 @@ header {
 header .heading {
     font-size: 1.2em;
     padding: 0.3rem 1rem;
-    border-bottom: 1px solid rgba(128, 128, 128, 0.5);
+    border-bottom: 1px solid var(--heavy-tint);
     align-self: stretch;
     display: flex;
     justify-content: space-around;
@@ -230,7 +237,7 @@ header .heading {
     display: none;
 }
 .menu:not(.disabled) {
-    background-color: rgba(128, 128, 128, 0.4);
+    background-color: var(--menu-color);
     border-radius: 0.5rem;
     display: flex;
     flex-direction: column;
@@ -238,7 +245,7 @@ header .heading {
     align-items: stretch;
 }
 .menu:not(.disabled).loading {
-    background-color: rgba(128, 128, 128, 0.8);
+    background-color: var(--menu-color-loading);
     opacity: 0.5;
 }
 #ng-form > .options {
@@ -304,10 +311,10 @@ textarea {
     border-radius: 0 0 0.5rem 0.5rem;
 }
 .menu > ul > li:hover {
-    background-color: rgba(128, 128, 128, 0.6);
+    background-color: var(--menu-color-heavy);
 }
 .menu > ul > li:active {
-    background-color: rgba(128, 128, 128, 0.8);
+    background-color: var(--menu-color-heavy);
 }
 
 #msg-list {
@@ -320,7 +327,7 @@ textarea {
 }
 #msg-list > li {
     display: flex;
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: var(--menu-color);
     border-radius: 0.3em;
     margin: 0.6em;
     margin-bottom: 0;
@@ -353,8 +360,8 @@ textarea {
     user-select: none;
 }
 .msg-close-btn:hover {
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: var(--tint);
 }
 .msg-close-btn:active {
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: var(--heavy-tint);
 }
