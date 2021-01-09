@@ -801,7 +801,7 @@ class DragData {
 function mousedownHandler(ev) {
     let target = ev.target;
     console.debug(ev.type, ev.clientX, ev.clientY, target);
-    if(target.classList.contains('item')) {
+    if(ev.button === 0 && target.classList.contains('item')) {
         ev.preventDefault();
         let itemDomElem = target;
         let originalXPos = itemDomElem.getBoundingClientRect().x;
