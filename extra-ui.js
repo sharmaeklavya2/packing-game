@@ -79,9 +79,9 @@ function createGenParamsInputs(src) {
 
 function ngFormCheckHandler(ev) {
     const formData = new FormData(ngForm);
-    var choice = formData.get('ng-choice');
-    var ngFormSubmitButton = document.getElementById('ng-submit');
-    var ngFormGenParamsWrapper = document.getElementById('ng-form-gen-params-wrapper');
+    let choice = formData.get('ng-choice');
+    let ngFormSubmitButton = document.getElementById('ng-submit');
+    let ngFormGenParamsWrapper = document.getElementById('ng-form-gen-params-wrapper');
     if(choice === null) {
         ngFormSubmitButton.setAttribute('disabled', 'disabled');
         ngFormGenParamsWrapper.classList.add('disabled');
@@ -107,7 +107,7 @@ function ngFormCheckHandler(ev) {
         }
         else {
             ngFormGenParamsWrapper.classList.remove('disabled');
-            var oldSrc = ngFormGenParamsWrapper.getAttribute('data-gen');
+            let oldSrc = ngFormGenParamsWrapper.getAttribute('data-gen');
             if(oldSrc !== src) {
                 ngFormGenParamsWrapper.setAttribute('data-gen', src);
                 createGenParamsInputs(src);
@@ -117,7 +117,7 @@ function ngFormCheckHandler(ev) {
 }
 
 function toQueryString(obj) {
-    var strs = [];
+    let strs = [];
     for(let [key, value] of Object.entries(obj)) {
         strs.push(encodeURIComponent(key) + "=" + encodeURIComponent(value));
     }
@@ -129,10 +129,10 @@ function ngFormSubmitHandler(ev) {
     ngForm.classList.add('loading');
 
     const formData = new FormData(ngForm);
-    var choice = formData.get('ng-choice');
+    let choice = formData.get('ng-choice');
     let [srctype, src] = choice.split(':');
-    var q = {'srctype': srctype, 'src': src};
-    var qs = '';
+    let q = {'srctype': srctype, 'src': src};
+    let qs = '';
 
     function failHook(msg) {addMsg('error', msg); ngFormSuccess();}
     function succHook() {
@@ -175,14 +175,14 @@ function autoPackSuccess() {
 
 function solutionsClickHandler(ev) {
     ev.preventDefault();
-    var solnName = ev.target.innerHTML;
+    let solnName = ev.target.innerHTML;
     game.selectSolution(solnName);
     showSolutionSuccess();
 }
 
 function autoPackClickHandler(ev) {
     ev.preventDefault();
-    var algoName = ev.target.innerHTML;
+    let algoName = ev.target.innerHTML;
     game.selectAutoPack(algoName);
     autoPackSuccess();
 }
@@ -210,11 +210,11 @@ function repopulateSolveMenu(solutions) {
 }
 
 function repopulateAutoPackMenu() {
-    var autoPack = game.level.autoPack;
-    var autoPackList = document.getElementById('auto-pack-list');
+    let autoPack = game.level.autoPack;
+    let autoPackList = document.getElementById('auto-pack-list');
     autoPackList.innerHTML = '';
     for(let key of bpAlgos.keys()) {
-        var liElem = document.createElement('li');
+        let liElem = document.createElement('li');
         liElem.innerHTML = key;
         liElem.addEventListener('click', autoPackClickHandler);
         autoPackList.appendChild(liElem);
@@ -222,12 +222,12 @@ function repopulateAutoPackMenu() {
 }
 
 function populateNgForm() {
-    var levels = [
+    let levels = [
         ['levels/bp/1.json', 'Level 1'],
         ['levels/bp/2.json', 'Level 2'],
         ['levels/bp/3.json', 'Level 3'],
     ];
-    for(var i=0; i < levels.length; ++i) {
+    for(let i=0; i < levels.length; ++i) {
         let [url, label] = levels[i];
         let id = 'ng-radio-url-' + i;
         let inputElem = document.createElement('input');
@@ -365,9 +365,9 @@ function enableRedoButton() {
 }
 
 function closeBtnClickHandler(ev) {
-    var closeBtn = ev.target;
-    var LiElem = closeBtn.parentElement;
-    var msgList = document.getElementById('msg-list');
+    let closeBtn = ev.target;
+    let LiElem = closeBtn.parentElement;
+    let msgList = document.getElementById('msg-list');
     msgList.removeChild(LiElem);
 }
 
@@ -380,18 +380,18 @@ function addMsg(type, text) {
         textArray = [text];
     }
     for(const text of textArray) {
-        var liElem = document.createElement('li');
+        let liElem = document.createElement('li');
         liElem.classList.add(type);
-        var msgSpan = document.createElement('span');
+        let msgSpan = document.createElement('span');
         msgSpan.classList.add('msg-text');
         msgSpan.innerHTML = text;
         liElem.appendChild(msgSpan);
-        var closeButton = document.createElement('span');
+        let closeButton = document.createElement('span');
         closeButton.classList.add('msg-close-btn');
         closeButton.innerHTML = '&times;';
         closeButton.addEventListener('click', closeBtnClickHandler);
         liElem.appendChild(closeButton);
-        var msgList = document.getElementById('msg-list');
+        let msgList = document.getElementById('msg-list');
         msgList.appendChild(liElem);
     }
 }

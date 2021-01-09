@@ -32,10 +32,10 @@ class Rectangle {
 
 function array2d(m, n, x) {
 /* create m-length list containing n-length lists of element x */
-    var arr = [];
-    for(var i=0; i<m; ++i) {
+    let arr = [];
+    for(let i=0; i<m; ++i) {
         let row = [];
-        for(var j=0; j<n; ++j) {
+        for(let j=0; j<n; ++j) {
             row.push(x);
         }
         arr.push(row);
@@ -93,8 +93,8 @@ class Bin {
         this._aggFilled[y][x] += z;
     }
     getFilledArea(rect) {
-        var minX = Math.min(rect.xPos + rect.xLen, this.xLen);
-        var minY = Math.min(rect.yPos + rect.yLen, this.yLen);
+        let minX = Math.min(rect.xPos + rect.xLen, this.xLen);
+        let minY = Math.min(rect.yPos + rect.yLen, this.yLen);
         return this._getAggFilled(minX, minY)
             - this._getAggFilled(rect.xPos, minY)
             - this._getAggFilled(minX, rect.yPos)
@@ -107,21 +107,21 @@ class Bin {
     _fill(rect, z) {
         console.assert(rect.xPos + rect.xLen <= this.xLen, '_fill: x overflow');
         console.assert(rect.yPos + rect.yLen <= this.yLen, '_fill: y overflow');
-        for(var i=1; i <= rect.yLen; ++i) {
-            var y = rect.yPos + i;
-            for(var j=1; j <= rect.xLen; ++j) {
+        for(let i=1; i <= rect.yLen; ++i) {
+            let y = rect.yPos + i;
+            for(let j=1; j <= rect.xLen; ++j) {
                 this._incAggFilled(rect.xPos + j, y, i * j * z);
             }
-            for(var x = rect.xPos + rect.xLen + 1; x <= this.xLen; ++x) {
+            for(let x = rect.xPos + rect.xLen + 1; x <= this.xLen; ++x) {
                 this._incAggFilled(x, y, i * rect.xLen * z);
             }
         }
-        for(var y = rect.yPos + rect.yLen + 1; y <= this.yLen; ++y) {
-            for(var j=1; j <= rect.xLen; ++j) {
+        for(let y = rect.yPos + rect.yLen + 1; y <= this.yLen; ++y) {
+            for(let j=1; j <= rect.xLen; ++j) {
                 this._incAggFilled(rect.xPos + j, y, rect.yLen * j * z);
             }
             let a = rect.yLen * rect.xLen;
-            for(var x = rect.xPos + rect.xLen + 1; x <= this.xLen; ++x) {
+            for(let x = rect.xPos + rect.xLen + 1; x <= this.xLen; ++x) {
                 this._incAggFilled(x, y, a * z);
             }
         }
@@ -164,7 +164,7 @@ function arraysEqual(a, b) {
     if(a === b) {return true;}
     if(a === null || b === null) {return false;}
     if(a.length !== b.length) {return false;}
-    for(var i = 0; i < a.length; ++i) {
+    for(let i = 0; i < a.length; ++i) {
         if(a[i] !== b[i]) {return false;}
     }
     return true;
@@ -255,14 +255,14 @@ class BinUI {
 }
 
 function createBarItems(domParent, names) {
-    var domElems = {};
-    for(var name of names) {
-        var entryDom = document.createElement('div');
+    let domElems = {};
+    for(let name of names) {
+        let entryDom = document.createElement('div');
         entryDom.classList.add('bar-entry');
-        var labelDom = document.createElement('div');
+        let labelDom = document.createElement('div');
         labelDom.classList.add('bar-label');
         labelDom.innerHTML = name;
-        var valueDom = document.createElement('div');
+        let valueDom = document.createElement('div');
         valueDom.classList.add('bar-value');
         domElems[name] = valueDom;
         entryDom.appendChild(labelDom);
@@ -320,7 +320,7 @@ class Game {
     getItemPositions() {
         let pos = [];
         let consecNulls = 0;
-        for(var i=0; i < this.items.length; ++i) {
+        for(let i=0; i < this.items.length; ++i) {
             let coords = this.getItemPosition(i);
             pos.push(coords);
             if(coords === null) {
@@ -348,8 +348,8 @@ class Game {
     }
 
     addBins(nBin) {
-        for(var i=0; i<nBin; ++i) {
-            var bin = new BinUI(this.level.binXLen, this.level.binYLen, false,
+        for(let i=0; i<nBin; ++i) {
+            let bin = new BinUI(this.level.binXLen, this.level.binYLen, false,
                 this.bins.length, this.scaleFactor);
             this.bins.push(bin);
             let packingArea = document.getElementById('packing-area');
@@ -358,15 +358,15 @@ class Game {
     }
 
     trimBins(targetEmpty) {
-        var nEmpty = 0;
-        var nBins = this.bins.length;
+        let nEmpty = 0;
+        let nBins = this.bins.length;
         for(; nEmpty < nBins && this.bins[nBins - nEmpty - 1].bin.isEmpty(); ++nEmpty);
 
         if(nEmpty < targetEmpty) {
             this.addBins(targetEmpty - nEmpty);
         }
         else {
-            for(var i=1; i <= nEmpty - targetEmpty; ++i) {
+            for(let i=1; i <= nEmpty - targetEmpty; ++i) {
                 this.bins[nBins - i].destroy();
             }
             this.bins.length = nBins - nEmpty + targetEmpty;
@@ -401,7 +401,7 @@ class Game {
         }
         console.assert(item.binUI === null, 'item ' + itemId
             + ' is already attached to bin ' + binId);
-        var wasEmpty = binUI.bin.isEmpty();
+        let wasEmpty = binUI.bin.isEmpty();
         if(binUI.bin.insert(new Rectangle(xPos, yPos, item.itemInfo.xLen, item.itemInfo.yLen))) {
             item.binUI = binUI;
             item.xPos = xPos;
@@ -456,9 +456,9 @@ class Game {
         }
         else {
             // check if moving will cause clash. If yes, invalidate history and warn.
-            var bin = this.bins[coords[0]];
-            var currCoords = this.getItemPosition(record.itemId);
-            var newPosRect = new Rectangle(coords[1], coords[2],
+            let bin = this.bins[coords[0]];
+            let currCoords = this.getItemPosition(record.itemId);
+            let newPosRect = new Rectangle(coords[1], coords[2],
                 item.itemInfo.xLen, item.itemInfo.yLen);
             this.detach(record.itemId);
             if(bin.bin.canFit(newPosRect)) {
@@ -504,7 +504,7 @@ class Game {
         for(let bin of this.bins) {
             bin.resize(this.scaleFactor);
         }
-        for(var i=0; i < this.items.length; ++i) {
+        for(let i=0; i < this.items.length; ++i) {
             let item = this.items[i];
             item.resize(this.scaleFactor);
             if(item.binUI === null) {
@@ -565,13 +565,13 @@ class Game {
     }
 
     _assessBins() {
-        var lb = this.level.lower_bound, ub = this.level.upper_bound;
-        var used = 0;
-        for(var i=0; i<this.bins.length; ++i) {
-            var bin = this.bins[i];
+        let lb = this.level.lower_bound, ub = this.level.upper_bound;
+        let used = 0;
+        for(let i=0; i<this.bins.length; ++i) {
+            let bin = this.bins[i];
             if(!bin.bin.isEmpty()) {
                 used += 1
-                var binType = 'good';
+                let binType = 'good';
                 if(used > ub) {
                     binType = 'danger';
                 }
@@ -581,7 +581,7 @@ class Game {
                 bin.domElem.setAttribute('data-bin-type', binType);
             }
             else {
-                bin.domElem.removeAttribute('data-bin-type', binType);
+                bin.domElem.removeAttribute('data-bin-type');
             }
         }
     }
@@ -599,9 +599,9 @@ class Game {
     }
 
     _computeInventoryDimsAndItemHomePositions() {
-        var maxXLen = 0;
-        var rawItems = this.level.items;
-        for(var item of rawItems) {
+        let maxXLen = 0;
+        let rawItems = this.level.items;
+        for(let item of rawItems) {
             maxXLen = Math.max(maxXLen, item.xLen);
         }
         const origInvXLen = Math.max(maxXLen, this.level.binXLen);
@@ -625,8 +625,8 @@ class Game {
         else {
             this.scaleFactor = scaleFactor;
         }
-        var actualArenaWidth = (this.invXLen + this.level.binXLen) * this.scaleFactor + 4 * innerMargin;
-        var spaceForArenaWidth = window.innerWidth - 2 * outerMargin;
+        let actualArenaWidth = (this.invXLen + this.level.binXLen) * this.scaleFactor + 4 * innerMargin;
+        let spaceForArenaWidth = window.innerWidth - 2 * outerMargin;
         if(actualArenaWidth >= spaceForArenaWidth) {
             arena.classList.add('large');
         }
@@ -643,9 +643,9 @@ class Game {
     }
 
     _createItems() {
-        var rawItems = this.level.items;
-        for(var i=0; i < rawItems.length; ++i) {
-            var itemUI = new ItemUI(rawItems[i], this.scaleFactor);
+        let rawItems = this.level.items;
+        for(let i=0; i < rawItems.length; ++i) {
+            let itemUI = new ItemUI(rawItems[i], this.scaleFactor);
             this.items.push(itemUI);
         }
         this._moveItemsToInventory(true);
@@ -668,12 +668,12 @@ class Game {
     }
 
     _moveItemsToInventory(firstTime) {
-        var xOff = inventory.getBoundingClientRect().x - arena.getBoundingClientRect().x;
-        var yOff = inventory.getBoundingClientRect().y - arena.getBoundingClientRect().y;
+        let xOff = inventory.getBoundingClientRect().x - arena.getBoundingClientRect().x;
+        let yOff = inventory.getBoundingClientRect().y - arena.getBoundingClientRect().y;
         this.yAgg = 0;
-        var n = this.items.length;
-        for(var i=0; i<n; ++i) {
-            var item = this.items[i];
+        let n = this.items.length;
+        for(let i=0; i<n; ++i) {
+            let item = this.items[i];
             this.detach(i);
             if(firstTime) {
                 inventory.appendChild(item.domElem);
@@ -685,18 +685,18 @@ class Game {
     }
 
     _moveItemToInventory(itemId) {
-        var xOff = inventory.getBoundingClientRect().x - arena.getBoundingClientRect().x;
-        var yOff = inventory.getBoundingClientRect().y - arena.getBoundingClientRect().y;
-        var item = this.items[itemId];
+        let xOff = inventory.getBoundingClientRect().x - arena.getBoundingClientRect().x;
+        let yOff = inventory.getBoundingClientRect().y - arena.getBoundingClientRect().y;
+        let item = this.items[itemId];
         this.detach(itemId);
         setPos(item.domElem, xOff + this.stripPackSol[itemId][0] * this.scaleFactor,
             yOff + this.stripPackSol[itemId][1] * this.scaleFactor);
     }
 
     _createBinsAndPackItems(pos) {
-        var binsNeeded = 1;
-        var rawItems = this.level.items;
-        for(var i=0; i < pos.length && i < rawItems.length; ++i) {
+        let binsNeeded = 1;
+        let rawItems = this.level.items;
+        for(let i=0; i < pos.length && i < rawItems.length; ++i) {
             if(pos[i] !== null && pos[i] !== undefined) {
                 binsNeeded = Math.max(binsNeeded, pos[i][0] + 2);
             }
@@ -704,7 +704,7 @@ class Game {
         this.addBins(binsNeeded);
 
         // move items as per pos
-        for(var i=0; i < pos.length && i < rawItems.length; ++i) {
+        for(let i=0; i < pos.length && i < rawItems.length; ++i) {
             if(pos[i] !== null && pos[i] !== undefined) {
                 let [binId, xPos, yPos] = pos[i];
                 this.attach(i, binId, xPos, yPos);
@@ -713,7 +713,7 @@ class Game {
     }
 
     _destroyBins() {
-        for(var bin of this.bins) {
+        for(let bin of this.bins) {
             bin.destroy();
         }
         this.bins.length = 0;
@@ -741,7 +741,7 @@ function clearGame() {
 
 class ItemInfoBar {
     constructor(gameType) {
-        var domElemNames = ['width', 'height'];
+        let domElemNames = ['width', 'height'];
         if(gameType == 'ks') {
             domElemNames.push('profit');
         }
@@ -750,9 +750,9 @@ class ItemInfoBar {
     }
 
     activate(item) {
-        var d = {'width': item.xLen, 'height': item.yLen, 'profit': item.profit};
+        let d = {'width': item.xLen, 'height': item.yLen, 'profit': item.profit};
         for(let [key, value] of Object.entries(d)) {
-            var domElem = this.domElems[key];
+            let domElem = this.domElems[key];
             if(domElem !== undefined) {
                 domElem.innerHTML = value;
             }
@@ -799,22 +799,22 @@ class DragData {
 }
 
 function mousedownHandler(ev) {
-    var target = ev.target;
+    let target = ev.target;
     console.debug(ev.type, ev.clientX, ev.clientY, target);
     if(target.classList.contains('item')) {
         ev.preventDefault();
-        var itemDomElem = target;
-        var originalXPos = itemDomElem.getBoundingClientRect().x;
-        var originalYPos = itemDomElem.getBoundingClientRect().y;
-        var itemXOff = ev.clientX - originalXPos;
-        var itemYOff = ev.clientY - originalYPos;
-        var itemId = parseInt(itemDomElem.getAttribute('data-item-id'));
-        var item = game.items[itemId];
+        let itemDomElem = target;
+        let originalXPos = itemDomElem.getBoundingClientRect().x;
+        let originalYPos = itemDomElem.getBoundingClientRect().y;
+        let itemXOff = ev.clientX - originalXPos;
+        let itemYOff = ev.clientY - originalYPos;
+        let itemId = parseInt(itemDomElem.getAttribute('data-item-id'));
+        let item = game.items[itemId];
         DragData.set(new DragData(itemId, game.getItemPosition(itemId), itemXOff, itemYOff));
 
         game.detach(itemId);
-        var xPos = originalXPos - arena.getBoundingClientRect().x;
-        var yPos = originalYPos - arena.getBoundingClientRect().y;
+        let xPos = originalXPos - arena.getBoundingClientRect().x;
+        let yPos = originalYPos - arena.getBoundingClientRect().y;
         setPos(item.domElem, xPos, yPos);
         hoverRect.style.height = itemDomElem.getBoundingClientRect().height + 'px';
         hoverRect.style.width = itemDomElem.getBoundingClientRect().width + 'px';
@@ -822,12 +822,12 @@ function mousedownHandler(ev) {
 }
 
 function getPos(ev, xLen, yLen, binId) {
-    var dragData = DragData.get();
+    let dragData = DragData.get();
     let bin = game.bins[binId];
-    var binX = bin.domElem.getBoundingClientRect().x;
-    var binY = bin.domElem.getBoundingClientRect().y;
-    var xPos = (ev.clientX - binX - dragData.xOff) / game.scaleFactor;
-    var yPos = (ev.clientY - binY - dragData.yOff) / game.scaleFactor;
+    let binX = bin.domElem.getBoundingClientRect().x;
+    let binY = bin.domElem.getBoundingClientRect().y;
+    let xPos = (ev.clientX - binX - dragData.xOff) / game.scaleFactor;
+    let yPos = (ev.clientY - binY - dragData.yOff) / game.scaleFactor;
     xPos = clip(Math.round(xPos), 0, bin.bin.xLen - xLen);
     yPos = clip(Math.round(yPos), 0, bin.bin.yLen - yLen);
     return [xPos, yPos];
@@ -864,15 +864,15 @@ function getMouseBinId(ev) {
 function mousemoveHandler(ev) {
     // console.debug("mousemove", ev.target.id, ev.target.classList.value);
     ev.preventDefault();
-    var dragData = DragData.get();
+    let dragData = DragData.get();
     if(dragData === null) {
         return;
     }
 
     // move item
-    var item = game.items[dragData.itemId];
-    var arenaX = arena.getBoundingClientRect().x;
-    var arenaY = arena.getBoundingClientRect().y;
+    let item = game.items[dragData.itemId];
+    let arenaX = arena.getBoundingClientRect().x;
+    let arenaY = arena.getBoundingClientRect().y;
     setPos(item.domElem, ev.clientX - dragData.xOff - arenaX, ev.clientY - dragData.yOff - arenaY);
 
     // draw hover
@@ -883,7 +883,7 @@ function mousemoveHandler(ev) {
     }
     else {
         let [xPos, yPos] = getPos(ev, item.itemInfo.xLen, item.itemInfo.yLen, binId);
-        var newPosRect = new Rectangle(xPos, yPos, item.itemInfo.xLen, item.itemInfo.yLen);
+        let newPosRect = new Rectangle(xPos, yPos, item.itemInfo.xLen, item.itemInfo.yLen);
         moveHoverRect(binId, newPosRect);
         if(bin.bin.canFit(newPosRect)) {
             hoverRect.classList.add('success');
@@ -898,9 +898,9 @@ function mousemoveHandler(ev) {
 
 function endDrag() {
     hoverRect.style.visibility = 'hidden';
-    var dragData = DragData.get();
+    let dragData = DragData.get();
     if(dragData !== null) {
-        var oldCoords = dragData.coords;
+        let oldCoords = dragData.coords;
         game._recordHistory(dragData.itemId, oldCoords, game.getItemPosition(dragData.itemId));
     }
     DragData.unset();
@@ -908,10 +908,10 @@ function endDrag() {
 }
 
 function mouseupHandler(ev) {
-    var target = ev.target;
+    let target = ev.target;
     console.debug(ev.type, target);
     ev.preventDefault();
-    var dragData = DragData.get();
+    let dragData = DragData.get();
     if(dragData === null) {
         return;
     }
@@ -930,10 +930,10 @@ function mouseupHandler(ev) {
 }
 
 function mouseleaveHandler(ev) {
-    var target = ev.target;
+    let target = ev.target;
     console.debug(ev.type, target);
     ev.preventDefault();
-    var dragData = DragData.get();
+    let dragData = DragData.get();
     if(dragData !== null) {
         endDrag();
     }

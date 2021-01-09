@@ -23,8 +23,8 @@ function dictAssertAccess(d, key, name) {
 }
 
 function readObjectPropsWithAssert(input, reqProps, optProps, objname) {
-    var o = {};
-    for(var prop of reqProps) {
+    let o = {};
+    for(let prop of reqProps) {
         if(input.hasOwnProperty(prop)) {
             o[prop] = input[prop];
         }
@@ -58,30 +58,30 @@ function itemInfoFromObject(j, id) {
         return new ItemInfo(id, xLen, yLen, profit, null);
     }
     else {
-        var reqProps = ['xLen', 'yLen'];
-        var optProps = {'color': null, 'profit': 0};
-        var o = readObjectPropsWithAssert(j, reqProps, optProps, 'item ' + id);
+        let reqProps = ['xLen', 'yLen'];
+        let optProps = {'color': null, 'profit': 0};
+        let o = readObjectPropsWithAssert(j, reqProps, optProps, 'item ' + id);
         return new ItemInfo(id, o['xLen'], o['yLen'], o['profit'], o['color']);
     }
 }
 
 function processLevel(j) {
-    var reqProps = ['binXLen', 'binYLen', 'items'];
-    var optProps = {'gameType': 'bp', 'startPos': [], 'solution': null,
+    let reqProps = ['binXLen', 'binYLen', 'items'];
+    let optProps = {'gameType': 'bp', 'startPos': [], 'solution': null,
         'lower_bound': null, 'upper_bound': null, 'solutions': null};
-    var o = readObjectPropsWithAssert(j, reqProps, optProps, 'level');
-    var items = [];
+    let o = readObjectPropsWithAssert(j, reqProps, optProps, 'level');
+    let items = [];
     if(o.gameType !== 'bp') {
         throw new InputError("the only supported gameType is bp");
     }
-    var id = 0;
-    for(var itemObj of o['items']) {
-        var n = itemObj.n;
+    let id = 0;
+    for(let itemObj of o['items']) {
+        let n = itemObj.n;
         if(n === undefined) {
             n = 1;
         }
-        for(var i=0; i<n; ++i) {
-            var item = itemInfoFromObject(itemObj, id++);
+        for(let i=0; i<n; ++i) {
+            let item = itemInfoFromObject(itemObj, id++);
             items.push(item);
         }
     }
@@ -96,7 +96,7 @@ function processLevel(j) {
     }
     o.solutions = new Map(Object.entries(o.solutions));
 
-    var ubAlgos = ['ffdh-ff', 'ffdh-ff-mirror'];
+    let ubAlgos = ['ffdh-ff', 'ffdh-ff-mirror'];
     o.computed_ub = items.length;
     o.computed_ub_reason = null;
     o.autoPack = new Map();
@@ -198,17 +198,17 @@ function validateAndConvert(q, paramMap) {
 }
 
 function levelGenBP1(q) {
-    var n = q.n, binXLen = q.xLen, binYLen = q.yLen;
-    var items = [];
-    var obj = {
+    let n = q.n, binXLen = q.xLen, binYLen = q.yLen;
+    let items = [];
+    let obj = {
         "binXLen": binXLen, "binYLen": binYLen,
         "gameType": "bp", "items": items,
     };
     if(q.seed === null) {
         q.seed = getRandomSeed();
     }
-    var rand = getRandGen(q.seed);
-    for(var i=0; i<n; ++i) {
+    let rand = getRandGen(q.seed);
+    for(let i=0; i<n; ++i) {
         items.push({
             "xLen": 1 + Math.floor(Math.pow(rand(), 3) * binXLen),
             "yLen": 1 + Math.floor(Math.pow(rand(), 3) * binYLen),
@@ -231,7 +231,7 @@ levelGenerators.set('bp1', levelGenBP1);
 //==[ Loading game ]============================================================
 
 function applyToHttpResponse(url, hook, failHook) {
-    var xhttp = new XMLHttpRequest();
+    let xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
         if(this.readyState == 4) {
             if(this.status >= 200 && this.status <= 299) {
@@ -295,7 +295,7 @@ function loadGameFromJsonString(levelString, scaleFactor=null, succHook=null, fa
 }
 
 function loadGameFromUrl(url, scaleFactor=null, succHook=null, failHook=null) {
-    var failHook2 = null;
+    let failHook2 = null;
     if(failHook !== null) {
         failHook2 = function(statusCode) {failHook("Network error: could not retrieve " + url
             + "; status code " + statusCode);};
@@ -367,8 +367,8 @@ function loadGameFromUpload(scaleFactor=null, succHook=null, failHook=null) {
 }
 
 function getQParams() {
-    var params = new URLSearchParams(window.location.search);
-    var d = {};
+    let params = new URLSearchParams(window.location.search);
+    let d = {};
     for(let [key, value] of params.entries()) {
         if(value !== '') {
             d[key] = value;
@@ -419,8 +419,8 @@ function loadGameFromQParams(q, succHook=null, failHook=null) {
 //==[ Saving / Export ]=========================================================
 
 function downloadBlob(blob, filename, cleanup=false) {
-    var url = URL.createObjectURL(blob);
-    var downloaderElem = document.getElementById('downloader');
+    let url = URL.createObjectURL(blob);
+    let downloaderElem = document.getElementById('downloader');
     downloaderElem.href = url;
     downloaderElem.download = filename;
     downloaderElem.click();
@@ -434,7 +434,7 @@ function downloadBlob(blob, filename, cleanup=false) {
 }
 
 function serializeItemInfo(itemInfo) {
-    var o = {"xLen": itemInfo.xLen, "yLen": itemInfo.yLen};
+    let o = {"xLen": itemInfo.xLen, "yLen": itemInfo.yLen};
     if(itemInfo.color !== null) {
         o['color'] = itemInfo.color;
     }
@@ -450,18 +450,18 @@ function serItemsEqual(a, b) {
 }
 
 function serializeLevel(level, pos=null) {
-    var o = {"binXLen": level.binXLen, "binYLen": level.binYLen,
+    let o = {"binXLen": level.binXLen, "binYLen": level.binYLen,
         "gameType": level.gameType, "solutions": Object.fromEntries(level.solutions.entries()),
         "lower_bound": level.lower_bound, "upper_bound": level.upper_bound};
     if(pos !== null && pos.length > 0) {o['startPos'] = pos;}
 
-    var serItems = [];
+    let serItems = [];
     o['items'] = serItems;
-    var prevSerItem = null;
-    for(var i=0; i < level.items.length; ++i) {
-        var serItem = serializeItemInfo(level.items[i]);
+    let prevSerItem = null;
+    for(let i=0; i < level.items.length; ++i) {
+        let serItem = serializeItemInfo(level.items[i]);
         if(prevSerItem !== null && serItemsEqual(prevSerItem, serItem)) {
-            var n = prevSerItem['n'];
+            let n = prevSerItem['n'];
             if(n === undefined) {
                 prevSerItem['n'] = 2;
             }
@@ -502,9 +502,9 @@ var defaultTikzOptions = {
 };
 
 function getCellAndMarginSize() {
-    var pxInCm = window.outerWidth / 21;
-    var margin = (innerMargin / 2 / pxInCm) + 'cm';
-    var cellSize = (game.scaleFactor / pxInCm) + 'cm';
+    let pxInCm = window.outerWidth / 21;
+    let margin = (innerMargin / 2 / pxInCm) + 'cm';
+    let cellSize = (game.scaleFactor / pxInCm) + 'cm';
     return [cellSize, margin];
 }
 
@@ -595,7 +595,7 @@ function binsToTikz(level, pos, options={}) {
 }
 
 function downloadBinsToTikz(options={}, filename='bins.tikz', cleanup=false) {
-    var tikz = binsToTikz(game.level, game.getItemPositions(), options);
-    var blob = new Blob([tikz], {type: 'application/x-tex'});
+    let tikz = binsToTikz(game.level, game.getItemPositions(), options);
+    let blob = new Blob([tikz], {type: 'application/x-tex'});
     downloadBlob(blob, filename, cleanup);
 }
