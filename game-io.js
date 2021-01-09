@@ -445,7 +445,7 @@ function serializeItemInfo(itemInfo) {
 }
 
 function serItemsEqual(a, b) {
-    return (a.xPos === b.xPos && a.yPos === b.yPos
+    return (a.xLen === b.xLen && a.yLen === b.yLen
         && a.profit === b.profit && a.color === b.color);
 }
 
