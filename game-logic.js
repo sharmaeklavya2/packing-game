@@ -22,23 +22,13 @@ class Rectangle {
         this.xLen = xLen;
         this.yLen = yLen;
     }
-    equals(rect) {
-        return (this.xPos == rect.xPos
-            && this.yPos == rect.yPos
-            && this.xLen == rect.xLen
-            && this.yLen == rect.yLen);
-    }
 }
 
 function array2d(m, n, x) {
 /* create m-length list containing n-length lists of element x */
     let arr = [];
     for(let i=0; i<m; ++i) {
-        let row = [];
-        for(let j=0; j<n; ++j) {
-            row.push(x);
-        }
-        arr.push(row);
+        arr.push(new Array(n).fill(x));
     }
     return arr;
 }
