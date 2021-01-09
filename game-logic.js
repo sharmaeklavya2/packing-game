@@ -45,7 +45,7 @@ class DummyBin {
     }
 
     isEmpty() {
-        return this.count == 0;
+        return this.count === 0;
     }
 
     insert(rect) {
@@ -54,7 +54,7 @@ class DummyBin {
     }
 
     remove(rect) {
-        if(this.count == 0) {
+        if(this.count === 0) {
             return false;
         }
         else {
@@ -91,7 +91,7 @@ class Bin {
             + this._getAggFilled(rect.xPos, rect.yPos);
     }
     isEmpty() {
-        return this._getAggFilled(this.xLen, this.yLen) == 0;
+        return this._getAggFilled(this.xLen, this.yLen) === 0;
     }
 
     _fill(rect, z) {
@@ -121,7 +121,7 @@ class Bin {
         if((rect.xPos + rect.xLen > this.xLen) || (rect.yPos + rect.yLen > this.yLen)) {
             return false;
         }
-        return this.getFilledArea(rect) == 0;
+        return this.getFilledArea(rect) === 0;
     }
 
     insert(rect) {
@@ -420,7 +420,7 @@ class Game {
         if(undo && this.historyLength === 0) {
             return;
         }
-        if(!undo && this.historyLength == this.history.length) {
+        if(!undo && this.historyLength === this.history.length) {
             return;
         }
 
@@ -643,10 +643,10 @@ class Game {
 
     _createStatsBar() {
         let domElemNames = ['packed', 'unpacked'];
-        if(this.level.gameType == 'bp') {
+        if(this.level.gameType === 'bp') {
             domElemNames.push('bins used');
         }
-        else if(this.level.gameType == 'ks') {
+        else if(this.level.gameType === 'ks') {
             domElemNames.push('profit');
         }
         this.statsDomElems = createBarItems(document.getElementById('stats-bar'), domElemNames);
@@ -732,7 +732,7 @@ function clearGame() {
 class ItemInfoBar {
     constructor(gameType) {
         let domElemNames = ['width', 'height'];
-        if(gameType == 'ks') {
+        if(gameType === 'ks') {
             domElemNames.push('profit');
         }
         this.barDom = document.getElementById('item-info-bar');
@@ -931,7 +931,7 @@ function mouseleaveHandler(ev) {
 
 function keydownHandler(ev) {
     if(handleKeyPresses && !ev.defaultPrevented) {
-        if(ev.key == 'z' && (ev.metaKey || ev.ctrlKey)) {
+        if(ev.key === 'z' && (ev.metaKey || ev.ctrlKey)) {
             if(game !== null) {game._undoOrRedo(!ev.shiftKey);}
             ev.preventDefault();
         }

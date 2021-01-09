@@ -233,7 +233,7 @@ levelGenerators.set('bp1', levelGenBP1);
 function applyToHttpResponse(url, hook, failHook) {
     let xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
-        if(this.readyState == 4) {
+        if(this.readyState === 4) {
             if(this.status >= 200 && this.status <= 299) {
                 console.debug('received response for ' + url);
                 hook(this.responseText);

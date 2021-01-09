@@ -64,7 +64,7 @@ class Shelf {
 }
 
 function nextFitShelfPack(items, xLen) {
-    if(items.length == 0) {
+    if(items.length === 0) {
         return [];
     }
     let shelfId = 0;
@@ -82,7 +82,7 @@ function nextFitShelfPack(items, xLen) {
 }
 
 function firstFitShelfPack(items, xLen) {
-    if(items.length == 0) {
+    if(items.length === 0) {
         return [];
     }
     let shelves = [];
@@ -289,7 +289,7 @@ function dff1(x, xMax) {
 function dff2(x, xMax) {
     // step at 0.5
     const x2 = x * 2;
-    if(x2 == xMax) {
+    if(x2 === xMax) {
         return 0.5;
     }
     else if(x2 < xMax) {
