@@ -131,7 +131,7 @@ function processLevel(j) {
 //==[ Level Generators ]========================================================
 
 function hueToColor(hue) {
-    return 'hsl(' + hue + ', 100%, 50%)';
+    return 'hsl(' + hue + ',100%,50%)';
 }
 
 class Parameter {
@@ -449,11 +449,43 @@ function serItemsEqual(a, b) {
         && a.profit === b.profit && a.color === b.color);
 }
 
+function prettyJSONizeHelper(o) {
+    if(Array.isArray(o)) {
+        let maxHeight = 0;
+        let serials = [];
+        for(const x of o) {
+            const [jx, hx] = prettyJSONizeHelper(x);
+            serials.push(jx);
+            maxHeight = Math.max(maxHeight, hx);
+        }
+        const separator = (maxHeight >= 1 ? ',\n' : ', ');
+        const delims = (maxHeight >= 1 ? ['[\n', '\n]'] : ['[', ']']);
+        return [delims[0] + serials.join(separator) + delims[1], maxHeight + 1];
+    }
+    else if(o !== null && o !== undefined && o.constructor === Object) {
+        let maxHeight = 0;
+        let serials = [];
+        for(const [k, v] of Object.entries(o)) {
+            const [jv, hv] = prettyJSONizeHelper(v);
+            serials.push(JSON.stringify(k) + ': ' + jv);
+            maxHeight = Math.max(maxHeight, hv);
+        }
+        const separator = (maxHeight >= 1 ? ',\n' : ', ');
+        const delims = (maxHeight >= 1 ? ['{\n', '\n}'] : ['{', '}']);
+        return [delims[0] + serials.join(separator) + delims[1], maxHeight + 1];
+    }
+    else {
+        return [JSON.stringify(o), 0];
+    }
+}
+
+function prettyJSONize(o) {
+    return prettyJSONizeHelper(o)[0];
+}
+
 function serializeLevel(level, pos=null) {
-    let o = {"binXLen": level.binXLen, "binYLen": level.binYLen,
-        "gameType": level.gameType, "solutions": Object.fromEntries(level.solutions.entries()),
+    let o = {"binXLen": level.binXLen, "binYLen": level.binYLen, "gameType": level.gameType,
         "lower_bound": level.lower_bound, "upper_bound": level.upper_bound};
-    if(pos !== null && pos.length > 0) {o['startPos'] = pos;}
 
     let serItems = [];
     o['items'] = serItems;
@@ -474,12 +506,23 @@ function serializeLevel(level, pos=null) {
             prevSerItem = serItem;
         }
     }
+
+    if(pos !== null && pos.length > 0) {o['startPos'] = pos;}
+    if(level.solutions.size > 0) {
+        let [[k, v]] = level.solutions.entries();
+        if(level.solutions.size === 1 && k === 'solution') {
+            o["solution"] = v;
+        }
+        else {
+            o["solutions"] = Object.fromEntries(level.solutions.entries());
+        }
+    }
     return o;
 }
 
 function downloadProgress(filename='progress.json', cleanup=false) {
     let level = serializeLevel(game.level, game.getItemPositions());
-    let blob = new Blob([JSON.stringify(level)], {type: 'application/json'});
+    let blob = new Blob([prettyJSONize(level)], {type: 'application/json'});
     downloadBlob(blob, filename, cleanup);
 }
 

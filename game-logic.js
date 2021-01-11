@@ -6,7 +6,7 @@ var hoverRect = document.getElementById('hover-rect');
 
 var innerMargin = 10;  // margin between arena and the elements inside it, in px.
 var outerMargin = 32;  // margin between arena and containing page.
-var defaultItemColor = 'hsl(210, 100%, 60%)';
+var defaultItemColor = 'hsl(210,100%,60%)';
 
 var handleKeyPresses = true;
 var game = null;
