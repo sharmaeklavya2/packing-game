@@ -68,13 +68,14 @@ function itemInfoFromObject(j, id) {
 function processLevel(j) {
     let reqProps = ['binXLen', 'binYLen', 'items'];
     let optProps = {'gameType': 'bp', 'startPos': [], 'solution': null,
-        'lowerBound': null, 'upperBound': null, 'solutions': null};
+        'lowerBound': 0, 'upperBound': null, 'solutions': null};
     let o = readObjectPropsWithAssert(j, reqProps, optProps, 'level');
     let items = [];
     if(o.gameType !== 'bp') {
         throw new InputError("the only supported gameType is bp");
     }
     let id = 0;
+    let area = 0;
     for(let itemObj of o['items']) {
         let n = itemObj.n;
         if(n === undefined) {
@@ -83,6 +84,7 @@ function processLevel(j) {
         for(let i=0; i<n; ++i) {
             let item = itemInfoFromObject(itemObj, id++);
             items.push(item);
+            area += item.area();
         }
     }
     o.items = items;
@@ -96,11 +98,16 @@ function processLevel(j) {
     }
     o.solutions = new Map(Object.entries(o.solutions));
 
-    let ubAlgos = ['ffdh-ff', 'ffdh-ff-mirror'];
+    const binArea = o.binXLen * o.binYLen;
+    o.computedLB = Math.ceil(area / binArea);
+    o.computedLBReason = 'area';
     o.computedUB = items.length;
-    o.computedUBReason = null;
-    o.autoPack = new Map();
-    o.autoPackNBins = new Map();
+    o.computedUBReason = 'n';
+    const areaBound = Math.ceil(4 * area / binArea) + 1;
+    if(areaBound < o.computedUB) {
+        o.computedUB = areaBound;
+        o.computedUBReason = 'nfdh-area';
+    }
     for(const [solnName, soln] of o.solutions.entries()) {
         const nBins = countUsedBins(soln);
         if(nBins < o.computedUB) {
@@ -108,22 +115,15 @@ function processLevel(j) {
             o.computedUB = nBins;
         }
     }
-    for(const algoName of ubAlgos) {
-        let algo = bpAlgos.get(algoName);
-        o.autoPack.set(algoName, algo(items, o.binXLen, o.binYLen, []));
-        const nBins = countUsedBins(o.autoPack.get(algoName));
-        o.autoPackNBins.set(algoName, nBins);
-        if(nBins < o.computedUB) {
-            o.computedUBReason = algoName;
-            o.computedUB = nBins;
-        }
-    }
+
+    o.autoPack = new Map();
+    o.autoPackNBins = new Map();
+    o.lowerBound = Math.max(o.lowerBound, o.computedLB);
     if(o.upperBound === null) {
         o.upperBound = o.computedUB;
     }
-    if(o.lowerBound === null) {
-        [o.computedLB, o.computedLBReason] = bpLowerBound(items, o.binXLen, o.binYLen, false);
-        o.lowerBound = o.computedLB;
+    else {
+        o.upperBound = Math.min(o.upperBound, o.computedUB);
     }
     return o;
 }
