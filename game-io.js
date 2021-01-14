@@ -68,7 +68,7 @@ function itemInfoFromObject(j, id) {
 function processLevel(j) {
     let reqProps = ['binXLen', 'binYLen', 'items'];
     let optProps = {'gameType': 'bp', 'startPos': [], 'solution': null,
-        'lower_bound': null, 'upper_bound': null, 'solutions': null};
+        'lowerBound': null, 'upperBound': null, 'solutions': null};
     let o = readObjectPropsWithAssert(j, reqProps, optProps, 'level');
     let items = [];
     if(o.gameType !== 'bp') {
@@ -97,15 +97,15 @@ function processLevel(j) {
     o.solutions = new Map(Object.entries(o.solutions));
 
     let ubAlgos = ['ffdh-ff', 'ffdh-ff-mirror'];
-    o.computed_ub = items.length;
-    o.computed_ub_reason = null;
+    o.computedUB = items.length;
+    o.computedUBReason = null;
     o.autoPack = new Map();
     o.autoPackNBins = new Map();
     for(const [solnName, soln] of o.solutions.entries()) {
         const nBins = countUsedBins(soln);
-        if(nBins < o.computed_ub) {
-            o.computed_ub_reason = solnName;
-            o.computed_ub = nBins;
+        if(nBins < o.computedUB) {
+            o.computedUBReason = solnName;
+            o.computedUB = nBins;
         }
     }
     for(const algoName of ubAlgos) {
@@ -113,17 +113,17 @@ function processLevel(j) {
         o.autoPack.set(algoName, algo(items, o.binXLen, o.binYLen, []));
         const nBins = countUsedBins(o.autoPack.get(algoName));
         o.autoPackNBins.set(algoName, nBins);
-        if(nBins < o.computed_ub) {
-            o.computed_ub_reason = algoName;
-            o.computed_ub = nBins;
+        if(nBins < o.computedUB) {
+            o.computedUBReason = algoName;
+            o.computedUB = nBins;
         }
     }
-    if(o.upper_bound === null) {
-        o.upper_bound = o.computed_ub;
+    if(o.upperBound === null) {
+        o.upperBound = o.computedUB;
     }
-    if(o.lower_bound === null) {
-        [o.computed_lb, o.computed_lb_reason] = bpLowerBound(items, o.binXLen, o.binYLen, false);
-        o.lower_bound = o.computed_lb;
+    if(o.lowerBound === null) {
+        [o.computedLB, o.computedLBReason] = bpLowerBound(items, o.binXLen, o.binYLen, false);
+        o.lowerBound = o.computedLB;
     }
     return o;
 }
@@ -485,7 +485,7 @@ function prettyJSONize(o) {
 
 function serializeLevel(level, pos=null) {
     let o = {"binXLen": level.binXLen, "binYLen": level.binYLen, "gameType": level.gameType,
-        "lower_bound": level.lower_bound, "upper_bound": level.upper_bound};
+        "lowerBound": level.lowerBound, "upperBound": level.upperBound};
 
     let serItems = [];
     o['items'] = serItems;

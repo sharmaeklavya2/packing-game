@@ -543,10 +543,10 @@ class Game {
         }
         let binsUsedDomElem = this.statsDomElems['bins used'];
         binsUsedDomElem.classList.remove('success', 'error', 'warning');
-        if(this.nBinsUsed > this.level.upper_bound) {
+        if(this.nBinsUsed > this.level.upperBound) {
             binsUsedDomElem.classList.add('error');
         }
-        else if(this.nBinsUsed > this.level.lower_bound) {
+        else if(this.nBinsUsed > this.level.lowerBound) {
             binsUsedDomElem.classList.add('warning');
         }
         else {
@@ -555,7 +555,7 @@ class Game {
     }
 
     _assessBins() {
-        let lb = this.level.lower_bound, ub = this.level.upper_bound;
+        let lb = this.level.lowerBound, ub = this.level.upperBound;
         let used = 0;
         for(let i=0; i<this.bins.length; ++i) {
             let bin = this.bins[i];
@@ -602,7 +602,7 @@ class Game {
     _setScaleFactor(scaleFactor) {
         let [inferredScaleX, inferredScaleY] = inferScaleFactors(
             this.invXLen, this.invYLen, this.level.binXLen, this.level.binYLen,
-            this.level.lower_bound);
+            this.level.lowerBound);
         if(scaleFactor === 'x') {
             this.scaleFactor = inferredScaleX;
         }
