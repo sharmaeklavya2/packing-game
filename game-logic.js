@@ -523,6 +523,23 @@ class Game {
         }
     }
 
+    lowerBound() {
+        if(this.level.origLB === null) {
+            return this.level.computedLB;
+        }
+        else {
+            return Math.max(this.level.computedLB, this.level.origLB);
+        }
+    }
+    upperBound() {
+        if(this.level.origUB === null) {
+            return this.level.computedUB;
+        }
+        else {
+            return Math.min(this.level.computedUB, this.level.origUB);
+        }
+    }
+
     destroy() {
         this._destroyItems();
         this._destroyBins();
@@ -558,9 +575,6 @@ class Game {
             level.computedUBReason = algoName;
             level.computedUB = nBins;
         }
-        if(nBins < level.upperBound) {
-            level.upperBound = nBins;
-        }
     }
 
     _improveLowerBound() {
@@ -569,9 +583,6 @@ class Game {
         if(newLB > level.computedLB) {
             level.computedLBReason = newLBReason;
             level.computedLB = newLB;
-        }
-        if(newLB > level.lowerBound) {
-            level.lowerBound = newLB;
         }
     }
 
@@ -598,10 +609,10 @@ class Game {
         }
         let binsUsedDomElem = this.statsDomElems['bins used'];
         binsUsedDomElem.classList.remove('success', 'error', 'warning');
-        if(this.nBinsUsed > this.level.upperBound) {
+        if(this.nBinsUsed > this.upperBound()) {
             binsUsedDomElem.classList.add('error');
         }
-        else if(this.nBinsUsed > this.level.lowerBound) {
+        else if(this.nBinsUsed > this.lowerBound()) {
             binsUsedDomElem.classList.add('warning');
         }
         else {
@@ -610,7 +621,7 @@ class Game {
     }
 
     _assessBins() {
-        let lb = this.level.lowerBound, ub = this.level.upperBound;
+        let lb = this.lowerBound(), ub = this.upperBound();
         let used = 0;
         for(let i=0; i<this.bins.length; ++i) {
             let bin = this.bins[i];
@@ -657,7 +668,7 @@ class Game {
     _setScaleFactor(scaleFactor) {
         let [inferredScaleX, inferredScaleY] = inferScaleFactors(
             this.invXLen, this.invYLen, this.level.binXLen, this.level.binYLen,
-            this.level.lowerBound);
+            this.lowerBound());
         if(scaleFactor === 'x') {
             this.scaleFactor = inferredScaleX;
         }

@@ -22,7 +22,7 @@ function dictAssertAccess(d, key, name) {
     }
 }
 
-function readObjectPropsWithAssert(input, reqProps, optProps, objname) {
+function readObjectPropsWithAssert(input, reqProps, optProps, modProps, objname) {
     let o = {};
     for(let prop of reqProps) {
         if(input.hasOwnProperty(prop)) {
@@ -32,14 +32,20 @@ function readObjectPropsWithAssert(input, reqProps, optProps, objname) {
             throw new InputError("property '" + prop + "' is missing for " + objname);
         }
     }
-    if(optProps.constructor === Object) {
-        for(let [prop, value] of Object.entries(optProps)) {
-            if(input.hasOwnProperty(prop)) {
-                o[prop] = input[prop];
-            }
-            else {
-                o[prop] = value;
-            }
+    for(let [prop, value] of Object.entries(optProps)) {
+        if(input.hasOwnProperty(prop)) {
+            o[prop] = input[prop];
+        }
+        else {
+            o[prop] = value;
+        }
+    }
+    for(let [prop, prop2] of Object.entries(modProps)) {
+        if(input.hasOwnProperty(prop)) {
+            o[prop2] = input[prop];
+        }
+        else {
+            o[prop2] = null;
         }
     }
     return o;
@@ -60,16 +66,16 @@ function itemInfoFromObject(j, id) {
     else {
         let reqProps = ['xLen', 'yLen'];
         let optProps = {'color': null, 'profit': 0};
-        let o = readObjectPropsWithAssert(j, reqProps, optProps, 'item ' + id);
+        let o = readObjectPropsWithAssert(j, reqProps, optProps, {}, 'item ' + id);
         return new ItemInfo(id, o['xLen'], o['yLen'], o['profit'], o['color']);
     }
 }
 
 function processLevel(j) {
     let reqProps = ['binXLen', 'binYLen', 'items'];
-    let optProps = {'gameType': 'bp', 'startPos': [], 'solution': null,
-        'lowerBound': 0, 'upperBound': null, 'solutions': null};
-    let o = readObjectPropsWithAssert(j, reqProps, optProps, 'level');
+    let optProps = {'gameType': 'bp', 'startPos': [], 'solutions': null};
+    let modProps = {'lowerBound': 'origLB', 'upperBound': 'origUB'};
+    let o = readObjectPropsWithAssert(j, reqProps, optProps, modProps, 'level');
     let items = [];
     if(o.gameType !== 'bp') {
         throw new InputError("the only supported gameType is bp");
@@ -89,8 +95,9 @@ function processLevel(j) {
     }
     o.items = items;
     if(o.solutions === null) {
-        if(o.solution !== null) {
-            o.solutions = {'solution': o.solution};
+        const solution = j['solution'];
+        if(solution !== null && solution !== undefined) {
+            o.solutions = {'solution': solution};
         }
         else {
             o.solutions = {};
@@ -140,16 +147,8 @@ function processLevel(j) {
             o.computedUB = nBins;
         }
     }
-
     o.autoPack = new Map();
     o.autoPackNBins = new Map();
-    o.lowerBound = Math.max(o.lowerBound, o.computedLB);
-    if(o.upperBound === null) {
-        o.upperBound = o.computedUB;
-    }
-    else {
-        o.upperBound = Math.min(o.upperBound, o.computedUB);
-    }
     return o;
 }
 
@@ -509,8 +508,7 @@ function prettyJSONize(o) {
 }
 
 function serializeLevel(level, pos=null) {
-    let o = {"binXLen": level.binXLen, "binYLen": level.binYLen, "gameType": level.gameType,
-        "lowerBound": level.lowerBound, "upperBound": level.upperBound};
+    let o = {"binXLen": level.binXLen, "binYLen": level.binYLen, "gameType": level.gameType};
 
     let serItems = [];
     o['items'] = serItems;
@@ -533,6 +531,8 @@ function serializeLevel(level, pos=null) {
     }
 
     if(pos !== null && pos.length > 0) {o['startPos'] = pos;}
+    if(level.origLB !== null) {o['lowerBound'] = level.origLB;}
+    if(level.origUB !== null) {o['upperBound'] = level.origUB;}
     if(level.solutions.size > 0) {
         let [[k, v]] = level.solutions.entries();
         if(level.solutions.size === 1 && k === 'solution') {
