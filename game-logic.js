@@ -297,6 +297,12 @@ function inferScaleFactors(invXLen, invYLen, binXLen, binYLen, nBins=1) {
     return [scaleX, Math.min(scaleY1, scaleY2)];
 }
 
+function arraySwap(arr, i, j) {
+    let t = arr[i];
+    arr[i] = arr[j];
+    arr[j] = t;
+}
+
 class Game {
 
     constructor(level, scaleFactor=null) {
@@ -566,6 +572,33 @@ class Game {
         this.level.items.pop();
         this._refreshStatsDom();
         this._assessBins();
+    }
+
+    _swapItems(i1, i2) {
+        if(i1 === i2) {
+            return;
+        }
+        this._invalidateHistory();
+
+        arraySwap(this.level.startPos, i1, i2);
+        for(let [solnName, soln] of this.level.solutions.entries()) {
+            arraySwap(soln, i1, i2);
+        }
+        for(let [algoName, packing] of this.level.autoPack.entries()) {
+            arraySwap(packing, i1, i2);
+        }
+        arraySwap(this.stripPackSol, i1, i2);
+        arraySwap(this.items, i1, i2);
+        arraySwap(this.level.items, i1, i2);
+        this.items[i1].domElem.setAttribute('data-item-id', i1);
+        this.level.items[i1].id = i1;
+        this.items[i2].domElem.setAttribute('data-item-id', i2);
+        this.level.items[i2].id = i2;
+    }
+
+    removeItem(itemId) {
+        this._swapItems(itemId, this.items.length - 1);
+        this.popItem();
     }
 
     destroy() {
