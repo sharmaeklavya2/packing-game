@@ -97,6 +97,18 @@ function processLevel(j) {
         }
     }
     o.solutions = new Map(Object.entries(o.solutions));
+    if(o.startPos.length > items.length) {
+        addMsg('warning', 'startPos has length ' + o.startPos.length
+            + ', but there are only ' + items.length + ' items. Ignoring last '
+            + (o.startPos.length - items.length) + ' entries in startPos.');
+        o.startPos.length = items.length;
+    }
+    else {
+        const nToIns = items.length - o.startPos.length;
+        for(let i=0; i<nToIns; ++i) {
+            o.startPos.push(null);
+        }
+    }
 
     const binArea = o.binXLen * o.binYLen;
     o.computedLB = Math.ceil(area / binArea);
@@ -109,6 +121,19 @@ function processLevel(j) {
         o.computedUBReason = 'nfdh-area';
     }
     for(const [solnName, soln] of o.solutions.entries()) {
+        if(soln.length > items.length) {
+            const solnName2 = (o.solutions.size > 1 ? solnName + ' ' : '');
+            addMsg('warning', 'solution ' + solnName2 + 'has length ' + soln.length
+                + ', but there are only ' + items.length + ' items. Ignoring last '
+                + (soln.length - items.length) + ' entries in solution.');
+            soln.length = items.length;
+        }
+        else {
+            const nToIns = items.length - soln.length;
+            for(let i=0; i<nToIns; ++i) {
+                soln.push(null);
+            }
+        }
         const nBins = countUsedBins(soln);
         if(nBins < o.computedUB) {
             o.computedUBReason = solnName;
