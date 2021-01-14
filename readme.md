@@ -29,11 +29,10 @@ and additions to code must adhere to this structure.
 Consider the example of picking an item and placing it into a bin (already implemented).
 First I wrote code to do this via the developer console:
 ```js
-i = globalGame.items[0];
-b = globalGame.bins[0];
-i.attach(b, 0, 0);
+game.attach(2, 0, 1, 3);
 ```
-This places item `i` at the top left corner of the first bin.
+This places item 2 in bin 0 (first bin) such that
+the item's top-left coordinate in the bin is (1, 3).
 This allowed me to only focus on the packing logic and not worry about mouse events.
 I could even test/debug my code before implementing event handlers.
 Later when implementing the event handlers, I just call `attach` at the appropriate place.
