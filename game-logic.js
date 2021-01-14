@@ -146,6 +146,28 @@ class ItemInfo {
         this.profit = profit;
         this.color = color;
     }
+
+    area() {
+        return this.xLen * this.yLen;
+    }
+}
+
+class ItemSetStats {
+    constructor(count=0, area=0, profit=0) {
+        this.count = count;
+        this.area = area;
+        this.profit = profit;
+    }
+    add(itemInfo) {
+        this.count += 1;
+        this.area += itemInfo.area();
+        this.profit += itemInfo.profit;
+    }
+    remove(itemInfo) {
+        this.count -= 1;
+        this.area -= itemInfo.area();
+        this.profit -= itemInfo.profit;
+    }
 }
 
 //==[ Util ]====================================================================
@@ -285,9 +307,9 @@ class Game {
         this.historyLength = 0;
         this.bins = [];
         this.items = [];
-        this.nItemsPacked = 0;
+        this.totalStats = new ItemSetStats();
+        this.packedStats = new ItemSetStats();
         this.nBinsUsed = 0;
-        this.profit = 0;
 
         this._setScaleFactor(scaleFactor);
         this._createStatsBar();
@@ -370,8 +392,7 @@ class Game {
                 item.itemInfo.xLen, item.itemInfo.yLen));
             item.binUI.domElem.removeChild(item.domElem);
             item.domElem.classList.remove('packed');
-            this.nItemsPacked--;
-            this.profit -= item.itemInfo.profit;
+            this.packedStats.remove(item.itemInfo);
             if(item.binUI.bin.isEmpty()) {
                 this.nBinsUsed--;
             }
@@ -398,8 +419,7 @@ class Game {
             item.yPos = yPos;
             item.domElem.classList.add('packed');
             setPos(item.domElem, this.scaleFactor * xPos, this.scaleFactor * yPos);
-            this.nItemsPacked++;
-            this.profit += item.itemInfo.profit;
+            this.packedStats.add(item.itemInfo);
             if(wasEmpty) {
                 this.nBinsUsed++;
             }
@@ -513,6 +533,8 @@ class Game {
         this.history = [];
         this.historyLength = 0;
         disableUndoButton();
+        this.totalStats = null;
+        this.packedStats = null;
         this._destroyStatsBar();
         this.itemInfoBar.destroy();
         this.level = null;
@@ -522,10 +544,10 @@ class Game {
 
     _refreshStatsDom() {
         let d = {
-            'packed': this.nItemsPacked,
-            'unpacked': this.items.length - this.nItemsPacked,
+            'packed': this.packedStats.count,
+            'unpacked': this.items.length - this.packedStats.count,
             'bins used': this.nBinsUsed,
-            'profit': this.profit,
+            'profit': this.packedStats.profit,
         };
         for(let [key, value] of Object.entries(d)) {
             let domElem = this.statsDomElems[key];
@@ -637,6 +659,7 @@ class Game {
         for(let i=0; i < rawItems.length; ++i) {
             let itemUI = new ItemUI(rawItems[i], this.scaleFactor);
             this.items.push(itemUI);
+            this.totalStats.add(rawItems[i]);
         }
         this._moveItemsToInventory(true);
     }
