@@ -353,10 +353,7 @@ class Game {
     putBack(pos=null) {
         this._moveItemsToInventory(false);
         this._destroyBins();
-        this.history = [];
-        this.historyLength = 0;
-        disableUndoButton();
-        disableRedoButton();
+        this._invalidateHistory();
         if(pos === null) {
             pos = [];
         }
@@ -533,9 +530,7 @@ class Game {
         this.invYLen = 0;
         this._setInventoryDimsPx();
         arena.classList.remove('large');
-        this.history = [];
-        this.historyLength = 0;
-        disableUndoButton();
+        this._invalidateHistory();
         this.totalStats = null;
         this.packedStats = null;
         this._destroyStatsBar();
@@ -543,6 +538,13 @@ class Game {
         this.level = null;
         this.stripPackSol = null;
         inventory.style.backgroundSize = null;
+    }
+
+    _invalidateHistory() {
+        this.history = [];
+        this.historyLength = 0;
+        disableUndoButton();
+        disableRedoButton();
     }
 
     _computeAutoPack(algoName) {
