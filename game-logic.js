@@ -305,6 +305,7 @@ class Game {
         this._computeAutoPack('ffdh-ff');
         this._computeAutoPack('ffdh-ff-mirror');
         this._improveLowerBound();
+
         this.itemInfoBar = new ItemInfoBar(this.level.gameType);
         this.history = [];
         this.historyLength = 0;
@@ -499,22 +500,6 @@ class Game {
         }
     }
 
-    _computeAutoPack(algoName) {
-        let algo = bpAlgos.get(algoName);
-        let level = this.level;
-        let packing = algo(level.items, level.binXLen, level.binYLen, []);
-        level.autoPack.set(algoName, packing);
-        const nBins = countUsedBins(packing);
-        level.autoPackNBins.set(algoName, nBins);
-        if(nBins < level.computedUB) {
-            level.computedUBReason = algoName;
-            level.computedUB = nBins;
-        }
-        if(nBins < level.upperBound) {
-            level.upperBound = nBins;
-        }
-    }
-
     selectAutoPack(algoName) {
         let autoPack = this.level.autoPack;
         if(autoPack.get(algoName) === undefined) {
@@ -525,18 +510,6 @@ class Game {
 
     selectSolution(solnName) {
         this.putBack(this.level.solutions.get(solnName));
-    }
-
-    _improveLowerBound() {
-        let level = this.level;
-        const [newLB, newLBReason] = bpLowerBound(level.items, level.binXLen, level.binYLen, false);
-        if(newLB > level.computedLB) {
-            level.computedLBReason = newLBReason;
-            level.computedLB = newLB;
-        }
-        if(newLB > level.lowerBound) {
-            level.lowerBound = newLB;
-        }
     }
 
     resize(scaleFactor) {
@@ -570,6 +543,34 @@ class Game {
         this.level = null;
         this.stripPackSol = null;
         inventory.style.backgroundSize = null;
+    }
+
+    _computeAutoPack(algoName) {
+        let algo = bpAlgos.get(algoName);
+        let level = this.level;
+        let packing = algo(level.items, level.binXLen, level.binYLen, []);
+        level.autoPack.set(algoName, packing);
+        const nBins = countUsedBins(packing);
+        level.autoPackNBins.set(algoName, nBins);
+        if(nBins < level.computedUB) {
+            level.computedUBReason = algoName;
+            level.computedUB = nBins;
+        }
+        if(nBins < level.upperBound) {
+            level.upperBound = nBins;
+        }
+    }
+
+    _improveLowerBound() {
+        let level = this.level;
+        const [newLB, newLBReason] = bpLowerBound(level.items, level.binXLen, level.binYLen, false);
+        if(newLB > level.computedLB) {
+            level.computedLBReason = newLBReason;
+            level.computedLB = newLB;
+        }
+        if(newLB > level.lowerBound) {
+            level.lowerBound = newLB;
+        }
     }
 
     _refreshStatsDom() {
