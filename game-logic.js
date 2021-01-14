@@ -540,6 +540,34 @@ class Game {
         }
     }
 
+    popItem() {
+        const itemId = this.level.items.length - 1;
+        if(itemId < 0) {
+            console.warn('nothing to pop');
+            return;
+        }
+        this.detach(itemId);
+        inventory.removeChild(this.items[itemId].domElem);
+        this._invalidateHistory();
+        this.totalStats.remove(this.level.items[itemId]);
+        this.level.startPos.pop();
+        for(let [solnName, soln] of this.level.solutions.entries()) {
+            soln.pop();
+        }
+        this.stripPackSol.pop();
+        this.level.origLB = null;
+        const binArea = this.level.binXLen * this.level.binYLen;
+        this.level.computedLB = Math.ceil(this.totalStats.area / binArea);
+        this.level.computedLBReason = 'area';
+        this.level.computedUBReason = null;
+        this.level.autoPack.clear();
+        this.level.autoPackNBins.clear();
+        this.items.pop();
+        this.level.items.pop();
+        this._refreshStatsDom();
+        this._assessBins();
+    }
+
     destroy() {
         this._destroyItems();
         this._destroyBins();
