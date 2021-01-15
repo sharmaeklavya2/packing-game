@@ -793,7 +793,7 @@ class Game {
     }
 
     _resetHistoryButtons() {
-        if(this.history.length > 0) {
+        if(this.historyLength > 0) {
             enableUndoButton();
         }
         else {
