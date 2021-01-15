@@ -417,6 +417,11 @@ class Game {
         }
     }
 
+    repackInventory() {
+        this._computeInventoryDimsAndItemHomePositions();
+        this._setInventoryDimsPx();
+    }
+
     detach(itemId) {
         let item = this.items[itemId];
         if(item.binUI !== null) {
