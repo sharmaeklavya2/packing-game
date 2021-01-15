@@ -1155,7 +1155,6 @@ function mousedownHandler(ev) {
         const xPos = Math.floor((ev.clientX - targetRect.x) / game.scaleFactor);
         const yPos = Math.floor((ev.clientY - targetRect.y) / game.scaleFactor);
         DragData.set(new DragData(null, [binId, xPos, yPos], 0, 0));
-        console.log('clicked bin ' + binId + ' at ' + [xPos, yPos]);
 
         const selRect = new Rectangle(xPos, yPos, 1, 1);
         hoverRect.style.width = (game.scaleFactor * selRect.xLen) + 'px';
