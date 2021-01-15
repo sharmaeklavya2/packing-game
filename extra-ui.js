@@ -268,7 +268,9 @@ function addExtraUIEventListeners() {
             if(game !== null) {downloadProgress();}
         });
     document.getElementById('unpack-button').addEventListener('click', function(ev) {
+            let oldPos = game.getItemPositions();
             game.putBack();
+            game._recordHistoryCommand({'cmd': 'bulkMove', 'oldPos': oldPos, 'newPos': []});
         });
     let solutionsButton = document.getElementById('solutions-button');
     solutionsButton.addEventListener('click', function(ev) {

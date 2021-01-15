@@ -384,7 +384,6 @@ class Game {
     putBack(pos=null) {
         this._moveItemsToInventory(false);
         this._destroyBins();
-        this._invalidateHistory();
         if(pos === null) {
             pos = [];
         }
@@ -493,11 +492,17 @@ class Game {
         if(autoPack.get(algoName) === undefined) {
             this._computeAutoPack(algoName);
         }
-        this.putBack(autoPack.get(algoName));
+        let newPos = autoPack.get(algoName);
+        let oldPos = this.getItemPositions();
+        this._recordHistoryCommand({'cmd': 'bulkMove', 'oldPos': oldPos, 'newPos': newPos});
+        this.putBack(newPos);
     }
 
     selectSolution(solnName) {
-        this.putBack(this.level.solutions.get(solnName));
+        let newPos = this.level.solutions.get(solnName);
+        let oldPos = this.getItemPositions();
+        this._recordHistoryCommand({'cmd': 'bulkMove', 'oldPos': oldPos, 'newPos': newPos});
+        this.putBack(newPos);
     }
 
     resize(scaleFactor) {
@@ -548,10 +553,8 @@ class Game {
         this.detach(itemId);
         inventory.removeChild(this.items[itemId].domElem);
         this.totalStats.remove(this.level.items[itemId]);
-        this.level.startPos.pop();
-        for(let [solnName, soln] of this.level.solutions.entries()) {
-            soln.pop();
-        }
+        this.level.startPos = [];
+        this.level.solutions.clear();
         this.stripPackSol.pop();
         this._invalidateLowerBound();
         this.level.computedUBReason = null;
@@ -861,6 +864,14 @@ class Game {
                         this._invalidateHistory();
                     }
                 }
+            }
+        }
+        else if(cmd.cmd === 'bulkMove') {
+            if(opposite) {
+                game.putBack(cmd.oldPos);
+            }
+            else {
+                game.putBack(cmd.newPos);
             }
         }
         else {
