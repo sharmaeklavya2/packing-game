@@ -7,6 +7,7 @@ var hoverRect = document.getElementById('hover-rect');
 var innerMargin = 10;  // margin between arena and the elements inside it, in px.
 var outerMargin = 32;  // margin between arena and containing page.
 var defaultItemColor = 'hsl(210,100%,60%)';
+var creatorMode = false;
 
 var handleKeyPresses = true;
 var game = null;
@@ -1148,6 +1149,21 @@ function mousedownHandler(ev) {
         hoverRect.style.height = targetRect.height + 'px';
         hoverRect.style.width = targetRect.width + 'px';
     }
+    else if(creatorMode && target.classList.contains('bin')) {
+        ev.preventDefault();
+        const binId = parseInt(target.getAttribute('data-bin-id'));
+        const xPos = Math.floor((ev.clientX - targetRect.x) / game.scaleFactor);
+        const yPos = Math.floor((ev.clientY - targetRect.y) / game.scaleFactor);
+        DragData.set(new DragData(null, [binId, xPos, yPos], 0, 0));
+        console.log('clicked bin ' + binId + ' at ' + [xPos, yPos]);
+
+        const selRect = new Rectangle(xPos, yPos, 1, 1);
+        hoverRect.style.width = (game.scaleFactor * selRect.xLen) + 'px';
+        hoverRect.style.height = (game.scaleFactor * selRect.yLen) + 'px';
+        hoverRect.classList.add('success');
+        hoverRect.classList.remove('failure');
+        moveHoverRect(binId, selRect);
+    }
 }
 
 function getPos(ev, xLen, yLen, binId) {
@@ -1190,6 +1206,24 @@ function getMouseBinId(ev) {
     return null;
 }
 
+function getSelectionRect(ev, binId, xPos1, yPos1) {
+    let binUI = game.bins[binId];
+    const binXLen = binUI.bin.xLen, binYLen = binUI.bin.yLen;
+    const binRect = binUI.domElem.getBoundingClientRect();
+    let xPos2 = clip(Math.floor((ev.clientX - binRect.x) / game.scaleFactor),
+        0, binXLen - 1);
+    let yPos2 = clip(Math.floor((ev.clientY - binRect.y) / game.scaleFactor),
+        0, binYLen - 1);
+    if(xPos1 > xPos2) {
+        [xPos1, xPos2] = [xPos2, xPos1];
+    }
+    if(yPos1 > yPos2) {
+        [yPos1, yPos2] = [yPos2, yPos1];
+    }
+    const xLen = xPos2 - xPos1 + 1, yLen = yPos2 - yPos1 + 1;
+    return new Rectangle(xPos1, yPos1, xLen, yLen);
+}
+
 function mousemoveHandler(ev) {
     // console.debug("mousemove", ev.target.id, ev.target.classList.value);
     let dragData = DragData.get();
@@ -1224,6 +1258,21 @@ function mousemoveHandler(ev) {
             }
         }
     }
+    else {
+        let [binId, xPos1, yPos1] = dragData.coords;
+        const selRect = getSelectionRect(ev, binId, xPos1, yPos1);
+        hoverRect.style.width = (game.scaleFactor * selRect.xLen) + 'px';
+        hoverRect.style.height = (game.scaleFactor * selRect.yLen) + 'px';
+        moveHoverRect(binId, selRect);
+        if(game.bins[binId].bin.canFit(selRect)) {
+            hoverRect.classList.add('success');
+            hoverRect.classList.remove('failure');
+        }
+        else {
+            hoverRect.classList.add('failure');
+            hoverRect.classList.remove('success');
+        }
+    }
 }
 
 function endDrag() {
@@ -1256,6 +1305,15 @@ function mouseupHandler(ev) {
         if(binId !== null) {
             let [xPos, yPos] = getPos(ev, itemInfo.xLen, itemInfo.yLen, binId);
             game.attach(itemId, binId, xPos, yPos);
+        }
+    }
+    else {
+        let [binId, xPos1, yPos1] = dragData.coords;
+        const selRect = getSelectionRect(ev, binId, xPos1, yPos1);
+        if(game.bins[binId].bin.canFit(selRect)) {
+            let itemInfo = new ItemInfo(null, selRect.xLen, selRect.yLen, 0, null);
+            game.pushItem(itemInfo);
+            game.attach(game.items.length - 1, binId, selRect.xPos, selRect.yPos);
         }
     }
     endDrag();
