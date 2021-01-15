@@ -1341,11 +1341,11 @@ function endDrag() {
 function mouseupHandler(ev) {
     let target = ev.target;
     console.debug(ev.type, target);
-    ev.preventDefault();
     let dragData = DragData.get();
     if(dragData === null) {
         return;
     }
+    ev.preventDefault();
     if(dragData.itemId !== null) {
         let itemId = dragData.itemId;
         let itemInfo = game.items[itemId].itemInfo;
@@ -1392,6 +1392,11 @@ function keydownHandler(ev) {
                 else {
                     game.undo();
                 }
+            }
+        }
+        else if(ev.key === 'Escape') {
+            if(game !== null) {
+                endDrag();
             }
         }
     }
