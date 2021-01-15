@@ -1118,7 +1118,9 @@ class DragData {
             throw new Error('globalDragData is already set');
         }
         globalDragData = dragData;
-        game.itemInfoBar.activate(game.items[dragData.itemId].itemInfo);
+        if(dragData.itemId !== null) {
+            game.itemInfoBar.activate(game.items[dragData.itemId].itemInfo);
+        }
         // ev.dataTransfer.setData('text/html', null);
     }
     static unset() {
@@ -1130,7 +1132,10 @@ class DragData {
 function mousedownHandler(ev) {
     let target = ev.target;
     console.debug(ev.type, ev.clientX, ev.clientY, target);
-    if(ev.button === 0 && target.classList.contains('item')) {
+    if(ev.button !== 0) {
+        return;
+    }
+    if(target.classList.contains('item')) {
         ev.preventDefault();
         let itemDomElem = target;
         let originalXPos = itemDomElem.getBoundingClientRect().x;
@@ -1192,35 +1197,36 @@ function getMouseBinId(ev) {
 
 function mousemoveHandler(ev) {
     // console.debug("mousemove", ev.target.id, ev.target.classList.value);
-    ev.preventDefault();
     let dragData = DragData.get();
     if(dragData === null) {
         return;
     }
+    ev.preventDefault();
+    if(dragData.itemId !== null) {
+        // move item
+        let item = game.items[dragData.itemId];
+        let arenaX = arena.getBoundingClientRect().x;
+        let arenaY = arena.getBoundingClientRect().y;
+        setPos(item.domElem, ev.clientX - dragData.xOff - arenaX, ev.clientY - dragData.yOff - arenaY);
 
-    // move item
-    let item = game.items[dragData.itemId];
-    let arenaX = arena.getBoundingClientRect().x;
-    let arenaY = arena.getBoundingClientRect().y;
-    setPos(item.domElem, ev.clientX - dragData.xOff - arenaX, ev.clientY - dragData.yOff - arenaY);
-
-    // draw hover
-    let binId = getMouseBinId(ev);
-    let bin = game.bins[binId];
-    if(binId === null) {
-        hoverRect.style.visibility = 'hidden';
-    }
-    else {
-        let [xPos, yPos] = getPos(ev, item.itemInfo.xLen, item.itemInfo.yLen, binId);
-        let newPosRect = new Rectangle(xPos, yPos, item.itemInfo.xLen, item.itemInfo.yLen);
-        moveHoverRect(binId, newPosRect);
-        if(bin.bin.canFit(newPosRect)) {
-            hoverRect.classList.add('success');
-            hoverRect.classList.remove('failure');
+        // draw hover
+        let binId = getMouseBinId(ev);
+        let bin = game.bins[binId];
+        if(binId === null) {
+            hoverRect.style.visibility = 'hidden';
         }
         else {
-            hoverRect.classList.add('failure');
-            hoverRect.classList.remove('success');
+            let [xPos, yPos] = getPos(ev, item.itemInfo.xLen, item.itemInfo.yLen, binId);
+            let newPosRect = new Rectangle(xPos, yPos, item.itemInfo.xLen, item.itemInfo.yLen);
+            moveHoverRect(binId, newPosRect);
+            if(bin.bin.canFit(newPosRect)) {
+                hoverRect.classList.add('success');
+                hoverRect.classList.remove('failure');
+            }
+            else {
+                hoverRect.classList.add('failure');
+                hoverRect.classList.remove('success');
+            }
         }
     }
 }
@@ -1229,8 +1235,10 @@ function endDrag() {
     hoverRect.style.visibility = 'hidden';
     let dragData = DragData.get();
     if(dragData !== null) {
-        let oldCoords = dragData.coords;
-        game._recordHistory(dragData.itemId, oldCoords, game.getItemPosition(dragData.itemId));
+        if(dragData.itemId !== null) {
+            let oldCoords = dragData.coords;
+            game._recordHistory(dragData.itemId, oldCoords, game.getItemPosition(dragData.itemId));
+        }
     }
     DragData.unset();
     game.trimBins(1);
@@ -1244,26 +1252,26 @@ function mouseupHandler(ev) {
     if(dragData === null) {
         return;
     }
+    if(dragData.itemId !== null) {
+        let itemId = dragData.itemId;
+        let itemInfo = game.items[itemId].itemInfo;
+        let binId = getMouseBinId(ev);
 
-    let itemId = dragData.itemId;
-    let itemInfo = game.items[itemId].itemInfo;
-    let binId = getMouseBinId(ev);
-
-    // attach item to bin
-    if(binId !== null) {
-        let [xPos, yPos] = getPos(ev, itemInfo.xLen, itemInfo.yLen, binId);
-        game.attach(itemId, binId, xPos, yPos);
+        // attach item to bin
+        if(binId !== null) {
+            let [xPos, yPos] = getPos(ev, itemInfo.xLen, itemInfo.yLen, binId);
+            game.attach(itemId, binId, xPos, yPos);
+        }
     }
-
     endDrag();
 }
 
 function mouseleaveHandler(ev) {
     let target = ev.target;
     console.debug(ev.type, target);
-    ev.preventDefault();
     let dragData = DragData.get();
     if(dragData !== null) {
+        ev.preventDefault();
         endDrag();
     }
 }
