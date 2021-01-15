@@ -542,7 +542,6 @@ class Game {
         }
         this.detach(itemId);
         inventory.removeChild(this.items[itemId].domElem);
-        this._invalidateHistory();
         this.totalStats.remove(this.level.items[itemId]);
         this.level.startPos.pop();
         for(let [solnName, soln] of this.level.solutions.entries()) {
@@ -639,7 +638,6 @@ class Game {
         this._moveItemToInventory(itemId);
         inventory.appendChild(itemUI.domElem);
 
-        this._invalidateHistory();
         this.level.startPos.push(null);
         this.level.solutions.clear();
         repopulateSolveMenu(this.level.solutions);
@@ -835,13 +833,33 @@ class Game {
                     if(currCoords !== null) {
                         this.attach(cmd.itemId, currCoords[0], currCoords[1], currCoords[2]);
                     }
-                    console.warn('undo failed: cannot move item ' + cmd.itemId
-                        + ' to position ' + coords + '; invalidating history');
+                    console.warn('undo/redo failed: cannot move item ' + cmd.itemId
+                        + ' to position ' + coords + '; invalidating history.');
                     this._invalidateHistory();
                 }
             }
         }
+        else if(cmd.cmd === 'addItem') {
+            if(opposite) {
+                game.popItem();
+            }
+            else {
+                let itemInfo = new ItemInfo(null, cmd.xLen, cmd.yLen, 0, null);
+                game.pushItem(itemInfo);
+                if(cmd.coords !== null && cmd.coords !== undefined) {
+                    const success = game.attach(game.items.length - 1, cmd.coords[0], cmd.coords[1],
+                        cmd.coords[2]);
+                    if(!success) {
+                        console.warn('undo/redo failed: cannot move item '
+                            + (game.items.length - 1) + ' to position '
+                            + cmd.coords + '; invalidating history.');
+                        this._invalidateHistory();
+                    }
+                }
+            }
+        }
         else {
+            this._invalidateHistory();
             throw new Error('unknown command ' + cmd.cmd);
         }
     }
@@ -1330,6 +1348,8 @@ function mouseupHandler(ev) {
             let itemInfo = new ItemInfo(null, selRect.xLen, selRect.yLen, 0, null);
             game.pushItem(itemInfo);
             game.attach(game.items.length - 1, binId, selRect.xPos, selRect.yPos);
+            game._recordHistoryCommand({'cmd': 'addItem', 'xLen': selRect.xLen,
+                'yLen': selRect.yLen, 'coords': [binId, selRect.xPos, selRect.yPos]});
         }
     }
     endDrag();
