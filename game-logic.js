@@ -644,6 +644,32 @@ class Game {
         this.modifyItem(itemId, newItemInfo);
     }
 
+    pushItem(itemInfo) {
+        const itemId = this.items.length;
+        itemInfo.id = itemId;
+        this.level.items.push(itemInfo);
+        let itemUI = new ItemUI(itemInfo, this.scaleFactor);
+        this.items.push(itemUI);
+        this.totalStats.add(itemInfo);
+        this.stripPackSol.push([0, this.invYLen]);
+        this.invYLen += itemInfo.yLen;
+        this.invXLen = Math.max(this.invXLen, itemInfo.xLen);
+        this._setInventoryDimsPx();
+        this._moveItemToInventory(itemId);
+        inventory.appendChild(itemUI.domElem);
+
+        this._invalidateHistory();
+        this.level.startPos.push(null);
+        this.level.solutions.clear();
+        repopulateSolveMenu(this.level.solutions);
+        this._invalidateUpperBound();
+        this.level.computedLBReason = null;
+        this.level.autoPack.clear();
+        this.level.autoPackNBins.clear();
+        this._refreshStatsDom();
+        this._assessBins();
+    }
+
     destroy() {
         this._destroyItems();
         this._destroyBins();
