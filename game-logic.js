@@ -198,6 +198,23 @@ function clip(x, lo, hi) {
     }
 }
 
+function gcd(a, b) {
+    while(true) {
+        if(b === 0) {
+            return a;
+        }
+        else {
+            a %= b;
+        }
+        if(a === 0) {
+            return b;
+        }
+        else {
+            b %= a;
+        }
+    }
+}
+
 //==[ UI Layer ]================================================================
 
 function setPos(domElem, xPos, yPos) {
@@ -949,6 +966,104 @@ function clearGame() {
         game.destroy();
         game = null;
     }
+}
+
+function coordListGcds(coordList, gX=0, gY=0) {
+    if(gX === 1 && gY === 1) {
+        return [gX, gY];
+    }
+    for(const coords of coordList) {
+        if(coords !== null) {
+            const [binId, xPos, yPos] = coords;
+            gX = gcd(gX, xPos);
+            gY = gcd(gY, yPos);
+        }
+    }
+    return [gX, gY];
+}
+
+function modifyCoordList(coordList, xMult, yMult, xDiv, yDiv) {
+    for(let i=0; i < coordList.length; ++i) {
+        if(coordList[i] !== null) {
+            let [binId, xPos, yPos] = coordList[i];
+            console.assert((xPos * xMult) % xDiv === 0, 'modifyCoordList: rouge xDiv ' + xDiv);
+            xPos = (xPos * xMult) / xDiv;
+            console.assert((yPos * yMult) % yDiv === 0, 'modifyCoordList: rouge yDiv ' + yDiv);
+            yPos = (yPos * yMult) / yDiv;
+            coordList[i] = [binId, xPos, yPos];
+        }
+    }
+}
+
+function getGranularity(level) {
+    let gX = 0, gY = 0;
+    for(const item of level.items) {
+        gX = gcd(gX, item.xLen);
+        gY = gcd(gY, item.yLen);
+    }
+    [gX, gY] = coordListGcds(level.startPos, gX, gY);
+    for(const [solnName, soln] of level.solutions.entries()) {
+        [gX, gY] = coordListGcds(soln, gX, gY);
+    }
+    for(const [algoName, packing] of level.autoPack.entries()) {
+        [gX, gY] = coordListGcds(packing, gX, gY);
+    }
+    return [gX, gY];
+}
+
+function rescaleLevel(level, xMult, yMult, xDiv=1, yDiv=1) {
+    modifyCoordList(level.startPos, xMult, yMult, xDiv, yDiv);
+    for(let [solnName, soln] of level.solutions) {
+        modifyCoordList(soln, xMult, yMult, xDiv, yDiv);
+    }
+    for(let [algoName, packing] of level.autoPack) {
+        modifyCoordList(packing, xMult, yMult, xDiv, yDiv);
+    }
+
+    console.assert((xMult * level.binXLen) % xDiv === 0,
+        `xDiv=${xDiv} does not divide binXLen=${level.binXLen}`);
+    console.assert((yMult * level.binYLen) % yDiv === 0,
+        `yDiv=${yDiv} does not divide binYLen=${level.binYLen}`);
+    level.binXLen = (xMult * level.binXLen) / xDiv;
+    level.binYLen = (yMult * level.binYLen) / yDiv;
+    for(let item of level.items) {
+        console.assert((xMult * item.xLen) % xDiv === 0,
+            `xDiv=${xDiv} does not divide item.xLen=${item.xLen}`);
+        console.assert((yMult * item.yLen) % yDiv === 0,
+            `yDiv=${yDiv} does not divide item.yLen=${item.yLen}`);
+        item.xLen = (xMult * item.xLen) / xDiv;
+        item.yLen = (yMult * item.yLen) / yDiv;
+    }
+}
+
+function reloadWithDimMult(xMult, yMult=null, xDiv=1, yDiv=1) {
+    if(yMult === null) {
+        yMult = xMult;
+    }
+    if(game === null) {
+        console.warn('attempt to reload an empty game');
+        return;
+    }
+    let level = game.level;
+    level.startPos = game.getItemPositions();
+    const [gX, gY] = getGranularity(level);
+    if(xDiv === null) {
+        xDiv = gX;
+    }
+    if(yDiv === null) {
+        yDiv = gY;
+    }
+    if(gX % xDiv !== 0) {
+        console.error(`xDiv=${xDiv} does not divide gX=${gX}`);
+        return;
+    }
+    if(gY % yDiv !== 0) {
+        console.error(`yDiv=${yDiv} does not divide gY=${gY}`);
+        return;
+    }
+    game.destroy();
+    rescaleLevel(level, xMult, yMult, xDiv, yDiv);
+    game = new Game(level, null);
 }
 
 //==[ Event Handling ]==========================================================
