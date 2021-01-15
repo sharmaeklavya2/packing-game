@@ -150,6 +150,10 @@ class ItemInfo {
     area() {
         return this.xLen * this.yLen;
     }
+
+    clone() {
+        return new ItemInfo(this.id, this.xLen, this.yLen, this.profit, this.color);
+    }
 }
 
 class ItemSetStats {
@@ -212,13 +216,17 @@ class ItemUI {
         this.domElem = document.createElement('div');
         this.domElem.classList.add('item');
         this.domElem.setAttribute('data-item-id', this.itemInfo.id);
-        if(itemInfo.color !== null) {
-            this.domElem.style.backgroundColor = itemInfo.color;
+        this.setColor(itemInfo.color);
+        this.resize(scaleFactor);
+    }
+
+    setColor(color) {
+        if(color !== null) {
+            this.domElem.style.backgroundColor = color;
         }
         else {
             this.domElem.style.backgroundColor = defaultItemColor;
         }
-        this.resize(scaleFactor);
     }
 
     resize(scaleFactor) {
@@ -228,7 +236,6 @@ class ItemUI {
             setPos(this.domElem, scaleFactor * this.xPos, scaleFactor * this.yPos);
         }
     }
-
 }
 
 class BinUI {
@@ -561,10 +568,7 @@ class Game {
             soln.pop();
         }
         this.stripPackSol.pop();
-        this.level.origLB = null;
-        const binArea = this.level.binXLen * this.level.binYLen;
-        this.level.computedLB = Math.ceil(this.totalStats.area / binArea);
-        this.level.computedLBReason = 'area';
+        this._invalidateLowerBound();
         this.level.computedUBReason = null;
         this.level.autoPack.clear();
         this.level.autoPackNBins.clear();
@@ -601,6 +605,45 @@ class Game {
         this.popItem();
     }
 
+    modifyItem(itemId, itemInfo) {
+        if(itemId >= this.items.length) {
+            throw new Error('item ' + itemId + ' does not exist.');
+        }
+        let item = this.items[itemId];
+        if(item.binUI !== null) {
+            let itemRect = item.domElem.getBoundingClientRect();
+            let arenaRect = arena.getBoundingClientRect();
+            this.detach(itemId);
+            setPos(item.domElem, itemRect.x - arenaRect.x, itemRect.y - arenaRect.y);
+        }
+        this._invalidateHistory();
+        this.level.items[itemId] = itemInfo;
+        item.itemInfo = itemInfo;
+        itemInfo.id = itemId;
+        item.setColor(itemInfo.color);
+        item.resize(this.scaleFactor);
+        this.totalStats.remove(this.level.items[itemId]);
+        this.totalStats.add(this.level.items[itemId]);
+        this.level.startPos[itemId] = null;
+        this.level.solutions.clear();
+        this.level.autoPack.clear();
+        this.level.autoPackNBins.clear();
+        this._invalidateLowerBound();
+        this._invalidateUpperBound();
+        repopulateSolveMenu(this.level.solutions);
+        this._refreshStatsDom();
+        this._assessBins();
+    }
+
+    hardRotate(itemId) {
+        if(itemId >= this.items.length) {
+            throw new Error('item ' + itemId + ' does not exist.');
+        }
+        let newItemInfo = this.level.items[itemId].clone();
+        [newItemInfo.xLen, newItemInfo.yLen] = [newItemInfo.yLen, newItemInfo.xLen];
+        this.modifyItem(itemId, newItemInfo);
+    }
+
     destroy() {
         this._destroyItems();
         this._destroyBins();
@@ -616,6 +659,25 @@ class Game {
         this.level = null;
         this.stripPackSol = null;
         inventory.style.backgroundSize = null;
+    }
+
+    _invalidateLowerBound() {
+        this.level.origLB = null;
+        const binArea = this.level.binXLen * this.level.binYLen;
+        this.level.computedLB = Math.ceil(this.totalStats.area / binArea);
+        this.level.computedLBReason = 'area';
+    }
+
+    _invalidateUpperBound() {
+        const binArea = this.level.binXLen * this.level.binYLen;
+        this.level.origUB = null;
+        this.level.computedUB = this.items.length;
+        this.level.computedUBReason = 'n';
+        const areaBound = Math.ceil(4 * this.totalStats.area / binArea) + 1;
+        if(areaBound < this.level.computedUB) {
+            this.level.computedUB = areaBound;
+            this.level.computedUBReason = 'nfdh-area';
+        }
     }
 
     _invalidateHistory() {
