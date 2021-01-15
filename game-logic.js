@@ -465,67 +465,22 @@ class Game {
         }
     }
 
-    undo() {this._undoOrRedo(true);}
-    redo() {this._undoOrRedo(false);}
-
-    _undoOrRedo(undo) {
-        if(undo && this.historyLength === 0) {
-            return;
-        }
-        if(!undo && this.historyLength === this.history.length) {
-            return;
-        }
-
-        let record, coords;
-        if(undo) {
-            record = this.history[--this.historyLength];
-            coords = record.oldCoords;
-        }
-        else {
-            record = this.history[this.historyLength++];
-            coords = record.newCoords;
-        }
-        const item = this.items[record.itemId];
-
-        if(coords === null) {
-            this._moveItemToInventory(record.itemId);
-            this.trimBins(1);
-        }
-        else if(coords[0] >= this.bins.length) {
-            this.addBins(coords[0] + 1 - this.bins.length);
-            this.detach(record.itemId);
-            this.attach(record.itemId, coords[0], coords[1], coords[2]);
-        }
-        else {
-            // check if moving will cause clash. If yes, invalidate history and warn.
-            let bin = this.bins[coords[0]];
-            let currCoords = this.getItemPosition(record.itemId);
-            let newPosRect = new Rectangle(coords[1], coords[2],
-                item.itemInfo.xLen, item.itemInfo.yLen);
-            this.detach(record.itemId);
-            if(bin.bin.canFit(newPosRect)) {
-                this.attach(record.itemId, coords[0], coords[1], coords[2]);
-                this.trimBins(1);
-            }
-            else {
-                if(currCoords !== null) {
-                    this.attach(record.itemId, currCoords[0], currCoords[1], currCoords[2]);
-                }
-                console.warn('undo failed: cannot move item ' + record.itemId
-                    + ' to position ' + coords + '; invalidating history');
-                this.history = [];
-                this.historyLength = 0;
-            }
-        }
+    undo() {
         if(this.historyLength === 0) {
-            disableUndoButton();
+            return;
         }
+        let cmd = this.history[--this.historyLength];
+        this._executeCommand(cmd, true);
+        this._resetHistoryButtons();
+    }
+
+    redo() {
         if(this.historyLength === this.history.length) {
-            disableRedoButton();
+            return;
         }
-        else {
-            enableRedoButton();
-        }
+        let cmd = this.history[this.historyLength++];
+        this._executeCommand(cmd, false);
+        this._resetHistoryButtons();
     }
 
     selectAutoPack(algoName) {
@@ -732,13 +687,6 @@ class Game {
         }
     }
 
-    _invalidateHistory() {
-        this.history = [];
-        this.historyLength = 0;
-        disableUndoButton();
-        disableRedoButton();
-    }
-
     _computeAutoPack(algoName) {
         let algo = bpAlgos.get(algoName);
         let level = this.level;
@@ -817,16 +765,85 @@ class Game {
         }
     }
 
-    _recordHistory(itemId, oldCoords, newCoords) {
+    _invalidateHistory() {
+        this.history = [];
+        this.historyLength = 0;
+        disableUndoButton();
+        disableRedoButton();
+    }
+
+    _recordMove(itemId, oldCoords, newCoords) {
         if(!arraysEqual(oldCoords, newCoords)) {
-            this.history[this.historyLength++] = {'itemId': itemId,
+            let cmd = {'cmd': 'move', 'itemId': itemId,
                 'oldCoords': oldCoords, 'newCoords': newCoords};
-            this.history.length = this.historyLength;
+            this._recordHistoryCommand(cmd);
         }
+    }
+
+    _recordHistoryCommand(cmd) {
+        this.history[this.historyLength++] = cmd;
+        this.history.length = this.historyLength;
+        this._resetHistoryButtons();
+    }
+
+    _resetHistoryButtons() {
         if(this.history.length > 0) {
             enableUndoButton();
         }
-        disableRedoButton();
+        else {
+            disableUndoButton();
+        }
+        if(this.historyLength === this.history.length) {
+            disableRedoButton();
+        }
+        else {
+            enableRedoButton();
+        }
+    }
+
+    _executeCommand(cmd, opposite) {
+        if(cmd.cmd === 'move') {
+            let coords;
+            if(opposite) {
+                coords = cmd.oldCoords;
+            }
+            else {
+                coords = cmd.newCoords;
+            }
+            let item = this.items[cmd.itemId];
+            if(coords === null) {
+                this._moveItemToInventory(cmd.itemId);
+                this.trimBins(1);
+            }
+            else if(coords[0] >= this.bins.length) {
+                this.addBins(coords[0] + 1 - this.bins.length);
+                this.detach(cmd.itemId);
+                this.attach(cmd.itemId, coords[0], coords[1], coords[2]);
+            }
+            else {
+                // check if moving will cause clash. If yes, invalidate history and warn.
+                let bin = this.bins[coords[0]];
+                let currCoords = this.getItemPosition(cmd.itemId);
+                let newPosRect = new Rectangle(coords[1], coords[2],
+                    item.itemInfo.xLen, item.itemInfo.yLen);
+                this.detach(cmd.itemId);
+                if(bin.bin.canFit(newPosRect)) {
+                    this.attach(cmd.itemId, coords[0], coords[1], coords[2]);
+                    this.trimBins(1);
+                }
+                else {
+                    if(currCoords !== null) {
+                        this.attach(cmd.itemId, currCoords[0], currCoords[1], currCoords[2]);
+                    }
+                    console.warn('undo failed: cannot move item ' + cmd.itemId
+                        + ' to position ' + coords + '; invalidating history');
+                    this._invalidateHistory();
+                }
+            }
+        }
+        else {
+            throw new Error('unknown command ' + cmd.cmd);
+        }
     }
 
     _computeInventoryDimsAndItemHomePositions() {
@@ -1280,7 +1297,7 @@ function endDrag() {
     if(dragData !== null) {
         if(dragData.itemId !== null) {
             let oldCoords = dragData.coords;
-            game._recordHistory(dragData.itemId, oldCoords, game.getItemPosition(dragData.itemId));
+            game._recordMove(dragData.itemId, oldCoords, game.getItemPosition(dragData.itemId));
         }
     }
     DragData.unset();
@@ -1331,8 +1348,15 @@ function mouseleaveHandler(ev) {
 function keydownHandler(ev) {
     if(handleKeyPresses && !ev.defaultPrevented) {
         if(ev.key === 'z' && (ev.metaKey || ev.ctrlKey)) {
-            if(game !== null) {game._undoOrRedo(!ev.shiftKey);}
             ev.preventDefault();
+            if(game !== null) {
+                if(ev.shiftKey) {
+                    game.redo();
+                }
+                else {
+                    game.undo();
+                }
+            }
         }
     }
 }
