@@ -536,6 +536,14 @@ class Game {
         }
     }
 
+    improveBounds() {
+        this._improveLowerBound();
+        this._computeAutoPack('ffdh-ff');
+        this._computeAutoPack('ffdh-ff-mirror');
+        this._refreshStatsDom();
+        this._assessBins();
+    }
+
     lowerBound() {
         if(this.level.origLB === null) {
             return this.level.computedLB;
