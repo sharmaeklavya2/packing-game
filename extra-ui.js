@@ -209,18 +209,6 @@ function repopulateSolveMenu(solutions) {
     }
 }
 
-function repopulateAutoPackMenu() {
-    let autoPack = game.level.autoPack;
-    let autoPackList = document.getElementById('auto-pack-list');
-    autoPackList.innerHTML = '';
-    for(let key of bpAlgos.keys()) {
-        let liElem = document.createElement('li');
-        liElem.innerHTML = key;
-        liElem.addEventListener('click', autoPackClickHandler);
-        autoPackList.appendChild(liElem);
-    }
-}
-
 function populateNgForm() {
     let levels = [
         ['levels/bp/1.json', 'Level 1'],
