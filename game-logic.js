@@ -1135,33 +1135,27 @@ function mousedownHandler(ev) {
     if(ev.button !== 0) {
         return;
     }
+    let targetRect = target.getBoundingClientRect();
+    let arenaRect = arena.getBoundingClientRect();
     if(target.classList.contains('item')) {
         ev.preventDefault();
-        let itemDomElem = target;
-        let originalXPos = itemDomElem.getBoundingClientRect().x;
-        let originalYPos = itemDomElem.getBoundingClientRect().y;
-        let itemXOff = ev.clientX - originalXPos;
-        let itemYOff = ev.clientY - originalYPos;
-        let itemId = parseInt(itemDomElem.getAttribute('data-item-id'));
-        let item = game.items[itemId];
+        let itemXOff = ev.clientX - targetRect.x, itemYOff = ev.clientY - targetRect.y;
+        let itemId = parseInt(target.getAttribute('data-item-id'));
         DragData.set(new DragData(itemId, game.getItemPosition(itemId), itemXOff, itemYOff));
 
         game.detach(itemId);
-        let xPos = originalXPos - arena.getBoundingClientRect().x;
-        let yPos = originalYPos - arena.getBoundingClientRect().y;
-        setPos(item.domElem, xPos, yPos);
-        hoverRect.style.height = itemDomElem.getBoundingClientRect().height + 'px';
-        hoverRect.style.width = itemDomElem.getBoundingClientRect().width + 'px';
+        setPos(target, targetRect.x - arenaRect.x, targetRect.y - arenaRect.y);
+        hoverRect.style.height = targetRect.height + 'px';
+        hoverRect.style.width = targetRect.width + 'px';
     }
 }
 
 function getPos(ev, xLen, yLen, binId) {
     let dragData = DragData.get();
     let bin = game.bins[binId];
-    let binX = bin.domElem.getBoundingClientRect().x;
-    let binY = bin.domElem.getBoundingClientRect().y;
-    let xPos = (ev.clientX - binX - dragData.xOff) / game.scaleFactor;
-    let yPos = (ev.clientY - binY - dragData.yOff) / game.scaleFactor;
+    let binRect = bin.domElem.getBoundingClientRect();
+    let xPos = (ev.clientX - binRect.x - dragData.xOff) / game.scaleFactor;
+    let yPos = (ev.clientY - binRect.y - dragData.yOff) / game.scaleFactor;
     xPos = clip(Math.round(xPos), 0, bin.bin.xLen - xLen);
     yPos = clip(Math.round(yPos), 0, bin.bin.yLen - yLen);
     return [xPos, yPos];
@@ -1173,9 +1167,10 @@ function moveHoverRect(binId, rect) {
         hoverRect.style.visibility = 'hidden';
     }
     else {
+        const binRect = bin.domElem.getBoundingClientRect();
         setPos(hoverRect,
-            bin.domElem.getBoundingClientRect().x + rect.xPos * game.scaleFactor,
-            bin.domElem.getBoundingClientRect().y + rect.yPos * game.scaleFactor);
+            binRect.x + rect.xPos * game.scaleFactor,
+            binRect.y + rect.yPos * game.scaleFactor);
         hoverRect.style.visibility = 'visible';
     }
 }
