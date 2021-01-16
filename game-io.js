@@ -51,7 +51,16 @@ function readObjectPropsWithAssert(input, reqProps, optProps, modProps, objname)
     return o;
 }
 
-function itemInfoFromObject(j, id) {
+function getDefaultProfit(xLen, yLen, defaultProfit) {
+    if(defaultProfit === 'area') {
+        return xLen * yLen;
+    }
+    else {
+        return defaultProfit;
+    }
+}
+
+function itemInfoFromObject(j, id, defaultProfit) {
     if(Array.isArray(j)) {
         if(j.length < 2) {
             throw new InputError('invalid input for item ' + id +
@@ -59,21 +68,24 @@ function itemInfoFromObject(j, id) {
         }
         let [xLen, yLen, profit] = j;
         if(profit === undefined) {
-            profit = 0;
+            profit = getDefaultProfit(xLen, yLen, defaultProfit);
         }
         return new ItemInfo(id, xLen, yLen, profit, null);
     }
     else {
         let reqProps = ['xLen', 'yLen'];
-        let optProps = {'color': null, 'profit': 0};
+        let optProps = {'color': null, 'profit': null};
         let o = readObjectPropsWithAssert(j, reqProps, optProps, {}, 'item ' + id);
+        if(o.profit === null) {
+            o.profit = getDefaultProfit(o.xLen, o.yLen, defaultProfit);
+        }
         return new ItemInfo(id, o['xLen'], o['yLen'], o['profit'], o['color']);
     }
 }
 
 function processLevel(j) {
     let reqProps = ['binXLen', 'binYLen', 'items'];
-    let optProps = {'gameType': 'bp', 'startPos': [], 'solutions': null};
+    let optProps = {'gameType': 'bp', 'startPos': [], 'solutions': null, 'defaultProfit': 0};
     let modProps = {'lowerBound': 'origLB', 'upperBound': 'origUB'};
     let o = readObjectPropsWithAssert(j, reqProps, optProps, modProps, 'level');
     let items = [];
@@ -88,7 +100,7 @@ function processLevel(j) {
             n = 1;
         }
         for(let i=0; i<n; ++i) {
-            let item = itemInfoFromObject(itemObj, id++);
+            let item = itemInfoFromObject(itemObj, id++, o.defaultProfit);
             items.push(item);
             area += item.area();
         }
