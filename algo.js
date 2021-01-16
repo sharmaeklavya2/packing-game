@@ -415,3 +415,251 @@ function bpLowerBound(items, binXLen, binYLen, rotation) {
     }
     return [lb, reason];
 }
+
+//==[ Brute-force guillotine-packing ]==========================================
+
+var recentGuillInput = null, recentGuillTreeColl = null;
+
+class GTree {
+    /* A guillotine tree of d-dimensional cuboids.
+     * mask: BigInt representing the set of items in the tree
+     * lens: lengths of the bounding box of the packing.
+     * cutDim: the dimension perpendicular to which we cut. null for leaves.
+     * children: the subtrees obtained by cutting. [] for leaves.
+     * itemIndex: index of the item at a leaf node. null for non-leaves.
+     */
+    constructor(mask, lens, cutDim, children, depth, itemIndex) {
+        this.mask = mask;
+        this.lens = lens;
+        this.cutDim = cutDim;
+        this.children = children;
+        this.depth = depth;
+        this.itemIndex = itemIndex;
+    }
+    hash() {
+        return this.mask.toString(36) + ';' + this.lens.join(',');
+    }
+}
+
+function listAllLE(l1, l2) {
+    // returns true iff for all i, l1[i] <= l2[i]
+    for(let i=0; i < l1.length && i < l2.length; ++i) {
+        if(l1[i] > l2[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function gTreeFromItem(itemIndex, itemLens) {
+    return new GTree(1n << BigInt(itemIndex), itemLens, null, [], 0, itemIndex);
+}
+
+function concatGTrees(gTrees, cutDim) {
+    if(gTrees.length <= 1) {
+        console.warn('concatGTrees called with only ' + gTrees.length + ' trees.');
+    }
+    const d = gTrees[0].lens.length;
+    let newMask = 0n;
+    let maxDepth = 0;
+    let lens = new Array(d).fill(0);
+    for(let gTree of gTrees) {
+        newMask |= gTree.mask;
+        for(let i=0; i<d; ++i) {
+            if(i != cutDim) {
+                lens[i] = Math.max(lens[i], gTree.lens[i]);
+            }
+        }
+        maxDepth = Math.max(maxDepth, gTree.depth);
+        lens[cutDim] += gTree.lens[cutDim];
+    }
+    return new GTree(newMask, lens, cutDim, gTrees, 1 + maxDepth, null);
+}
+
+function isWeakInferior(gTree1, gTree2) {
+    // returns true iff gTree1 and gTree2 have the same items but
+    // gTree1 takes more space than gTree2.
+    if(gTree1.mask !== gTree2.mask) {
+        return false;
+    }
+    return listAllLE(gTree2.lens, gTree1.lens);
+}
+
+function isStrongInferior(gTree1, gTree2) {
+    // returns true iff gTree1 has a subset of gTree2's items but takes more space than gTree2.
+    if((gTree1.mask & gTree2.mask) !== gTree1.mask) {
+        return false;
+    }
+    return listAllLE(gTree2.lens, gTree1.lens);
+}
+
+class GTreeCollection {
+    constructor(inferiority=null) {
+        this.inferiority = inferiority;
+        this.map = new Map();
+    }
+
+    size() {
+        return this.map.size;
+    }
+
+    add(gTree) {
+        let hash = gTree.hash();
+        if(this.map.has(hash)) {
+            return false;
+        }
+        if(this.inferiority !== null) {
+            let keysToDelete = new Set();
+            for(let [hash2, gTree2] of this.map) {
+                if(this.inferiority(gTree, gTree2)) {
+                    return false;
+                }
+                else if(this.inferiority(gTree2, gTree)) {
+                    keysToDelete.add(hash2);
+                }
+            }
+            for(const key of keysToDelete) {
+                this.map.delete(key);
+            }
+        }
+        this.map.set(hash, gTree);
+        return true;
+    }
+
+    asArray() {
+        return [...this.map.values()];
+    }
+
+    getTreesWithBestMask(f, minVal=0) {
+        let output = [];
+        let maxVal = minVal;
+        for(let gTree of this.map.values()) {
+            const val = f(gTree.mask);
+            if(val > maxVal) {
+                maxVal = val;
+                output = [gTree];
+            }
+            else if(val === maxVal) {
+                output.push(gTree);
+            }
+        }
+        return [maxVal, output];
+    }
+
+    *genUPairs() {
+        for(let [hash1, gTree1] of this.map.entries()) {
+            for(let [hash2, gTree2] of this.map.entries()) {
+                if(hash1 < hash2) {
+                    yield [gTree1, gTree2];
+                }
+            }
+        }
+    }
+}
+
+function getInitialColl(itemLensList, binLens) {
+    let gTreeColl = new GTreeCollection(isWeakInferior);
+    // let gTreeColl = new GTreeCollection(isStrongInferior);
+    for(let i=0; i < itemLensList.length; ++i) {
+        if(listAllLE(itemLensList[i], binLens)) {
+            let gTree = gTreeFromItem(i, itemLensList[i]);
+            gTreeColl.add(gTree, false);
+        }
+    }
+    return gTreeColl;
+}
+
+function improveColl(gTreeColl, binLens, cutDim) {
+    let newGTrees = [];
+    for(let [gTree1, gTree2] of gTreeColl.genUPairs()) {
+        const intersection = gTree1.mask & gTree2.mask;
+        const fits = (gTree1.lens[cutDim] + gTree2.lens[cutDim] <= binLens[cutDim]);
+        if(intersection === 0n && fits) {
+        // if(intersection !== gTree1.mask && intersection !== gTree2.mask && fits) {
+            newGTrees.push(concatGTrees([gTree1, gTree2], cutDim));
+        }
+    }
+    let improvement = false;
+    for(let gTree of newGTrees) {
+        if(gTreeColl.add(gTree)) {
+            improvement = true;
+        }
+    }
+    return improvement;
+}
+
+function enumGTrees(itemLensList, binLens) {
+    let gTreeColl = getInitialColl(itemLensList, binLens);
+    if(gTreeColl.size() === 0) {
+        return gTreeColl;
+    }
+    const d = itemLensList[0].length;
+    let cutDim = 0;
+    let improvement = true;
+    while(improvement) {
+        improvement = improveColl(gTreeColl, binLens, cutDim);
+        cutDim = (cutDim + 1) % d;
+    }
+    return gTreeColl;
+}
+
+function gTreeToPackingHelper(gTree, items, binId, position, output) {
+    if(gTree.itemIndex !== null) {
+        output[items[gTree.itemIndex].id] = [binId].concat(position);
+    }
+    else {
+        let position2 = position.slice();
+        for(let child of gTree.children) {
+            gTreeToPackingHelper(child, items, binId, position2, output);
+            position2[gTree.cutDim] += child.lens[gTree.cutDim];
+        }
+    }
+}
+
+function gTreeToPacking(gTree, items, binId, output=[]) {
+    gTreeToPackingHelper(gTree, items, binId, [0, 0], output);
+    if(Array.isArray(output)) {
+        for(let i=0; i < output.length; ++i) {
+            if(output[i] === undefined) {
+                output[i] = null;
+            }
+        }
+    }
+    return output;
+}
+
+function _enumGuillKSColl(items, binXLen, binYLen) {
+    let itemLensList = [];
+    for(let item of items) {
+        itemLensList.push([item.xLen, item.yLen]);
+    }
+    let gTreeColl = enumGTrees(itemLensList, [binXLen, binYLen]);
+    recentInput = itemLensList;
+    recentOutput = gTreeColl;
+
+    function maskToProfit(mask, output=0) {
+        for(let i=0; mask; ++i) {
+            if(mask & 1n) {
+                output += items[i].profit;
+            }
+            mask >>= 1n;
+        }
+        return output;
+    }
+    let [maxProfit, gTrees] = gTreeColl.getTreesWithBestMask(maskToProfit);
+    return [maxProfit, gTrees];
+}
+
+function enumGuillKSSols(items, binXLen, binYLen) {
+    let [maxProfit, gTrees] = _enumGuillKSColl(items, binXLen, binYLen);
+    let packings = [];
+    let seenMasks = new Set();
+    for(let gTree of gTrees) {
+        let packing = gTreeToPacking(gTree, items, 0);
+        if(!seenMasks.has(gTree.mask)) {
+            packings.push(packing);
+            seenMasks.add(gTree.mask);
+        }
+    }
+    return [maxProfit, packings];
+}
