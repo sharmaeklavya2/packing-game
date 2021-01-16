@@ -1437,6 +1437,7 @@ function addEventListeners() {
 //==[ Main ]====================================================================
 
 window.addEventListener('load', function() {
+    createMirrors();
     addEventListeners();
     loadGameFromQParams(getQParams(), null, function(msg) {addMsg('error', msg);});
     populateNgForm();

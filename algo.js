@@ -38,9 +38,69 @@ function getRandGen(seed) {
     return mulberry32(xmur3(seed)());
 }
 
-//==[ Packing algorithms ]======================================================
+//==[ General packing algorithms ]==============================================
 
 var bpAlgos = new Map();
+
+function getStripDims(items, stripPackSol) {
+    let xLen = 0, yLen = 0;
+    for(let i=0; i < items.length; ++i) {
+        xLen = Math.max(xLen, stripPackSol[items[i].id][0] + items[i].xLen);
+        yLen = Math.max(yLen, stripPackSol[items[i].id][1] + items[i].yLen);
+    }
+    return [xLen, yLen];
+}
+
+function countUsedBins(bpSol) {
+    let ind = [];
+    for(let i=0; i < bpSol.length; ++i) {
+        ind[bpSol[i][0]] = 1;
+    }
+    let nBins = 0;
+    for(let j=0; j < ind.length; ++j) {
+        if(ind[j] !== undefined) {
+            nBins++;
+        }
+    }
+    return nBins;
+}
+
+function rotateAllItems(items) {
+    for(let i=0; i < items.length; ++i) {
+        let yLen = items[i].yLen;
+        items[i].yLen = items[i].xLen;
+        items[i].xLen = yLen;
+    }
+}
+
+function mirrorAlgo(gbpAlgo) {
+    function mirrorBinPack(items, binXLen, binYLen, output) {
+        rotateAllItems(items);
+        gbpAlgo(items, binYLen, binXLen, output);
+        rotateAllItems(items);
+        for(let i=0; i < output.length; ++i) {
+            let y = output[i][2];
+            output[i][2] = output[i][1];
+            output[i][1] = y;
+        }
+        return output;
+    }
+    return mirrorBinPack;
+}
+
+function createMirrors() {
+    let algoNames = [];
+    for(let algoName of bpAlgos.keys()) {
+        if(!algoName.endsWith('-mirror')) {
+            algoNames.push(algoName);
+        }
+    }
+    for(let algoName of algoNames) {
+        bpAlgos.set(algoName + '-mirror', mirrorAlgo(bpAlgos.get(algoName)));
+    }
+}
+
+//==[ Shelf-based packing algorithms ]==========================================
 
 class Shelf {
     constructor(id, xLen) {
@@ -221,65 +281,7 @@ function ffdhNfBinPack(items, binXLen, binYLen, output) {
 }
 bpAlgos.set('ffdh-nf', ffdhNfBinPack);
 
-function getStripDims(items, stripPackSol) {
-    let xLen = 0, yLen = 0;
-    for(let i=0; i < items.length; ++i) {
-        xLen = Math.max(xLen, stripPackSol[items[i].id][0] + items[i].xLen);
-        yLen = Math.max(yLen, stripPackSol[items[i].id][1] + items[i].yLen);
-    }
-    return [xLen, yLen];
-}
-
-function countUsedBins(bpSol) {
-    let ind = [];
-    for(let i=0; i < bpSol.length; ++i) {
-        ind[bpSol[i][0]] = 1;
-    }
-    let nBins = 0;
-    for(let j=0; j < ind.length; ++j) {
-        if(ind[j] !== undefined) {
-            nBins++;
-        }
-    }
-    return nBins;
-}
-
-function rotateAllItems(items) {
-    for(let i=0; i < items.length; ++i) {
-        let yLen = items[i].yLen;
-        items[i].yLen = items[i].xLen;
-        items[i].xLen = yLen;
-    }
-}
-
-function mirrorAlgo(gbpAlgo) {
-    function mirrorBinPack(items, binXLen, binYLen, output) {
-        rotateAllItems(items);
-        gbpAlgo(items, binYLen, binXLen, output);
-        rotateAllItems(items);
-        for(let i=0; i < output.length; ++i) {
-            let y = output[i][2];
-            output[i][2] = output[i][1];
-            output[i][1] = y;
-        }
-        return output;
-    }
-    return mirrorBinPack;
-}
-
-function createMirrors() {
-    let algoNames = [];
-    for(let algoName of bpAlgos.keys()) {
-        if(!algoName.endsWith('-mirror')) {
-            algoNames.push(algoName);
-        }
-    }
-    for(let algoName of algoNames) {
-        bpAlgos.set(algoName + '-mirror', mirrorAlgo(bpAlgos.get(algoName)));
-    }
-}
-createMirrors();
-
+//==[ Packing lower-bounds ]====================================================
 
 function dff1(x, xMax) {
     // identity function
