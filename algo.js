@@ -106,9 +106,13 @@ function createRawMirrors(algoNames) {
 }
 
 function simplePackerWrap(packAlgo) {
-    function simplePacker(items, binXLen, binYLen, succHook=null, failHook=null, logger=null) {
+    function simplePacker(items, binXLen, binYLen, succHook, failHook=null, logger=null) {
         let packing = packAlgo(items, binXLen, binYLen);
-        succHook(packing);
+        let packObj = packing;
+        if(Array.isArray(packing)) {
+            packObj = {'deterministic': true, 'packings': new Map([['0', packing]])};
+        }
+        succHook(packObj);
         return null;
     }
     simplePacker.packerType = 'simple';
@@ -708,19 +712,17 @@ function _enumGuillKSTrees(items, binXLen, binYLen) {
 
 function enumGuillKSSols(items, binXLen, binYLen) {
     let [maxProfit, gTrees] = _enumGuillKSTrees(items, binXLen, binYLen);
-    let packings = [];
-    let seenMasks = new Set();
+    let packings = new Map();
     for(let gTree of gTrees) {
         let packing = gTreeToPacking(gTree, items, 0);
-        if(!seenMasks.has(gTree.mask)) {
-            packings.push(packing);
-            seenMasks.add(gTree.mask);
-        }
+        let key = gTree.mask.toString(16);
+        packings.set(key, packing);
     }
-    return [maxProfit, packings];
+    return {'maxProfit': maxProfit, 'deterministic': true, 'packings': packings};
 }
 
 //==[ Main ]====================================================================
 
 createRawMirrors(['ffdh-ff', 'nfdh', 'ffdh-nf']);
+rawSimplePackers.set('opt-guill-ks', enumGuillKSSols);
 cookSimplePackers();

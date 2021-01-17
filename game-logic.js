@@ -182,6 +182,12 @@ class ItemSetStats {
 
 //==[ Util ]====================================================================
 
+function getFirstValue(map) {
+    for(let value of map.values()) {
+        return value;
+    }
+}
+
 function arraysEqual(a, b) {
     if(a === b) {return true;}
     if(a === null || b === null) {return false;}
@@ -493,12 +499,29 @@ class Game {
         this._resetHistoryButtons();
     }
 
-    selectAutoPack(algoName, succHook=null, failHook=null, logger=null) {
+    selectAutoPack(algoName, packName=null, succHook=null, failHook=null, logger=null) {
         let thisGame = this;
-        function succHook2(packing) {
-            let oldPos = thisGame.getItemPositions();
-            thisGame._recordHistoryCommand({'cmd': 'bulkMove', 'oldPos': oldPos, 'newPos': packing});
-            thisGame.putBack(packing);
+        function succHook2(packObj) {
+            let packings = packObj.packings;
+            if(packings.size > 0) {
+                let packing;
+                if(packName === null) {
+                    packing = getFirstValue(packings);
+                }
+                else {
+                    packing = packings.get(packName);
+                    if(packing === undefined) {
+                        throw new Error(`packing ${algoName}.${packName} not found.`);
+                    }
+                }
+                let oldPos = thisGame.getItemPositions();
+                thisGame._recordHistoryCommand(
+                    {'cmd': 'bulkMove', 'oldPos': oldPos, 'newPos': packing});
+                thisGame.putBack(packing);
+            }
+            else {
+                addMsg('warning', 'No packings were output by the packer.');
+            }
             if(succHook !== null) {
                 succHook();
             }
@@ -700,24 +723,26 @@ class Game {
 
     _computeAutoPack(algoName, succHook=null, failHook=null, logger=null) {
         let level = this.level;
-        let cachedPacking = level.autoPack.get(algoName);
-        if(cachedPacking === undefined) {
+        let cachedPackObj = level.autoPack.get(algoName);
+        if(cachedPackObj === undefined || !cachedPackObj.deterministic) {
             let packer = packers.get(algoName);
-            function succHook2(packing) {
-                level.autoPack.set(algoName, packing);
-                const nBins = countUsedBins(packing);
-                if(nBins < level.computedUB) {
-                    level.computedUBReason = algoName;
-                    level.computedUB = nBins;
+            function succHook2(packObj) {
+                level.autoPack.set(algoName, packObj);
+                for(let [packName, packing] of packObj.packings) {
+                    const nBins = countUsedBins(packing);
+                    if(nBins < level.computedUB) {
+                        level.computedUBReason = algoName + '.' + packName;
+                        level.computedUB = nBins;
+                    }
                 }
                 if(succHook !== null) {
-                    succHook(packing);
+                    succHook(packObj);
                 }
             }
             packer(level.items, level.binXLen, level.binYLen, succHook2, failHook, logger);
         }
         else {
-            succHook(cachedPacking);
+            succHook(cachedPackObj);
         }
     }
 

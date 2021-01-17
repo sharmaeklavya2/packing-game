@@ -183,7 +183,7 @@ function solutionsClickHandler(ev) {
 function autoPackClickHandler(ev) {
     ev.preventDefault();
     let algoName = ev.target.innerHTML;
-    game.selectAutoPack(algoName, autoPackComplete, autoPackComplete, null);
+    game.selectAutoPack(algoName, null, autoPackComplete, autoPackComplete, null);
 }
 
 function repopulateSolutionsMenu(solutions) {
