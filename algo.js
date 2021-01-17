@@ -60,10 +60,16 @@ function getStripDims(items, stripPackSol) {
     return [xLen, yLen];
 }
 
-function countUsedBins(bpSol) {
+function countUsedBinsAndUnpackedItems(bpSol) {
     let ind = [];
+    let nUnpacked = 0;
     for(let i=0; i < bpSol.length; ++i) {
-        ind[bpSol[i][0]] = 1;
+        if(bpSol[i] !== null) {
+            ind[bpSol[i][0]] = 1;
+        }
+        else {
+            nUnpacked += 1;
+        }
     }
     let nBins = 0;
     for(let j=0; j < ind.length; ++j) {
@@ -71,7 +77,7 @@ function countUsedBins(bpSol) {
             nBins++;
         }
     }
-    return nBins;
+    return [nBins, nUnpacked];
 }
 
 function rotateAllItems(items) {

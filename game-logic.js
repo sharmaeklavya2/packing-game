@@ -729,10 +729,10 @@ class Game {
             function succHook2(packObj) {
                 level.autoPack.set(algoName, packObj);
                 for(let [packName, packing] of packObj.packings) {
-                    const nBins = countUsedBins(packing);
-                    if(nBins < level.computedUB) {
+                    const [nBins, nUnpacked] = countUsedBinsAndUnpackedItems(packing);
+                    if(nBins + nUnpacked < level.computedUB) {
                         level.computedUBReason = algoName + '.' + packName;
-                        level.computedUB = nBins;
+                        level.computedUB = nBins + nUnpacked;
                     }
                 }
                 if(succHook !== null) {
