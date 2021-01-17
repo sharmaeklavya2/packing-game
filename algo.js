@@ -431,10 +431,26 @@ function bpLowerBound(items, binXLen, binYLen, rotation) {
 //==[ Brute-force guillotine-packing ]==========================================
 
 var gTreeCollCache = new Map();
+let MaskType = BigInt;
+let maskConst0 = MaskType(0);
+let maskConst1 = MaskType(1);
+
+function setBigIntAsMaskType(yes=true) {
+    if(yes) {
+        MaskType = BigInt;
+        maskConst0 = 0n;
+        maskConst1 = 1n;
+    }
+    else {
+        MaskType = Number;
+        maskConst0 = 0;
+        maskConst1 = 1;
+    }
+}
 
 class GTree {
     /* A guillotine tree of d-dimensional cuboids.
-     * mask: BigInt representing the set of items in the tree
+     * mask: MaskType representing the set of items in the tree
      * lens: lengths of the bounding box of the packing.
      * cutDim: the dimension perpendicular to which we cut. null for leaves.
      * children: the subtrees obtained by cutting. [] for leaves.
@@ -464,7 +480,7 @@ function listAllLE(l1, l2) {
 }
 
 function gTreeFromItem(itemIndex, itemLens) {
-    return new GTree(1n << BigInt(itemIndex), itemLens, null, [], 0, itemIndex);
+    return new GTree(maskConst1 << MaskType(itemIndex), itemLens, null, [], 0, itemIndex);
 }
 
 function concatGTrees(gTrees, cutDim) {
@@ -472,7 +488,7 @@ function concatGTrees(gTrees, cutDim) {
         console.warn('concatGTrees called with only ' + gTrees.length + ' trees.');
     }
     const d = gTrees[0].lens.length;
-    let newMask = 0n;
+    let newMask = maskConst0;
     let maxDepth = 0;
     let lens = new Array(d).fill(0);
     for(let gTree of gTrees) {
@@ -586,7 +602,7 @@ function improveColl(gTreeColl, binLens, cutDim) {
     for(let [gTree1, gTree2] of gTreeColl.genUPairs()) {
         const intersection = gTree1.mask & gTree2.mask;
         const fits = (gTree1.lens[cutDim] + gTree2.lens[cutDim] <= binLens[cutDim]);
-        if(intersection === 0n && fits) {
+        if(intersection === maskConst0 && fits) {
         // if(intersection !== gTree1.mask && intersection !== gTree2.mask && fits) {
             newGTrees.push(concatGTrees([gTree1, gTree2], cutDim));
         }
@@ -601,6 +617,7 @@ function improveColl(gTreeColl, binLens, cutDim) {
 }
 
 function enumGTrees(itemLensList, binLens) {
+    setBigIntAsMaskType(itemLensList.length > 30);
     let gTreeColl = getInitialColl(itemLensList, binLens);
     if(gTreeColl.size() === 0) {
         return gTreeColl;
@@ -659,10 +676,10 @@ function _enumGuillKSTrees(items, binXLen, binYLen) {
 
     function maskToProfit(mask, output=0) {
         for(let i=0; mask; ++i) {
-            if(mask & 1n) {
+            if(mask & maskConst1) {
                 output += items[i].profit;
             }
-            mask >>= 1n;
+            mask >>= maskConst1;
         }
         return output;
     }
