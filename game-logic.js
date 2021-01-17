@@ -155,6 +155,11 @@ class ItemInfo {
     clone() {
         return new ItemInfo(this.id, this.xLen, this.yLen, this.profit, this.color);
     }
+
+    toJSON() {
+        return {'id': this.id, 'xLen': this.xLen, 'yLen': this.yLen,
+            'profit': this.profit, 'color': this.color};
+    }
 }
 
 class ItemSetStats {
