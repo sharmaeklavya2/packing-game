@@ -160,7 +160,6 @@ function processLevel(j) {
         }
     }
     o.autoPack = new Map();
-    o.autoPackNBins = new Map();
     return o;
 }
 

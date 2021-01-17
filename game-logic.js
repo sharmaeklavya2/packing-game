@@ -567,7 +567,6 @@ class Game {
         this._invalidateLowerBound();
         this.level.computedUBReason = null;
         this.level.autoPack.clear();
-        this.level.autoPackNBins.clear();
         this.items.pop();
         this.level.items.pop();
         this._refreshStatsDom();
@@ -623,7 +622,6 @@ class Game {
         this.level.startPos[itemId] = null;
         this.level.solutions.clear();
         this.level.autoPack.clear();
-        this.level.autoPackNBins.clear();
         this._invalidateLowerBound();
         this._invalidateUpperBound();
         repopulateSolveMenu(this.level.solutions);
@@ -660,7 +658,6 @@ class Game {
         this._invalidateUpperBound();
         this.level.computedLBReason = null;
         this.level.autoPack.clear();
-        this.level.autoPackNBins.clear();
         this._refreshStatsDom();
         this._assessBins();
     }
@@ -709,7 +706,6 @@ class Game {
             function succHook2(packing) {
                 level.autoPack.set(algoName, packing);
                 const nBins = countUsedBins(packing);
-                level.autoPackNBins.set(algoName, nBins);
                 if(nBins < level.computedUB) {
                     level.computedUBReason = algoName;
                     level.computedUB = nBins;
