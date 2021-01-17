@@ -238,7 +238,7 @@ function levelGenBP1(q) {
     let items = [];
     let obj = {
         "binXLen": binXLen, "binYLen": binYLen,
-        "gameType": "bp", "items": items,
+        "gameType": "bp", "items": items, "defaultProfit": "area",
     };
     if(q.seed === null) {
         q.seed = getRandomSeed();
