@@ -637,8 +637,13 @@ function gTreeToPacking(gTree, items, binId) {
 
 function _enumGuillKSColl(items, binXLen, binYLen) {
     let itemLensList = [];
+    let totalProfit = 0;
     for(let item of items) {
         itemLensList.push([item.xLen, item.yLen]);
+        totalProfit += item.profit;
+    }
+    if(totalProfit <= 0) {
+        return [0, []];
     }
     let gTreeColl = enumGTrees(itemLensList, [binXLen, binYLen]);
     recentGuillInput = itemLensList;
