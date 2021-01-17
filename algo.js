@@ -38,9 +38,17 @@ function getRandGen(seed) {
     return mulberry32(xmur3(seed)());
 }
 
-//==[ General packing algorithms ]==============================================
+//==[ Packing util ]============================================================
 
 var bpAlgos = new Map();
+
+function fillEmptySlotsWithNulls(a) {
+    for(let i=0; i < a.length; ++i) {
+        if(a[i] === undefined) {
+            a[i] = null;
+        }
+    }
+}
 
 function getStripDims(items, stripPackSol) {
     let xLen = 0, yLen = 0;
@@ -74,27 +82,23 @@ function rotateAllItems(items) {
 }
 
 function mirrorAlgo(gbpAlgo) {
-    function mirrorBinPack(items, binXLen, binYLen, output) {
+    function mirrorBinPack(items, binXLen, binYLen) {
         rotateAllItems(items);
-        gbpAlgo(items, binYLen, binXLen, output);
+        let output = gbpAlgo(items, binYLen, binXLen);
         rotateAllItems(items);
         for(let i=0; i < output.length; ++i) {
-            let y = output[i][2];
-            output[i][2] = output[i][1];
-            output[i][1] = y;
+            if(output[i] !== null) {
+                let y = output[i][2];
+                output[i][2] = output[i][1];
+                output[i][1] = y;
+            }
         }
         return output;
     }
     return mirrorBinPack;
 }
 
-function createMirrors() {
-    let algoNames = [];
-    for(let algoName of bpAlgos.keys()) {
-        if(!algoName.endsWith('-mirror')) {
-            algoNames.push(algoName);
-        }
-    }
+function createMirrors(algoNames = ['ffdh-ff', 'nfdh', 'ffdh-nf']) {
     for(let algoName of algoNames) {
         bpAlgos.set(algoName + '-mirror', mirrorAlgo(bpAlgos.get(algoName)));
     }
@@ -192,8 +196,9 @@ function ffdhShelfPack(items, xLen) {
     return firstFitShelfPack(sortedItems, xLen);
 }
 
-function packShelvesIntoStrip(shelves, stripXLen, output) {
+function packShelvesIntoStrip(shelves, stripXLen) {
     let yAgg=0;
+    let output = [];
     for(let i=0; i < shelves.length; ++i) {
         let items = shelves[i].items;
         let xAgg = 0;
@@ -203,22 +208,24 @@ function packShelvesIntoStrip(shelves, stripXLen, output) {
         }
         yAgg += shelves[i].size;
     }
+    fillEmptySlotsWithNulls(output);
     return output;
 }
 
-function nfdhStripPack(items, stripXLen, output) {
+function nfdhStripPack(items, stripXLen) {
     let shelves = nfdhShelfPack(items, stripXLen);
-    return packShelvesIntoStrip(shelves, stripXLen, output);
+    return packShelvesIntoStrip(shelves, stripXLen);
 }
 
-function ffdhStripPack(items, stripXLen, output) {
+function ffdhStripPack(items, stripXLen) {
     let shelves = ffdhShelfPack(items, stripXLen);
-    return packShelvesIntoStrip(shelves, stripXLen, output);
+    return packShelvesIntoStrip(shelves, stripXLen);
 }
 
-function nextFit1D(items, binSize, output) {
+function nextFit1D(items, binSize) {
     let used = 0;
     let binId = 0;
+    let output = [];
     for(let i=0; i < items.length; ++i) {
         if(used + items[i].size <= binSize) {
             output[items[i].id] = [binId, used];
@@ -229,11 +236,13 @@ function nextFit1D(items, binSize, output) {
             used = items[i].size;
         }
     }
+    fillEmptySlotsWithNulls(output);
     return output;
 }
 
-function firstFit1D(items, binSize, output) {
+function firstFit1D(items, binSize) {
     let usage = [];
+    let output = [];
     for(let i=0; i < items.length; ++i) {
         let itemSize = items[i].size;
         let packed = false;
@@ -250,12 +259,14 @@ function firstFit1D(items, binSize, output) {
             usage.push(itemSize);
         }
     }
+    fillEmptySlotsWithNulls(output);
     return output;
 }
 
-function shelfBinPack(items, shelfAlgo, bpAlgo, binXLen, binYLen, output) {
+function shelfBinPack(items, shelfAlgo, bpAlgo, binXLen, binYLen) {
     let shelves = shelfAlgo(items, binXLen);
-    let shelfBPOutput = bpAlgo(shelves, binYLen, []);
+    let shelfBPOutput = bpAlgo(shelves, binYLen);
+    let output = [];
     for(let i=0; i < shelves.length; ++i) {
         let items = shelves[i].items;
         let xAgg = 0;
@@ -265,19 +276,20 @@ function shelfBinPack(items, shelfAlgo, bpAlgo, binXLen, binYLen, output) {
             xAgg += items[j].xLen;
         }
     }
+    fillEmptySlotsWithNulls(output);
     return output;
 }
 
-function ffdhFfBinPack(items, binXLen, binYLen, output) {
-    return shelfBinPack(items, ffdhShelfPack, firstFit1D, binXLen, binYLen, output);
+function ffdhFfBinPack(items, binXLen, binYLen) {
+    return shelfBinPack(items, ffdhShelfPack, firstFit1D, binXLen, binYLen);
 }
 bpAlgos.set('ffdh-ff', ffdhFfBinPack);
-function nfdhBinPack(items, binXLen, binYLen, output) {
-    return shelfBinPack(items, nfdhShelfPack, nextFit1D, binXLen, binYLen, output);
+function nfdhBinPack(items, binXLen, binYLen) {
+    return shelfBinPack(items, nfdhShelfPack, nextFit1D, binXLen, binYLen);
 }
 bpAlgos.set('nfdh', nfdhBinPack);
-function ffdhNfBinPack(items, binXLen, binYLen, output) {
-    return shelfBinPack(items, ffdhShelfPack, nextFit1D, binXLen, binYLen, output);
+function ffdhNfBinPack(items, binXLen, binYLen) {
+    return shelfBinPack(items, ffdhShelfPack, nextFit1D, binXLen, binYLen);
 }
 bpAlgos.set('ffdh-nf', ffdhNfBinPack);
 
@@ -616,15 +628,10 @@ function gTreeToPackingHelper(gTree, items, binId, position, output) {
     }
 }
 
-function gTreeToPacking(gTree, items, binId, output=[]) {
+function gTreeToPacking(gTree, items, binId) {
+    let output = [];
     gTreeToPackingHelper(gTree, items, binId, [0, 0], output);
-    if(Array.isArray(output)) {
-        for(let i=0; i < output.length; ++i) {
-            if(output[i] === undefined) {
-                output[i] = null;
-            }
-        }
-    }
+    fillEmptySlotsWithNulls(output);
     return output;
 }
 
@@ -634,8 +641,8 @@ function _enumGuillKSColl(items, binXLen, binYLen) {
         itemLensList.push([item.xLen, item.yLen]);
     }
     let gTreeColl = enumGTrees(itemLensList, [binXLen, binYLen]);
-    recentInput = itemLensList;
-    recentOutput = gTreeColl;
+    recentGuillInput = itemLensList;
+    recentGuillTreeColl = gTreeColl;
 
     function maskToProfit(mask, output=0) {
         for(let i=0; mask; ++i) {

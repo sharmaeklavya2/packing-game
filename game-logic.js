@@ -696,7 +696,7 @@ class Game {
     _computeAutoPack(algoName) {
         let algo = bpAlgos.get(algoName);
         let level = this.level;
-        let packing = algo(level.items, level.binXLen, level.binYLen, []);
+        let packing = algo(level.items, level.binXLen, level.binYLen);
         level.autoPack.set(algoName, packing);
         const nBins = countUsedBins(packing);
         level.autoPackNBins.set(algoName, nBins);
@@ -887,7 +887,7 @@ class Game {
             maxXLen = Math.max(maxXLen, item.xLen);
         }
         const origInvXLen = Math.max(maxXLen, this.level.binXLen);
-        this.stripPackSol = nfdhStripPack(rawItems, origInvXLen, []);
+        this.stripPackSol = nfdhStripPack(rawItems, origInvXLen);
         [this.invXLen, this.invYLen] = getStripDims(rawItems, this.stripPackSol);
     }
 
