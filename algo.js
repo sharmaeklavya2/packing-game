@@ -430,7 +430,7 @@ function bpLowerBound(items, binXLen, binYLen, rotation) {
 
 //==[ Brute-force guillotine-packing ]==========================================
 
-var recentGuillInput = null, recentGuillTreeColl = null;
+var gTreeCollCache = new Map();
 
 class GTree {
     /* A guillotine tree of d-dimensional cuboids.
@@ -615,6 +615,16 @@ function enumGTrees(itemLensList, binLens) {
     return gTreeColl;
 }
 
+function enumGTreesWithCaching(itemLensList, binLens) {
+    const key = JSON.stringify([itemLensList, binLens]);
+    let gTreeColl = gTreeCollCache.get(key);
+    if(gTreeColl === undefined) {
+        gTreeColl = enumGTrees(itemLensList, binLens);
+        gTreeCollCache.set(key, gTreeColl);
+    }
+    return gTreeColl;
+}
+
 function gTreeToPackingHelper(gTree, items, binId, position, output) {
     if(gTree.itemIndex !== null) {
         output[items[gTree.itemIndex].id] = [binId].concat(position);
@@ -635,7 +645,7 @@ function gTreeToPacking(gTree, items, binId) {
     return output;
 }
 
-function _enumGuillKSColl(items, binXLen, binYLen) {
+function _enumGuillKSTrees(items, binXLen, binYLen) {
     let itemLensList = [];
     let totalProfit = 0;
     for(let item of items) {
@@ -645,9 +655,7 @@ function _enumGuillKSColl(items, binXLen, binYLen) {
     if(totalProfit <= 0) {
         return [0, []];
     }
-    let gTreeColl = enumGTrees(itemLensList, [binXLen, binYLen]);
-    recentGuillInput = itemLensList;
-    recentGuillTreeColl = gTreeColl;
+    let gTreeColl = enumGTreesWithCaching(itemLensList, [binXLen, binYLen]);
 
     function maskToProfit(mask, output=0) {
         for(let i=0; mask; ++i) {
@@ -663,7 +671,7 @@ function _enumGuillKSColl(items, binXLen, binYLen) {
 }
 
 function enumGuillKSSols(items, binXLen, binYLen) {
-    let [maxProfit, gTrees] = _enumGuillKSColl(items, binXLen, binYLen);
+    let [maxProfit, gTrees] = _enumGuillKSTrees(items, binXLen, binYLen);
     let packings = [];
     let seenMasks = new Set();
     for(let gTree of gTrees) {
