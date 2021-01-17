@@ -356,7 +356,8 @@ class Game {
         this._createItems();
         this._createBinsAndPackItems(this.level.startPos);
         this._refreshStatsDom();
-        repopulateSolveMenu(this.level.solutions);
+        repopulateSolutionsMenu(this.level.solutions);
+        repopulateAutoPackMenu();
     }
 
     getItemPosition(itemId) {
@@ -492,15 +493,17 @@ class Game {
         this._resetHistoryButtons();
     }
 
-    selectAutoPack(algoName) {
-        let autoPack = this.level.autoPack;
-        if(autoPack.get(algoName) === undefined) {
-            this._computeAutoPack(algoName);
+    selectAutoPack(algoName, succHook=null, failHook=null, logger=null) {
+        let thisGame = this;
+        function succHook2(packing) {
+            let oldPos = thisGame.getItemPositions();
+            thisGame._recordHistoryCommand({'cmd': 'bulkMove', 'oldPos': oldPos, 'newPos': packing});
+            thisGame.putBack(packing);
+            if(succHook !== null) {
+                succHook();
+            }
         }
-        let newPos = autoPack.get(algoName);
-        let oldPos = this.getItemPositions();
-        this._recordHistoryCommand({'cmd': 'bulkMove', 'oldPos': oldPos, 'newPos': newPos});
-        this.putBack(newPos);
+        this._computeAutoPack(algoName, succHook2, failHook, logger);
     }
 
     selectSolution(solnName) {
@@ -698,16 +701,27 @@ class Game {
         }
     }
 
-    _computeAutoPack(algoName) {
-        let algo = bpAlgos.get(algoName);
+    _computeAutoPack(algoName, succHook=null, failHook=null, logger=null) {
         let level = this.level;
-        let packing = algo(level.items, level.binXLen, level.binYLen);
-        level.autoPack.set(algoName, packing);
-        const nBins = countUsedBins(packing);
-        level.autoPackNBins.set(algoName, nBins);
-        if(nBins < level.computedUB) {
-            level.computedUBReason = algoName;
-            level.computedUB = nBins;
+        let cachedPacking = level.autoPack.get(algoName);
+        if(cachedPacking === undefined) {
+            let packer = packers.get(algoName);
+            function succHook2(packing) {
+                level.autoPack.set(algoName, packing);
+                const nBins = countUsedBins(packing);
+                level.autoPackNBins.set(algoName, nBins);
+                if(nBins < level.computedUB) {
+                    level.computedUBReason = algoName;
+                    level.computedUB = nBins;
+                }
+                if(succHook !== null) {
+                    succHook(packing);
+                }
+            }
+            packer(level.items, level.binXLen, level.binYLen, succHook2, failHook, logger);
+        }
+        else {
+            succHook(cachedPacking);
         }
     }
 
@@ -1442,7 +1456,6 @@ function addEventListeners() {
 //==[ Main ]====================================================================
 
 window.addEventListener('load', function() {
-    createMirrors();
     addEventListeners();
     loadGameFromQParams(getQParams(), null, function(msg) {addMsg('error', msg);});
     populateNgForm();

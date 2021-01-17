@@ -168,7 +168,7 @@ function showSolutionSuccess() {
     document.getElementById('solutions-button').classList.remove('pressed');
 }
 
-function autoPackSuccess() {
+function autoPackComplete() {
     document.getElementById('auto-pack-menu').classList.add('disabled');
     document.getElementById('auto-pack-button').classList.remove('pressed');
 }
@@ -183,29 +183,42 @@ function solutionsClickHandler(ev) {
 function autoPackClickHandler(ev) {
     ev.preventDefault();
     let algoName = ev.target.innerHTML;
-    game.selectAutoPack(algoName);
-    autoPackSuccess();
+    game.selectAutoPack(algoName, autoPackComplete, autoPackComplete, null);
 }
 
-function repopulateSolveMenu(solutions) {
-    let a = [[solutions, 'solutions', solutionsClickHandler],
-        [bpAlgos, 'auto-pack', autoPackClickHandler]];
-    for(let [solMap, domKey, clickHandler] of a) {
-        let listDomElem = document.getElementById(domKey + '-list');
-        listDomElem.innerHTML = '';
-        let button = document.getElementById(domKey + '-button');
-        if(solMap.size === 0) {
-            button.classList.add('disabled');
-        }
-        else {
-            button.classList.remove('disabled');
-        }
-        for(let key of solMap.keys()) {
-            let liElem = document.createElement('li');
-            liElem.innerHTML = key;
-            liElem.addEventListener('click', clickHandler);
-            listDomElem.appendChild(liElem);
-        }
+function repopulateSolutionsMenu(solutions) {
+    let listDomElem = document.getElementById('solutions-list');
+    listDomElem.innerHTML = '';
+    let button = document.getElementById('solutions-button');
+    if(solutions.size === 0) {
+        button.classList.add('disabled');
+    }
+    else {
+        button.classList.remove('disabled');
+    }
+    for(let key of solutions.keys()) {
+        let liElem = document.createElement('li');
+        liElem.innerHTML = key;
+        liElem.addEventListener('click', solutionsClickHandler);
+        listDomElem.appendChild(liElem);
+    }
+}
+
+function repopulateAutoPackMenu() {
+    let listDomElem = document.getElementById('auto-pack-list');
+    listDomElem.innerHTML = '';
+    let button = document.getElementById('auto-pack-button');
+    if(packers.size === 0) {
+        button.classList.add('disabled');
+    }
+    else {
+        button.classList.remove('disabled');
+    }
+    for(let key of packers.keys()) {
+        let liElem = document.createElement('li');
+        liElem.innerHTML = key;
+        liElem.addEventListener('click', autoPackClickHandler);
+        listDomElem.appendChild(liElem);
     }
 }
 

@@ -40,7 +40,8 @@ function getRandGen(seed) {
 
 //==[ Packing util ]============================================================
 
-var bpAlgos = new Map();
+var rawSimplePackers = new Map();
+var packers = new Map();
 
 function fillEmptySlotsWithNulls(a) {
     for(let i=0; i < a.length; ++i) {
@@ -98,9 +99,25 @@ function mirrorAlgo(gbpAlgo) {
     return mirrorBinPack;
 }
 
-function createMirrors(algoNames = ['ffdh-ff', 'nfdh', 'ffdh-nf']) {
+function createRawMirrors(algoNames) {
     for(let algoName of algoNames) {
-        bpAlgos.set(algoName + '-mirror', mirrorAlgo(bpAlgos.get(algoName)));
+        rawSimplePackers.set(algoName + '-mirror', mirrorAlgo(rawSimplePackers.get(algoName)));
+    }
+}
+
+function simplePackerWrap(packAlgo) {
+    function simplePacker(items, binXLen, binYLen, succHook=null, failHook=null, logger=null) {
+        let packing = packAlgo(items, binXLen, binYLen);
+        succHook(packing);
+        return null;
+    }
+    simplePacker.packerType = 'simple';
+    return simplePacker;
+}
+
+function cookSimplePackers() {
+    for(let [algoName, rawAlgo] of rawSimplePackers) {
+        packers.set(algoName, simplePackerWrap(rawAlgo));
     }
 }
 
@@ -283,15 +300,15 @@ function shelfBinPack(items, shelfAlgo, bpAlgo, binXLen, binYLen) {
 function ffdhFfBinPack(items, binXLen, binYLen) {
     return shelfBinPack(items, ffdhShelfPack, firstFit1D, binXLen, binYLen);
 }
-bpAlgos.set('ffdh-ff', ffdhFfBinPack);
+rawSimplePackers.set('ffdh-ff', ffdhFfBinPack);
 function nfdhBinPack(items, binXLen, binYLen) {
     return shelfBinPack(items, nfdhShelfPack, nextFit1D, binXLen, binYLen);
 }
-bpAlgos.set('nfdh', nfdhBinPack);
+rawSimplePackers.set('nfdh', nfdhBinPack);
 function ffdhNfBinPack(items, binXLen, binYLen) {
     return shelfBinPack(items, ffdhShelfPack, nextFit1D, binXLen, binYLen);
 }
-bpAlgos.set('ffdh-nf', ffdhNfBinPack);
+rawSimplePackers.set('ffdh-nf', ffdhNfBinPack);
 
 //==[ Packing lower-bounds ]====================================================
 
@@ -702,3 +719,8 @@ function enumGuillKSSols(items, binXLen, binYLen) {
     }
     return [maxProfit, packings];
 }
+
+//==[ Main ]====================================================================
+
+createRawMirrors(['ffdh-ff', 'nfdh', 'ffdh-nf']);
+cookSimplePackers();
