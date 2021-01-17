@@ -624,9 +624,11 @@ function enumGTrees(itemLensList, binLens) {
     }
     const d = itemLensList[0].length;
     let cutDim = 0;
-    let improvement = true;
-    while(improvement) {
-        improvement = improveColl(gTreeColl, binLens, cutDim);
+    let failCount = 0;
+    while(failCount < d) {
+        const improvement = improveColl(gTreeColl, binLens, cutDim);
+        if(improvement) {failCount = 0;}
+        else {failCount += 1;}
         cutDim = (cutDim + 1) % d;
     }
     return gTreeColl;
