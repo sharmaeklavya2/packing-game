@@ -741,7 +741,7 @@ class Game {
             }
             packer(level.items, level.binXLen, level.binYLen, succHook2, failHook, logger);
         }
-        else {
+        else if(succHook !== null) {
             succHook(cachedPackObj);
         }
     }
