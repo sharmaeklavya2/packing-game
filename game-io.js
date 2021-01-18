@@ -153,10 +153,11 @@ function processLevel(j) {
                 soln.push(null);
             }
         }
-        const nBins = countUsedBins(soln);
-        if(nBins < o.computedUB) {
+        const [nBins, nPacked] = countUsedBinsAndPackedItems(soln);
+        const computedUB = nBins + o.items.length - nPacked;
+        if(computedUB < o.computedUB) {
             o.computedUBReason = solnName;
-            o.computedUB = nBins;
+            o.computedUB = computedUB;
         }
     }
     o.autoPack = new Map();
