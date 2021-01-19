@@ -7,7 +7,7 @@ var hoverRect = document.getElementById('hover-rect');
 var innerMargin = 10;  // margin between arena and the elements inside it, in px.
 var outerMargin = 32;  // margin between arena and containing page.
 var defaultItemColor = 'hsl(210,100%,60%)';
-var creatorMode = false;
+var mouseMode = null;
 
 var handleKeyPresses = true;
 var game = null;
@@ -604,7 +604,6 @@ class Game {
         if(i1 === i2) {
             return;
         }
-        this._invalidateHistory();
 
         arraySwap(this.level.startPos, i1, i2);
         for(let [solnName, soln] of this.level.solutions.entries()) {
@@ -910,6 +909,26 @@ class Game {
                         this._invalidateHistory();
                     }
                 }
+            }
+        }
+        else if(cmd.cmd === 'removeItem') {
+            if(opposite) {
+                let itemInfo = new ItemInfo(null, cmd.xLen, cmd.yLen, cmd.profit, cmd.color);
+                game.pushItem(itemInfo);
+                if(cmd.coords !== null && cmd.coords !== undefined) {
+                    const success = game.attach(game.items.length - 1,
+                        cmd.coords[0], cmd.coords[1], cmd.coords[2]);
+                    if(!success) {
+                        console.warn('undo/redo failed: cannot move item '
+                            + (game.items.length - 1) + ' to position '
+                            + cmd.coords + '; invalidating history.');
+                        this._invalidateHistory();
+                    }
+                }
+                game._swapItems(cmd.itemId, this.items.length - 1);
+            }
+            else {
+                game.removeItem(cmd.itemId);
             }
         }
         else if(cmd.cmd === 'bulkMove') {
@@ -1232,15 +1251,25 @@ function mousedownHandler(ev) {
     let targetRect = target.getBoundingClientRect();
     if(target.classList.contains('item')) {
         ev.preventDefault();
-        let itemXOff = ev.clientX - targetRect.x, itemYOff = ev.clientY - targetRect.y;
         let itemId = parseInt(target.getAttribute('data-item-id'));
-        DragData.set(new DragData(itemId, game.getItemPosition(itemId), itemXOff, itemYOff));
-
-        game.detach(itemId);
-        hoverRect.style.height = targetRect.height + 'px';
-        hoverRect.style.width = targetRect.width + 'px';
+        if(mouseMode === 'delete') {
+            const coords = game.getItemPosition(itemId);
+            const itemInfo = game.level.items[itemId];
+            game._recordHistoryCommand({'cmd': 'removeItem', 'itemId': itemId,
+                'xLen': itemInfo.xLen, 'yLen': itemInfo.yLen,
+                'color': itemInfo.color, 'profit': itemInfo.profit,
+                'coords': coords});
+            game.removeItem(itemId);
+        }
+        else {
+            let itemXOff = ev.clientX - targetRect.x, itemYOff = ev.clientY - targetRect.y;
+            DragData.set(new DragData(itemId, game.getItemPosition(itemId), itemXOff, itemYOff));
+            game.detach(itemId);
+            hoverRect.style.height = targetRect.height + 'px';
+            hoverRect.style.width = targetRect.width + 'px';
+        }
     }
-    else if(creatorMode && target.classList.contains('bin')) {
+    else if(mouseMode === 'create' && target.classList.contains('bin')) {
         ev.preventDefault();
         const binId = parseInt(target.getAttribute('data-bin-id'));
         const xPos = Math.floor((ev.clientX - targetRect.x) / game.scaleFactor);
