@@ -234,6 +234,13 @@ function setPos(domElem, xPos, yPos) {
     domElem.style.left = xPos + 'px';
 }
 
+function changeDomParent(node, parentNode) {
+    let nodeRect = node.getBoundingClientRect();
+    let parentRect = parentNode.getBoundingClientRect();
+    setPos(node, nodeRect.x - parentRect.x, nodeRect.y - parentRect.y);
+    parentNode.appendChild(node);
+}
+
 class ItemUI {
     constructor(itemInfo, scaleFactor) {
         this.itemInfo = itemInfo;
@@ -438,14 +445,12 @@ class Game {
         if(item.binUI !== null) {
             item.binUI.bin.remove(new Rectangle(item.xPos, item.yPos,
                 item.itemInfo.xLen, item.itemInfo.yLen));
-            item.binUI.domElem.removeChild(item.domElem);
-            item.domElem.classList.remove('packed');
             this.packedStats.remove(item.itemInfo);
             if(item.binUI.bin.isEmpty()) {
                 this.nBinsUsed--;
             }
             item.binUI = null;
-            inventory.appendChild(item.domElem);
+            changeDomParent(item.domElem, inventory);
             this._assessBins();
             this._refreshStatsDom();
         }
@@ -465,13 +470,12 @@ class Game {
             item.binUI = binUI;
             item.xPos = xPos;
             item.yPos = yPos;
-            item.domElem.classList.add('packed');
-            setPos(item.domElem, this.scaleFactor * xPos, this.scaleFactor * yPos);
             this.packedStats.add(item.itemInfo);
             if(wasEmpty) {
                 this.nBinsUsed++;
             }
-            item.binUI.domElem.appendChild(item.domElem);
+            changeDomParent(item.domElem, item.binUI.domElem);
+            setPos(item.domElem, this.scaleFactor * xPos, this.scaleFactor * yPos);
             this._assessBins();
             this._refreshStatsDom();
             return true;
@@ -629,10 +633,7 @@ class Game {
         }
         let item = this.items[itemId];
         if(item.binUI !== null) {
-            let itemRect = item.domElem.getBoundingClientRect();
-            let arenaRect = arena.getBoundingClientRect();
             this.detach(itemId);
-            setPos(item.domElem, itemRect.x - arenaRect.x, itemRect.y - arenaRect.y);
         }
         this._invalidateHistory();
         this.level.items[itemId] = itemInfo;
@@ -992,8 +993,6 @@ class Game {
     }
 
     _moveItemsToInventory(firstTime) {
-        let xOff = inventory.getBoundingClientRect().x - arena.getBoundingClientRect().x;
-        let yOff = inventory.getBoundingClientRect().y - arena.getBoundingClientRect().y;
         this.yAgg = 0;
         let n = this.items.length;
         for(let i=0; i<n; ++i) {
@@ -1002,19 +1001,17 @@ class Game {
             if(firstTime) {
                 inventory.appendChild(item.domElem);
             }
-            setPos(item.domElem, xOff + this.stripPackSol[i][0] * this.scaleFactor,
-                yOff + this.stripPackSol[i][1] * this.scaleFactor);
+            setPos(item.domElem, this.stripPackSol[i][0] * this.scaleFactor,
+                this.stripPackSol[i][1] * this.scaleFactor);
             this.yAgg += item.itemInfo.yLen;
         }
     }
 
     _moveItemToInventory(itemId) {
-        let xOff = inventory.getBoundingClientRect().x - arena.getBoundingClientRect().x;
-        let yOff = inventory.getBoundingClientRect().y - arena.getBoundingClientRect().y;
         let item = this.items[itemId];
         this.detach(itemId);
-        setPos(item.domElem, xOff + this.stripPackSol[itemId][0] * this.scaleFactor,
-            yOff + this.stripPackSol[itemId][1] * this.scaleFactor);
+        setPos(item.domElem, this.stripPackSol[itemId][0] * this.scaleFactor,
+            this.stripPackSol[itemId][1] * this.scaleFactor);
     }
 
     _createBinsAndPackItems(pos) {
@@ -1229,7 +1226,6 @@ function mousedownHandler(ev) {
         return;
     }
     let targetRect = target.getBoundingClientRect();
-    let arenaRect = arena.getBoundingClientRect();
     if(target.classList.contains('item')) {
         ev.preventDefault();
         let itemXOff = ev.clientX - targetRect.x, itemYOff = ev.clientY - targetRect.y;
@@ -1237,7 +1233,6 @@ function mousedownHandler(ev) {
         DragData.set(new DragData(itemId, game.getItemPosition(itemId), itemXOff, itemYOff));
 
         game.detach(itemId);
-        setPos(target, targetRect.x - arenaRect.x, targetRect.y - arenaRect.y);
         hoverRect.style.height = targetRect.height + 'px';
         hoverRect.style.width = targetRect.width + 'px';
     }
@@ -1325,9 +1320,9 @@ function mousemoveHandler(ev) {
     if(dragData.itemId !== null) {
         // move item
         let item = game.items[dragData.itemId];
-        let arenaX = arena.getBoundingClientRect().x;
-        let arenaY = arena.getBoundingClientRect().y;
-        setPos(item.domElem, ev.clientX - dragData.xOff - arenaX, ev.clientY - dragData.yOff - arenaY);
+        let inventoryRect = inventory.getBoundingClientRect();
+        setPos(item.domElem, ev.clientX - dragData.xOff - inventoryRect.x,
+            ev.clientY - dragData.yOff - inventoryRect.y);
 
         // draw hover
         let binId = getMouseBinId(ev);

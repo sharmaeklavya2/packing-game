@@ -55,6 +55,7 @@ footer {
 #inventory {
     margin: 10px;
     flex-shrink: 0;
+    position: relative;
 }
 #packing-area {
     padding: 5px;
@@ -80,7 +81,7 @@ footer {
 .show-id .item::after {
     content: attr(data-item-id);
 }
-.item.packed {
+.bin .item {
     z-index: 10;
 }
 
@@ -150,7 +151,7 @@ footer {
     opacity: 70%;
     border: 1px solid rgba(0, 0, 0, 0.25);
 }
-.item.packed {
+.bin .item {
     opacity: 90%;
     box-shadow: none;
 }
