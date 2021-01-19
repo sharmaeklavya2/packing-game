@@ -341,6 +341,11 @@ function addExtraUIEventListeners() {
             document.getElementById('export-button').classList.remove('pressed');
             document.getElementById('export-menu').classList.add('disabled');
         });
+    document.getElementById('export-li-svg').addEventListener('click', function(ev) {
+            downloadAsSvg();
+            document.getElementById('export-button').classList.remove('pressed');
+            document.getElementById('export-menu').classList.add('disabled');
+        });
     document.getElementById('export-li-pdf').addEventListener('click', function(ev) {
             if(game.nBinsUsed === 0) {
                 addMsg('error', 'No bins have been used; nothing to export.');

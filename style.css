@@ -300,7 +300,7 @@ textarea {
     margin: 0;
     padding: 0;
 }
-.menu > ul > li {
+#solutions-menu li, #auto-pack-menu li {
     font-family: monospace;
     font-size: 1.1rem;
 }

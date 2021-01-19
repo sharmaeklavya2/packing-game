@@ -685,3 +685,128 @@ function downloadBinsToTikz(options={}, filename='bins.tikz', cleanup=false) {
     let blob = new Blob([tikz], {type: 'application/x-tex'});
     downloadBlob(blob, filename, cleanup);
 }
+
+const svgHeader = '<?xml version="1.0" encoding="UTF-8"?>\n';
+const svgNS = 'http://www.w3.org/2000/svg';
+
+function createSvgElement(doc, parent, name, attrs={}) {
+    let elem = doc.createElementNS(svgNS, name);
+    for(let [key, value] of Object.entries(attrs)) {
+        elem.setAttribute(key, value);
+    }
+    parent.appendChild(elem);
+    return elem;
+}
+
+function levelToSvg(game, showInventory=null, textFunc=null) {
+    if(game === null) {return null;}
+    let level = game.level;
+    let pos = game.getItemPositions();
+    let inventoryPos = game.stripPackSol;
+    const scaleFactor = game.scaleFactor, strokeWidth = 0.8 / scaleFactor;
+    const invXLen = game.invXLen, invYLen = game.invYLen;
+
+    let doc = document.implementation.createDocument(svgNS, 'svg');
+    let root = doc.rootElement;
+    let defs = createSvgElement(doc, root, 'defs');
+    let pattern = createSvgElement(doc, defs, 'pattern', {
+        'id': 'grid',
+        'width': 1, 'height': 1,
+        'patternUnits': 'userSpaceOnUse',
+        });
+    let gridRect = createSvgElement(doc, pattern, 'rect', {
+        'width': 1, 'height': 1,
+        'fill': 'none',
+        'stroke': '#c8c8c8',
+        'stroke-width': strokeWidth / 2,
+        });
+    let styleLines = [
+        '.bin ~ .item {fill-opacity: 90%;}',
+        '#inventory ~ .item {fill-opacity: 70%;}',
+        '#inventory, .bin {fill: url(#grid);}',
+        ];
+    if(textFunc !== null) {
+        styleLines.push(`g > text {transform: scale(${1/scaleFactor});}`);
+    }
+    let styleSheet = createSvgElement(doc, root, 'style');
+    styleSheet.innerHTML = styleLines.join('\n');
+
+    let [unpacked, packed] = getPackedAndUnpackedItems(pos, level.items.length);
+    if(showInventory === null) {
+        showInventory = (unpacked.length > 0);
+    }
+
+    function drawItem(i, xPos, yPos, parent) {
+        const xLen = level.items[i].xLen, yLen = level.items[i].yLen;
+        createSvgElement(doc, parent, 'rect', {
+            'x': xPos, 'y': yPos,
+            'width': xLen, 'height': yLen,
+            'fill': level.items[i].color,
+            'data-item-id': i, 'class': 'item',
+            });
+        if(textFunc !== null) {
+            const text = textFunc(level.items[i]).toString();
+            const fontSize = Math.min(16, 0.8 * scaleFactor * yLen,
+                xLen * scaleFactor / text.length);
+            let textNode = createSvgElement(doc, parent, 'text', {
+                'x': (xPos + xLen / 2) * scaleFactor,
+                'y': (yPos + yLen / 2) * scaleFactor + fontSize * 0.4,
+                'text-anchor': 'middle',
+                'font-size': fontSize,
+                });
+            textNode.innerHTML = text;
+        }
+    }
+
+    if(showInventory) {
+        let gInv = createSvgElement(doc, root, 'g', {
+            'transform': `translate(${innerMargin}, ${innerMargin}) scale(${scaleFactor})`,
+            'stroke': 'black', 'stroke-width': strokeWidth,
+            });
+        let rectInv = createSvgElement(doc, gInv, 'rect', {
+            'width': invXLen, 'height': invYLen,
+            'id': 'inventory',
+            });
+        for(let i of unpacked) {
+            drawItem(i, inventoryPos[i][0], inventoryPos[i][1], gInv);
+        }
+    }
+
+    const packXPos = (showInventory ? innerMargin * 2 + scaleFactor * invXLen : innerMargin);
+    let packYPos = innerMargin;
+    let maxBinXLen = 0;
+    for(let j=0; j < packed.length; ++j) {
+        const binXLen = game.bins[j].bin.xLen, binYLen = game.bins[j].bin.yLen;
+        maxBinXLen = Math.max(maxBinXLen, binXLen);
+        let gBin = createSvgElement(doc, root, 'g', {
+            'transform': `translate(${packXPos}, ${packYPos}) scale(${scaleFactor})`,
+            'stroke': 'black', 'stroke-width': strokeWidth,
+            });
+        let rectBin = createSvgElement(doc, gBin, 'rect', {
+            'width': binXLen, 'height': binYLen,
+            'data-bin-id': j, 'class': 'bin',
+            });
+        for(let i of packed[j]) {
+            drawItem(i, pos[i][1], pos[i][2], gBin);
+        }
+        packYPos += innerMargin + scaleFactor * binYLen;
+        maxBinXLen = Math.max(maxBinXLen, binXLen);
+    }
+
+    const totalWidth = packXPos + (packed.length > 0 ? maxBinXLen * scaleFactor + innerMargin : 0);
+    const totalHeight = (showInventory?
+        Math.max(packYPos, innerMargin * 2 + scaleFactor * invYLen) : packYPos);
+    root.setAttribute('width', totalWidth);
+    root.setAttribute('height', totalHeight);
+    root.setAttribute('viewBox', '0 0 ' + totalWidth + ' ' + totalHeight);
+
+    let serializer = new XMLSerializer();
+    return svgHeader + (new XMLSerializer()).serializeToString(doc);
+}
+
+function downloadAsSvg(showInventory=null, textFunc=null, filename='packing-game.svg',
+        cleanup=false) {
+    let svgText = levelToSvg(game, showInventory, textFunc);
+    let blob = new Blob([svgText], {type: 'image/svg+xml'});
+    downloadBlob(blob, filename, cleanup);
+}
