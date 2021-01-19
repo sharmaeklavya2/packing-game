@@ -251,6 +251,7 @@ function levelGenBP1(q) {
             "color": hueToColor(Math.floor(rand() * 360)),
         });
     }
+    items.sort(RectComparator);
     return obj;
 }
 
