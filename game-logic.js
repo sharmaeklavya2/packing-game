@@ -7,7 +7,8 @@ var hoverRect = document.getElementById('hover-rect');
 var innerMargin = 10;  // margin between arena and the elements inside it, in px.
 var outerMargin = 32;  // margin between arena and containing page.
 var defaultItemColor = 'hsl(210,100%,60%)';
-var mouseMode = null;
+var itemMouseMode = 'drag';
+var binMouseMode = null;
 
 var handleKeyPresses = true;
 var game = null;
@@ -1267,7 +1268,7 @@ function mousedownHandler(ev) {
     if(target.classList.contains('item')) {
         ev.preventDefault();
         let itemId = parseInt(target.getAttribute('data-item-id'));
-        if(mouseMode === 'delete') {
+        if(itemMouseMode === 'delete') {
             const coords = game.getItemPosition(itemId);
             const itemInfo = game.level.items[itemId];
             game._recordHistoryCommand({'cmd': 'removeItem', 'itemId': itemId,
@@ -1276,7 +1277,7 @@ function mousedownHandler(ev) {
                 'coords': coords});
             game.removeItem(itemId);
         }
-        else {
+        else if(itemMouseMode === 'drag') {
             let itemXOff = ev.clientX - targetRect.x, itemYOff = ev.clientY - targetRect.y;
             DragData.set(new DragData(itemId, game.getItemPosition(itemId), itemXOff, itemYOff));
             game.detach(itemId);
@@ -1284,19 +1285,21 @@ function mousedownHandler(ev) {
             hoverRect.style.width = targetRect.width + 'px';
         }
     }
-    else if(mouseMode === 'create' && target.classList.contains('bin')) {
+    else if(target.classList.contains('bin')) {
         ev.preventDefault();
         const binId = parseInt(target.getAttribute('data-bin-id'));
-        const xPos = Math.floor((ev.clientX - targetRect.x) / game.scaleFactor);
-        const yPos = Math.floor((ev.clientY - targetRect.y) / game.scaleFactor);
-        DragData.set(new DragData(null, [binId, xPos, yPos], 0, 0));
+        if(binMouseMode === 'create') {
+            const xPos = Math.floor((ev.clientX - targetRect.x) / game.scaleFactor);
+            const yPos = Math.floor((ev.clientY - targetRect.y) / game.scaleFactor);
+            DragData.set(new DragData(null, [binId, xPos, yPos], 0, 0));
 
-        const selRect = new Rectangle(xPos, yPos, 1, 1);
-        hoverRect.style.width = (game.scaleFactor * selRect.xLen) + 'px';
-        hoverRect.style.height = (game.scaleFactor * selRect.yLen) + 'px';
-        hoverRect.classList.add('success');
-        hoverRect.classList.remove('failure');
-        moveHoverRect(binId, selRect);
+            const selRect = new Rectangle(xPos, yPos, 1, 1);
+            hoverRect.style.width = (game.scaleFactor * selRect.xLen) + 'px';
+            hoverRect.style.height = (game.scaleFactor * selRect.yLen) + 'px';
+            hoverRect.classList.add('success');
+            hoverRect.classList.remove('failure');
+            moveHoverRect(binId, selRect);
+        }
     }
 }
 
