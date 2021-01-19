@@ -647,7 +647,7 @@ class Game {
         this.level.autoPack.clear();
         this._invalidateLowerBound();
         this._invalidateUpperBound();
-        repopulateSolveMenu(this.level.solutions);
+        repopulateSolutionsMenu(this.level.solutions);
         this._refreshStatsDom();
         this._assessBins();
     }
@@ -677,7 +677,7 @@ class Game {
 
         this.level.startPos.push(null);
         this.level.solutions.clear();
-        repopulateSolveMenu(this.level.solutions);
+        repopulateSolutionsMenu(this.level.solutions);
         this._invalidateUpperBound();
         this.level.computedLBReason = null;
         this.level.autoPack.clear();
