@@ -1361,7 +1361,7 @@ function mousemoveHandler(ev) {
     }
 }
 
-function endDrag() {
+function endDrag(hook=null) {
     hoverRect.style.visibility = 'hidden';
     let dragData = DragData.get();
     if(dragData !== null) {
@@ -1369,9 +1369,10 @@ function endDrag() {
             let oldCoords = dragData.coords;
             game._recordMove(dragData.itemId, oldCoords, game.getItemPosition(dragData.itemId));
         }
+        DragData.unset();
+        game.trimBins(1);
+        if(hook !== null) {hook();}
     }
-    DragData.unset();
-    game.trimBins(1);
 }
 
 function mouseupHandler(ev) {
@@ -1410,16 +1411,13 @@ function mouseupHandler(ev) {
 function mouseleaveHandler(ev) {
     let target = ev.target;
     console.debug(ev.type, target);
-    let dragData = DragData.get();
-    if(dragData !== null) {
-        ev.preventDefault();
-        endDrag();
-    }
+    endDrag(() => ev.preventDefault());
 }
 
 function keydownHandler(ev) {
     if(handleKeyPresses && !ev.defaultPrevented) {
-        if(ev.key === 'z' && (ev.metaKey || ev.ctrlKey)) {
+        const metaOrCtrl = ev.metaKey || ev.ctrlKey;
+        if(ev.key === 'z' && metaOrCtrl) {
             ev.preventDefault();
             if(game !== null) {
                 if(ev.shiftKey) {
@@ -1431,9 +1429,7 @@ function keydownHandler(ev) {
             }
         }
         else if(ev.key === 'Escape') {
-            if(game !== null) {
-                endDrag();
-            }
+            endDrag(() => ev.preventDefault());
         }
     }
 }
