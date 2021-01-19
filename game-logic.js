@@ -1428,6 +1428,25 @@ function keydownHandler(ev) {
                 }
             }
         }
+        else if(ev.key === 's' && metaOrCtrl) {
+            if(game !== null) {
+                ev.preventDefault();
+                downloadProgress();
+            }
+        }
+        else if(ev.key === 'c' && metaOrCtrl) {
+            if(game !== null) {
+                ev.preventDefault();
+                if(window.navigator.clipboard) {
+                    let levelJSON = prettyJSONize(serializeLevel(
+                        game.level, game.getItemPositions()));
+                    window.navigator.clipboard.writeText(levelJSON)
+                        .then(() => addMsg('info', 'Level JSON copied to clipboard.'))
+                        .catch(() => addMsg('warning',
+                            'Level JSON could not be copied to clipboard.'));
+                }
+            }
+        }
         else if(ev.key === 'Escape') {
             endDrag(() => ev.preventDefault());
         }
