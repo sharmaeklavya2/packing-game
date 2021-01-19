@@ -794,6 +794,7 @@ class Game {
     _assessBins() {
         let lb = this.lowerBound(), ub = this.upperBound();
         let used = 0;
+        let binTypes = [];
         for(let i=0; i<this.bins.length; ++i) {
             let bin = this.bins[i];
             if(!bin.bin.isEmpty()) {
@@ -805,12 +806,15 @@ class Game {
                 else if(used > lb) {
                     binType = 'warning';
                 }
+                binTypes.push(binType);
                 bin.domElem.setAttribute('data-bin-type', binType);
             }
             else {
+                binTypes.push(null);
                 bin.domElem.removeAttribute('data-bin-type');
             }
         }
+        return binTypes;
     }
 
     _invalidateHistory() {
