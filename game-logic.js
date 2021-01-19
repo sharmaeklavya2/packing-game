@@ -438,6 +438,13 @@ class Game {
     repackInventory() {
         this._computeInventoryDimsAndItemHomePositions();
         this._setInventoryDimsPx();
+        for(let i=0; i < this.items.length; ++i) {
+            let item = this.items[i];
+            if(item.binUI === null) {
+                setPos(item.domElem, this.stripPackSol[i][0] * this.scaleFactor,
+                    this.stripPackSol[i][1] * this.scaleFactor);
+            }
+        }
     }
 
     detach(itemId) {
@@ -593,6 +600,7 @@ class Game {
         this.level.autoPack.clear();
         this.items.pop();
         this.level.items.pop();
+        this.repackInventory();
         this._assessBins();
     }
 
@@ -664,9 +672,12 @@ class Game {
         this.items.push(itemUI);
         this.totalStats.add(itemInfo);
         this.stripPackSol.push([0, this.invYLen]);
+        /*
         this.invYLen += itemInfo.yLen;
         this.invXLen = Math.max(this.invXLen, itemInfo.xLen);
         this._setInventoryDimsPx();
+        */
+        this.repackInventory();
         this._moveItemToInventory(itemId);
         inventory.appendChild(itemUI.domElem);
 
