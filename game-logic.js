@@ -452,7 +452,6 @@ class Game {
             item.binUI = null;
             changeDomParent(item.domElem, inventory);
             this._assessBins();
-            this._refreshStatsDom();
         }
     }
 
@@ -477,7 +476,6 @@ class Game {
             changeDomParent(item.domElem, item.binUI.domElem);
             setPos(item.domElem, this.scaleFactor * xPos, this.scaleFactor * yPos);
             this._assessBins();
-            this._refreshStatsDom();
             return true;
         }
         else {
@@ -558,7 +556,6 @@ class Game {
         this._improveLowerBound();
         this._computeAutoPack('ffdh-ff');
         this._computeAutoPack('ffdh-ff-mirror');
-        this._refreshStatsDom();
         this._assessBins();
     }
 
@@ -596,7 +593,6 @@ class Game {
         this.level.autoPack.clear();
         this.items.pop();
         this.level.items.pop();
-        this._refreshStatsDom();
         this._assessBins();
     }
 
@@ -648,7 +644,6 @@ class Game {
         this._invalidateLowerBound();
         this._invalidateUpperBound();
         repopulateSolutionsMenu(this.level.solutions);
-        this._refreshStatsDom();
         this._assessBins();
     }
 
@@ -681,7 +676,6 @@ class Game {
         this._invalidateUpperBound();
         this.level.computedLBReason = null;
         this.level.autoPack.clear();
-        this._refreshStatsDom();
         this._assessBins();
     }
 
@@ -813,6 +807,7 @@ class Game {
                 bin.domElem.removeAttribute('data-bin-type');
             }
         }
+        this._refreshStatsDom();
         return binTypes;
     }
 
