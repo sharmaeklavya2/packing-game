@@ -337,6 +337,7 @@ function addExtraUIEventListeners() {
             if(game.nBinsUsed === 0) {
                 addMsg('error', 'No bins have been used; nothing to export.');
             }
+            downloadBinsToTikz();
             document.getElementById('export-button').classList.remove('pressed');
             document.getElementById('export-menu').classList.add('disabled');
         });
