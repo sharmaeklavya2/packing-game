@@ -22,7 +22,7 @@ body {
     display: flex;
     align-self: center;
     align-items: flex-start;
-    margin: 32px 32px 0 32px;
+    margin: 32px;
 }
 #arena.large {
     align-self: flex-start;
