@@ -601,6 +601,7 @@ class Game {
         this.items.pop();
         this.level.items.pop();
         this.repackInventory();
+        this.trimBins(1);
         this._assessBins();
     }
 
@@ -873,7 +874,7 @@ class Game {
                 this.trimBins(1);
             }
             else if(coords[0] >= this.bins.length) {
-                this.addBins(coords[0] + 1 - this.bins.length);
+                this.addBins(coords[0] + 2 - this.bins.length);
                 this.detach(cmd.itemId);
                 this.attach(cmd.itemId, coords[0], coords[1], coords[2]);
             }
@@ -900,17 +901,18 @@ class Game {
         }
         else if(cmd.cmd === 'addItem') {
             if(opposite) {
-                game.popItem();
+                this.popItem();
             }
             else {
                 let itemInfo = new ItemInfo(null, cmd.xLen, cmd.yLen, 0, null);
-                game.pushItem(itemInfo);
+                this.pushItem(itemInfo);
                 if(cmd.coords !== null && cmd.coords !== undefined) {
-                    const success = game.attach(game.items.length - 1, cmd.coords[0], cmd.coords[1],
+                    const success = this.attach(this.items.length - 1, cmd.coords[0], cmd.coords[1],
                         cmd.coords[2]);
+                    this.trimBins(1);
                     if(!success) {
                         console.warn('undo/redo failed: cannot move item '
-                            + (game.items.length - 1) + ' to position '
+                            + (this.items.length - 1) + ' to position '
                             + cmd.coords + '; invalidating history.');
                         this._invalidateHistory();
                     }
@@ -920,29 +922,36 @@ class Game {
         else if(cmd.cmd === 'removeItem') {
             if(opposite) {
                 let itemInfo = new ItemInfo(null, cmd.xLen, cmd.yLen, cmd.profit, cmd.color);
-                game.pushItem(itemInfo);
+                this.pushItem(itemInfo);
                 if(cmd.coords !== null && cmd.coords !== undefined) {
-                    const success = game.attach(game.items.length - 1,
-                        cmd.coords[0], cmd.coords[1], cmd.coords[2]);
-                    if(!success) {
-                        console.warn('undo/redo failed: cannot move item '
-                            + (game.items.length - 1) + ' to position '
-                            + cmd.coords + '; invalidating history.');
-                        this._invalidateHistory();
+                    if(cmd.coords[0] >= this.bins.length) {
+                        this.addBins(cmd.coords[0] + 2 - this.bins.length);
+                        this.attach(this.items.length - 1, cmd.coords[0],
+                            cmd.coords[1], cmd.coords[2]);
+                    }
+                    else {
+                        const success = this.attach(this.items.length - 1,
+                            cmd.coords[0], cmd.coords[1], cmd.coords[2]);
+                        if(!success) {
+                            console.warn('undo/redo failed: cannot move item '
+                                + cmd.itemId + ' to position '
+                                + cmd.coords + '; invalidating history.');
+                            this._invalidateHistory();
+                        }
                     }
                 }
-                game._swapItems(cmd.itemId, this.items.length - 1);
+                this._swapItems(cmd.itemId, this.items.length - 1);
             }
             else {
-                game.removeItem(cmd.itemId);
+                this.removeItem(cmd.itemId);
             }
         }
         else if(cmd.cmd === 'bulkMove') {
             if(opposite) {
-                game.putBack(cmd.oldPos);
+                this.putBack(cmd.oldPos);
             }
             else {
-                game.putBack(cmd.newPos);
+                this.putBack(cmd.newPos);
             }
         }
         else {
