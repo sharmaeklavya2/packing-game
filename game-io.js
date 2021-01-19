@@ -589,28 +589,33 @@ function getCellAndMarginSize() {
     return [cellSize, margin];
 }
 
+function getPackedAndUnpackedItems(pos, nItems) {
+    let packed = [], unpacked = [];
+    for(let i=0; i < nItems; ++i) {
+        if(pos[i] === undefined || pos[i] === null) {
+            unpacked.push(i);
+        }
+        else {
+            let [binId, xPos, yPos] = pos[i];
+            if(packed[binId] === undefined) {
+                packed[binId] = [];
+            }
+            packed[binId].push(i);
+        }
+    }
+    for(let j=0; j < packed.length; ++j) {
+        if(packed[j] === undefined) {
+            packed[j] = [];
+        }
+    }
+    return [unpacked, packed];
+}
+
 function binsToTikz(level, pos, options={}) {
     if(pos.length === 0) {
         console.warn('binsToTikz: no packed items.');
     }
-    const n = level.items.length;
-    let m = 0;
-    let children = [];
-    for(let i=0; i < pos.length && i < n; ++i) {
-        if(pos[i] !== undefined && pos[i] !== null) {
-            let [binId, xPos, yPos] = pos[i];
-            m = Math.max(m, binId+1);
-            if(children[binId] === undefined) {
-                children[binId] = [];
-            }
-            children[binId].push(i);
-        }
-    }
-    for(let j=0; j<m; ++j) {
-        if(children[j] === undefined) {
-            children[j] = [];
-        }
-    }
+    let [unpacked, packed] = getPackedAndUnpackedItems(pos, level.items.length);
 
     if(game !== null) {
         let [computedCellSize, computedMargin] = getCellAndMarginSize();
@@ -639,13 +644,13 @@ function binsToTikz(level, pos, options={}) {
 '\\tikzset{binGrid/.style={draw,step=1\\pGameL,{black!20}}}',
 '\\tikzset{item/.style={draw,fill=defaultItemColor}}',
 ];
-    for(let j=0; j<m; ++j) {
+    for(let j=0; j < packed.length; ++j) {
         lines.push('\\begin{tikzpicture}');
         lines.push('\\path (-\\pGameM, -\\pGameM) rectangle '
             + `(${level.binXLen}\\pGameL+\\pGameM, ${level.binYLen}\\pGameL+\\pGameM);`);
         lines.push('\\path[binGrid] (0\\pGameL, 0\\pGameL) grid '
             + `(${level.binXLen}\\pGameL, ${level.binYLen}\\pGameL);`);
-        for(let i of children[j]) {
+        for(let i of packed[j]) {
             const xLen = level.items[i].xLen;
             const yLen = level.items[i].yLen;
             let [binId, xPos, yPos] = pos[i];
