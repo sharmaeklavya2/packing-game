@@ -9,6 +9,7 @@ body {
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    overflow-y: scroll;
     --tint: rgba(0, 0, 0, 0.1);
     --heavy-tint: rgba(0, 0, 0, 0.2);
     --menu-color: rgba(192, 192, 192, 0.8);
