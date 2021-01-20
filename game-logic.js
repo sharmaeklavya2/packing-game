@@ -457,7 +457,7 @@ class Game {
                 this.nBinsUsed--;
             }
             item.binUI = null;
-            changeDomParent(item.domElem, inventory);
+            window.setTimeout(() => changeDomParent(item.domElem, inventory));
             this._assessBins();
         }
     }
@@ -480,8 +480,10 @@ class Game {
             if(wasEmpty) {
                 this.nBinsUsed++;
             }
+            window.setTimeout(() => {
             changeDomParent(item.domElem, item.binUI.domElem);
             setPos(item.domElem, this.scaleFactor * xPos, this.scaleFactor * yPos);
+            });
             this._assessBins();
             return true;
         }
@@ -1291,7 +1293,7 @@ function mousedownHandler(ev) {
         else if(mouseMode['item'] === 'drag') {
             let itemXOff = ev.clientX - targetRect.x, itemYOff = ev.clientY - targetRect.y;
             DragData.set(new DragData(itemId, game.getItemPosition(itemId), itemXOff, itemYOff));
-            window.setTimeout(() => game.detach(itemId), 0);
+            game.detach(itemId);
             target.classList.add('moving');
             hoverRect.style.height = targetRect.height + 'px';
             hoverRect.style.width = targetRect.width + 'px';
@@ -1383,9 +1385,9 @@ function mousemoveHandler(ev) {
     if(dragData.itemId !== null) {
         // move item
         let item = game.items[dragData.itemId];
-        let inventoryRect = inventory.getBoundingClientRect();
-        setPos(item.domElem, ev.clientX - dragData.xOff - inventoryRect.x,
-            ev.clientY - dragData.yOff - inventoryRect.y);
+        let parentRect = item.domElem.parentNode.getBoundingClientRect();
+        setPos(item.domElem, ev.clientX - dragData.xOff - parentRect.x,
+            ev.clientY - dragData.yOff - parentRect.y);
 
         // draw hover
         let binId = getMouseBinId(ev);
