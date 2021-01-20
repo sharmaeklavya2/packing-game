@@ -284,9 +284,6 @@ function addExtraUIEventListeners() {
     redoButton.addEventListener('click', function(ev) {
             if(game !== null) {game.redo();}
         });
-    document.getElementById('zoom-button').addEventListener('click', function(ev) {
-            toggleMenus('zoom-button');
-        });
     document.getElementById('save-game-button').addEventListener('click', function(ev) {
             if(game !== null) {downloadProgress();}
         });
@@ -308,18 +305,15 @@ function addExtraUIEventListeners() {
                 }
             }
         });
-    document.getElementById('auto-pack-button').addEventListener('click', function(ev) {
-            toggleMenus('auto-pack-button');
-        });
-    document.getElementById('export-button').addEventListener('click', function(ev) {
-            toggleMenus('export-button');
-        });
-    document.getElementById('edit-button').addEventListener('click', function(ev) {
-            toggleMenus('edit-button');
-        });
     document.getElementById('about-button').addEventListener('click', function(ev) {
             window.alert(aboutText);
         });
+    let onlyToggleIds = ['zoom-button', 'auto-pack-button', 'export-button', 'edit-button'];
+    for(const id of onlyToggleIds) {
+        document.getElementById(id).addEventListener('click', function(ev) {
+                toggleMenus(id);
+            });
+    }
 
     ngForm.addEventListener('submit', ngFormSubmitHandler);
     ngForm.addEventListener('change', ngFormCheckHandler);
