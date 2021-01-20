@@ -447,7 +447,7 @@ class Game {
         }
     }
 
-    detach(itemId) {
+    detach(itemId, asyncDomChange=false) {
         let item = this.items[itemId];
         if(item.binUI !== null) {
             item.binUI.bin.remove(new Rectangle(item.xPos, item.yPos,
@@ -457,12 +457,18 @@ class Game {
                 this.nBinsUsed--;
             }
             item.binUI = null;
-            window.setTimeout(() => changeDomParent(item.domElem, inventory));
+            let changeFunc = () => changeDomParent(item.domElem, inventory);
+            if(asyncDomChange) {
+                window.setTimeout(changeFunc);
+            }
+            else {
+                changeFunc();
+            }
             this._assessBins();
         }
     }
 
-    attach(itemId, binId, xPos, yPos) {
+    attach(itemId, binId, xPos, yPos, asyncDomChange=false) {
         let item = this.items[itemId];
         let binUI = this.bins[binId];
         if(binUI === undefined) {
@@ -480,10 +486,16 @@ class Game {
             if(wasEmpty) {
                 this.nBinsUsed++;
             }
-            window.setTimeout(() => {
-            changeDomParent(item.domElem, item.binUI.domElem);
-            setPos(item.domElem, this.scaleFactor * xPos, this.scaleFactor * yPos);
-            });
+            let changeFunc = () => {
+                changeDomParent(item.domElem, item.binUI.domElem);
+                setPos(item.domElem, this.scaleFactor * xPos, this.scaleFactor * yPos);
+            };
+            if(asyncDomChange) {
+                window.setTimeout(changeFunc);
+            }
+            else {
+                changeFunc();
+            }
             this._assessBins();
             return true;
         }
@@ -1293,7 +1305,7 @@ function mousedownHandler(ev) {
         else if(mouseMode['item'] === 'drag') {
             let itemXOff = ev.clientX - targetRect.x, itemYOff = ev.clientY - targetRect.y;
             DragData.set(new DragData(itemId, game.getItemPosition(itemId), itemXOff, itemYOff));
-            game.detach(itemId);
+            game.detach(itemId, true);
             target.classList.add('moving');
             hoverRect.style.height = targetRect.height + 'px';
             hoverRect.style.width = targetRect.width + 'px';
@@ -1466,7 +1478,7 @@ function mouseupHandler(ev) {
         if(game.bins[binId].bin.canFit(selRect)) {
             let itemInfo = new ItemInfo(null, selRect.xLen, selRect.yLen, 0, null);
             game.pushItem(itemInfo);
-            game.attach(game.items.length - 1, binId, selRect.xPos, selRect.yPos);
+            game.attach(game.items.length - 1, binId, selRect.xPos, selRect.yPos, true);
             game._recordHistoryCommand({'cmd': 'addItem', 'xLen': selRect.xLen,
                 'yLen': selRect.yLen, 'coords': [binId, selRect.xPos, selRect.yPos]});
         }
