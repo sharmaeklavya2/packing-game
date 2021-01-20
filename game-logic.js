@@ -1292,6 +1292,7 @@ function mousedownHandler(ev) {
             let itemXOff = ev.clientX - targetRect.x, itemYOff = ev.clientY - targetRect.y;
             DragData.set(new DragData(itemId, game.getItemPosition(itemId), itemXOff, itemYOff));
             window.setTimeout(() => game.detach(itemId), 0);
+            target.classList.add('moving');
             hoverRect.style.height = targetRect.height + 'px';
             hoverRect.style.width = targetRect.width + 'px';
         }
@@ -1430,6 +1431,7 @@ function endDrag(hook=null) {
         if(dragData.itemId !== null) {
             let oldCoords = dragData.coords;
             game._recordMove(dragData.itemId, oldCoords, game.getItemPosition(dragData.itemId));
+            game.items[dragData.itemId].domElem.classList.remove('moving');
         }
         DragData.unset();
         game.trimBins(1);

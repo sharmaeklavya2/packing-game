@@ -84,6 +84,9 @@ footer {
 .item-touch .item {
     touch-action: none;
 }
+.item.moving {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4), 0 4px 12px 4px rgba(0,0,0,0.2);
+}
 .show-id .item::after {
     content: attr(data-item-id);
 }
