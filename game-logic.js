@@ -1291,7 +1291,7 @@ function mousedownHandler(ev) {
         else if(mouseMode['item'] === 'drag') {
             let itemXOff = ev.clientX - targetRect.x, itemYOff = ev.clientY - targetRect.y;
             DragData.set(new DragData(itemId, game.getItemPosition(itemId), itemXOff, itemYOff));
-            game.detach(itemId);
+            window.setTimeout(() => game.detach(itemId), 0);
             hoverRect.style.height = targetRect.height + 'px';
             hoverRect.style.width = targetRect.width + 'px';
         }
