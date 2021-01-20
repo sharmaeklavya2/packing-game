@@ -252,10 +252,10 @@ header .heading {
     background-color: var(--menu-color-loading);
     opacity: 0.5;
 }
-#ng-form > .options {
+form.menu > .options {
     padding: 0 2rem;
 }
-#ng-form .input-pair, #ng-form p {
+form.menu .input-pair, form.menu p {
     margin: 0.5rem 0;
 }
 .input-pair {

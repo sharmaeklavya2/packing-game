@@ -3,6 +3,7 @@
 var undoButton = document.getElementById('undo-button');
 var redoButton = document.getElementById('redo-button');
 var ngForm = document.getElementById('ng-form');
+var editForm = document.getElementById('edit-form');
 var ngFormRawTextarea = document.getElementById('ng-raw');
 var buttonToMenuMap = new Map([
     ['new-game-button', 'ng-form'],
@@ -10,6 +11,7 @@ var buttonToMenuMap = new Map([
     ['auto-pack-button', 'auto-pack-menu'],
     ['export-button', 'export-menu'],
     ['zoom-button', 'zoom-toolbar'],
+    ['edit-button', 'edit-form'],
 ]);
 
 function toggleMenus(buttonId) {
@@ -114,6 +116,12 @@ function ngFormCheckHandler(ev) {
             }
         }
     }
+}
+
+function editFormCheckHandler(ev) {
+    const formData = new FormData(editForm);
+    itemMouseMode = formData.get('edit-item');
+    binMouseMode = formData.get('edit-bin');
 }
 
 function toQueryString(obj) {
@@ -304,6 +312,9 @@ function addExtraUIEventListeners() {
     document.getElementById('export-button').addEventListener('click', function(ev) {
             toggleMenus('export-button');
         });
+    document.getElementById('edit-button').addEventListener('click', function(ev) {
+            toggleMenus('edit-button');
+        });
     document.getElementById('about-button').addEventListener('click', function(ev) {
             window.alert(aboutText);
         });
@@ -311,6 +322,8 @@ function addExtraUIEventListeners() {
     ngForm.addEventListener('submit', ngFormSubmitHandler);
     ngForm.addEventListener('change', ngFormCheckHandler);
     ngForm.addEventListener('input', ngFormCheckHandler);
+    editForm.addEventListener('change', editFormCheckHandler);
+    editForm.addEventListener('input', editFormCheckHandler);
 
     ngFormRawTextarea.addEventListener('focus', function() {
             handleKeyPresses = false;
