@@ -120,8 +120,10 @@ function ngFormCheckHandler(ev) {
 
 function editFormCheckHandler(ev) {
     const formData = new FormData(editForm);
-    itemMouseMode = formData.get('edit-item');
-    binMouseMode = formData.get('edit-bin');
+    const keys = ['item', 'bin'];
+    for(const key of keys) {
+        setMouseMode(key, formData.get('edit-' + key));
+    }
 }
 
 function toQueryString(obj) {

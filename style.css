@@ -69,15 +69,20 @@ footer {
     position: relative;
     margin: 5px;
 }
+.bin-touch .bin {
+    touch-action: none;
+}
 
 .item {
     position: absolute;
     z-index: 30;
     box-sizing: border-box;
-    touch-action: none;
     display: flex;
     align-items: center;
     justify-content: space-around;
+}
+.item-touch .item {
+    touch-action: none;
 }
 .show-id .item::after {
     content: attr(data-item-id);

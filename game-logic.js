@@ -7,8 +7,7 @@ var hoverRect = document.getElementById('hover-rect');
 var innerMargin = 10;  // margin between arena and the elements inside it, in px.
 var outerMargin = 32;  // margin between arena and containing page.
 var defaultItemColor = 'hsl(210,100%,60%)';
-var itemMouseMode = 'drag';
-var binMouseMode = null;
+var mouseMode = {'item': 'drag', 'bin': null};
 
 var handleKeyPresses = true;
 var game = null;
@@ -1090,6 +1089,18 @@ class Game {
     }
 }
 
+function setMouseMode(key, mode) {
+    if(mode === '') {mode = null;}
+    if(mouseMode[key] === mode) {return;}
+    if(mouseMode[key] === null) {
+        arena.classList.add(key + '-touch');
+    }
+    if(mode === null) {
+        arena.classList.remove(key + '-touch');
+    }
+    mouseMode[key] = mode;
+}
+
 function clearGame() {
     if(game !== null) {
         game.destroy();
@@ -1268,7 +1279,7 @@ function mousedownHandler(ev) {
     if(target.classList.contains('item')) {
         ev.preventDefault();
         let itemId = parseInt(target.getAttribute('data-item-id'));
-        if(itemMouseMode === 'delete') {
+        if(mouseMode['item'] === 'delete') {
             const coords = game.getItemPosition(itemId);
             const itemInfo = game.level.items[itemId];
             game._recordHistoryCommand({'cmd': 'removeItem', 'itemId': itemId,
@@ -1277,7 +1288,7 @@ function mousedownHandler(ev) {
                 'coords': coords});
             game.removeItem(itemId);
         }
-        else if(itemMouseMode === 'drag') {
+        else if(mouseMode['item'] === 'drag') {
             let itemXOff = ev.clientX - targetRect.x, itemYOff = ev.clientY - targetRect.y;
             DragData.set(new DragData(itemId, game.getItemPosition(itemId), itemXOff, itemYOff));
             game.detach(itemId);
@@ -1288,7 +1299,7 @@ function mousedownHandler(ev) {
     else if(target.classList.contains('bin')) {
         ev.preventDefault();
         const binId = parseInt(target.getAttribute('data-bin-id'));
-        if(binMouseMode === 'create') {
+        if(mouseMode['bin'] === 'create') {
             const xPos = Math.floor((ev.clientX - targetRect.x) / game.scaleFactor);
             const yPos = Math.floor((ev.clientY - targetRect.y) / game.scaleFactor);
             DragData.set(new DragData(null, [binId, xPos, yPos], 0, 0));
