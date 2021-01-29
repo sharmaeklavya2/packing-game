@@ -741,7 +741,7 @@ function levelToSvg(game, showInventory=null, textFunc=null) {
         createSvgElement(doc, parent, 'rect', {
             'x': xPos, 'y': yPos,
             'width': xLen, 'height': yLen,
-            'fill': level.items[i].color,
+            'fill': level.items[i].color || defaultItemColor,
             'data-item-id': i, 'class': 'item',
             });
         if(textFunc !== null) {
