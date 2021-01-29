@@ -435,8 +435,8 @@ class Game {
         }
     }
 
-    repackInventory() {
-        this._computeInventoryDimsAndItemHomePositions();
+    repackInventory(origInvXLen=null) {
+        this._computeInventoryDimsAndItemHomePositions(origInvXLen);
         this._setInventoryDimsPx();
         for(let i=0; i < this.items.length; ++i) {
             let item = this.items[i];
@@ -974,13 +974,15 @@ class Game {
         }
     }
 
-    _computeInventoryDimsAndItemHomePositions() {
-        let maxXLen = 0;
+    _computeInventoryDimsAndItemHomePositions(origInvXLen=null) {
         let rawItems = this.level.items;
-        for(let item of rawItems) {
-            maxXLen = Math.max(maxXLen, item.xLen);
+        if(origInvXLen === null) {
+            let maxXLen = 0;
+            for(let item of rawItems) {
+                maxXLen = Math.max(maxXLen, item.xLen);
+            }
+            origInvXLen = Math.max(maxXLen, this.level.binXLen);
         }
-        const origInvXLen = Math.max(maxXLen, this.level.binXLen);
         this.stripPackSol = nfdhStripPack(rawItems, origInvXLen);
         [this.invXLen, this.invYLen] = getStripDims(rawItems, this.stripPackSol);
     }
