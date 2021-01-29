@@ -195,6 +195,12 @@ function positiveIntConverter(x) {
 }
 const positiveIntMessage = 'should be a positive integer.';
 
+function nonNegFloatConverter(x) {
+    const y = parseFloat(x);
+    return [!isNaN(y) && y >= 0, y];
+}
+const nonNegFloatMessage = 'should be a non-negative real number.';
+
 function boolConverter(x) {
     if(x === '1' || x === 'true') {
         return [true, true];
@@ -384,8 +390,24 @@ function splitItem(item, rand) {
     return newItems;
 }
 
+function removeSmallArea(items, delFrac) {
+    items.sort((item1, item2) => item2.xLen * item2.yLen - item1.xLen * item1.yLen);
+    let totalArea = 0;
+    let areas = [];
+    for(let item of items) {
+        let area = item.xLen * item.yLen;
+        totalArea += area;
+        areas.push(area);
+    }
+    let areaToDelete = delFrac * totalArea;
+    while(areas.length > 0 && areas[areas.length - 1] <= areaToDelete) {
+        areaToDelete -= areas.pop();
+    }
+    items.length = areas.length;
+}
+
 function levelGenGuill(q) {
-    const nCuts = q.nCuts, nBins = q.nBins, binXLen = q.xLen, binYLen = q.yLen;
+    const binXLen = q.xLen, binYLen = q.yLen;
     let items = [], solution = [];
     let obj = {
         "binXLen": binXLen, "binYLen": binYLen, "gameType": "bp",
@@ -394,17 +416,18 @@ function levelGenGuill(q) {
     if(q.seed === null) {
         q.seed = getRandomSeed();
     }
-    for(let i=0; i < nBins; ++i) {
+    for(let i=0; i < q.nBins; ++i) {
         items.push({'xLen': binXLen, 'yLen': binYLen, 'x': 0, 'y': 0, 'nBin': i});
     }
     let rand = getRandGen(q.seed);
-    for(let i=0; i < nCuts; ++i) {
+    for(let i=0; i < q.nCuts; ++i) {
         const j = chooseItem(items, rand);
         let newItems = splitItem(items[j], rand);
         for(let newItem of newItems) {
             items.push(newItem);
         }
     }
+    removeSmallArea(items, q.delFrac);
     for(let i=0; i < items.length; ++i) {
         solution[i] = [items[i].nBin, items[i].x, items[i].y];
     }
@@ -417,6 +440,8 @@ levelGenGuill.paramMap = toParamMap([
     new Parameter('nCuts', 14, 'number of cuts', positiveIntConverter, positiveIntMessage),
     new Parameter('xLen', 12, 'xLen of bin', positiveIntConverter, positiveIntMessage),
     new Parameter('yLen', 12, 'yLen of bin', positiveIntConverter, positiveIntMessage),
+    new Parameter('delFrac', 0.03, 'fraction of area to delete',
+        nonNegFloatConverter, nonNegFloatMessage),
     new Parameter('seed', null, 'seed for random number generator',
         urlEncodeIdemp, urlEncodeIdempMessage),
 ]);
