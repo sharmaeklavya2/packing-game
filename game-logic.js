@@ -976,12 +976,12 @@ class Game {
 
     _computeInventoryDimsAndItemHomePositions(origInvXLen=null) {
         let rawItems = this.level.items;
-        if(origInvXLen === null) {
-            let maxXLen = 0;
-            for(let item of rawItems) {
-                maxXLen = Math.max(maxXLen, item.xLen);
-            }
-            origInvXLen = Math.max(maxXLen, this.level.binXLen);
+        let maxXLen = this.level.binXLen;
+        for(let item of rawItems) {
+            maxXLen = Math.max(maxXLen, item.xLen);
+        }
+        if(origInvXLen === null || origInvXLen < maxXLen) {
+            origInvXLen = maxXLen;
         }
         this.stripPackSol = nfdhStripPack(rawItems, origInvXLen);
         [this.invXLen, this.invYLen] = getStripDims(rawItems, this.stripPackSol);
