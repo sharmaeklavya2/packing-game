@@ -167,7 +167,7 @@ function processLevel(j) {
 //==[ Level Generators ]========================================================
 
 function hueToColor(hue) {
-    return 'hsl(' + hue + ',100%,50%)';
+    return 'hsl(' + hue + ',90%,60%)';
 }
 
 class Parameter {
