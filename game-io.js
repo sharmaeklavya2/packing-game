@@ -323,6 +323,96 @@ levelGen4in1.paramMap = toParamMap([
 levelGen4in1.info = 'Generate an instance where each bin contains 4 interlocked items.'
 levelGenerators.set('4in1', levelGen4in1);
 
+function weightedSample(scores, rand) {
+    let scoreSum = 0;
+    for(let i=0; i < scores.length; ++i) {
+        scoreSum += scores[i];
+    }
+    let x = rand() * scoreSum;
+    let i=0;
+    for(; i < scores.length & x >= scores[i]; ++i) {
+        x -= scores[i];
+    }
+    return i;
+}
+
+function chooseItem(items, rand) {
+    let scores = [];
+    for(let i=0; i < items.length; ++i) {
+        const score = items[i].xLen * items[i].yLen;
+        scores.push(score);
+    }
+    return weightedSample(scores, rand);
+}
+
+function splitItem(item, rand) {
+    let newItems = [];
+    if(item.xLen === 1 && item.yLen === 1) {
+        return newItems;
+    }
+    const horCut = weightedSample([item.xLen - 1, item.yLen - 1], rand);
+    // const horCut = (item.xLen > item.yLen ? 0 : 1);
+    if(horCut) {
+        if(item.yLen > 1) {
+            const yLen1 = 1 + Math.floor(rand() * (item.yLen - 1));
+            const yLen2 = item.yLen - yLen1;
+            item.yLen = yLen1;
+            let newItem = {'xLen': item.xLen, 'yLen': yLen2,
+                'nBin': item.nBin, 'x': item.x, 'y': item.y + yLen1};
+            newItems.push(newItem);
+        }
+    }
+    else {
+        if(item.xLen > 1) {
+            const xLen1 = 1 + Math.floor(rand() * (item.xLen - 1));
+            const xLen2 = item.xLen - xLen1;
+            item.xLen = xLen1;
+            let newItem = {'xLen': xLen2, 'yLen': item.yLen,
+                'nBin': item.nBin, 'x': item.x + xLen1, 'y': item.y};
+            newItems.push(newItem);
+        }
+    }
+    return newItems;
+}
+
+function levelGenGuill(q) {
+    const nCuts = q.nCuts, nBins = q.nBins, binXLen = q.xLen, binYLen = q.yLen;
+    let items = [], solution = [];
+    let obj = {
+        "binXLen": binXLen, "binYLen": binYLen, "gameType": "bp",
+        "items": items, "solution": solution,
+    };
+    if(q.seed === null) {
+        q.seed = getRandomSeed();
+    }
+    for(let i=0; i < nBins; ++i) {
+        items.push({'xLen': binXLen, 'yLen': binYLen, 'x': 0, 'y': 0, 'nBin': i});
+    }
+    let rand = getRandGen(q.seed);
+    for(let i=0; i < nCuts; ++i) {
+        const j = chooseItem(items, rand);
+        let newItems = splitItem(items[j], rand);
+        for(let newItem of newItems) {
+            items.push(newItem);
+        }
+    }
+    for(let i=0; i < items.length; ++i) {
+        solution[i] = [items[i].nBin, items[i].x, items[i].y];
+    }
+    return obj;
+}
+
+levelGenGuill.paramMap = toParamMap([
+    new Parameter('nBins', 3, 'number of bins', positiveIntConverter, positiveIntMessage),
+    new Parameter('nCuts', 12, 'number of cuts', positiveIntConverter, positiveIntMessage),
+    new Parameter('xLen', 12, 'xLen of bin', positiveIntConverter, positiveIntMessage),
+    new Parameter('yLen', 12, 'yLen of bin', positiveIntConverter, positiveIntMessage),
+    new Parameter('seed', null, 'seed for random number generator',
+        urlEncodeIdemp, urlEncodeIdempMessage),
+]);
+levelGen4in1.info = 'Generate an instance by repeatedly cutting items.'
+levelGenerators.set('guill', levelGenGuill);
+
 //==[ Loading game ]============================================================
 
 function applyToHttpResponse(url, hook, failHook) {
