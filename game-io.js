@@ -233,6 +233,12 @@ function validateAndConvert(q, paramMap) {
     return errors;
 }
 
+function addRandomColors(items, rand) {
+    for(let item of items) {
+        item.color = hueToColor(Math.floor(rand() * 360));
+    }
+}
+
 function levelGenBP1(q) {
     let n = q.n, binXLen = q.xLen, binYLen = q.yLen;
     let items = [];
@@ -248,9 +254,9 @@ function levelGenBP1(q) {
         items.push({
             "xLen": 1 + Math.floor(Math.pow(rand(), 3) * binXLen),
             "yLen": 1 + Math.floor(Math.pow(rand(), 3) * binYLen),
-            "color": hueToColor(Math.floor(rand() * 360)),
         });
     }
+    addRandomColors(items, rand);
     items.sort(RectComparator);
     return obj;
 }
@@ -297,14 +303,17 @@ function levelGen4in1(q) {
         let [x1, x2] = distinctChoose(q.xMargin, binXLen - q.xMargin, rand);
         let [y1, y2] = distinctChoose(q.yMargin, binYLen - q.yMargin, rand);
         let x3 = binXLen - x2, y3 = binYLen - y2;
-        items.push([x1, y2], [x2, binYLen - y2],
-            [binXLen - x2, binYLen - y1], [binXLen - x1, y1]);
+        items.push({'xLen': x1, 'yLen': y2},
+            {'xLen': x2, 'yLen': binYLen - y2},
+            {'xLen': binXLen - x2, 'yLen': binYLen - y1},
+            {'xLen': binXLen - x1, 'yLen': y1});
         solution.push([i, 0, 0], [i, 0, y2], [i, x2, y1], [i, x1, 0]);
         if(q.fillCenter) {
-            items.push([x2 - x1, y2 - y1]);
+            items.push({'xLen': x2 - x1, 'yLen': y2 - y1});
             solution.push([i, x1, y1]);
         }
     }
+    addRandomColors(items, rand);
     return obj;
 }
 
@@ -399,6 +408,7 @@ function levelGenGuill(q) {
     for(let i=0; i < items.length; ++i) {
         solution[i] = [items[i].nBin, items[i].x, items[i].y];
     }
+    addRandomColors(items, rand);
     return obj;
 }
 
