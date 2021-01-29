@@ -318,7 +318,7 @@ function levelGen4in1(q) {
 }
 
 levelGen4in1.paramMap = toParamMap([
-    new Parameter('n', 1, 'number of bins', positiveIntConverter, positiveIntMessage),
+    new Parameter('n', 2, 'number of bins', positiveIntConverter, positiveIntMessage),
     new Parameter('xLen', 8, 'xLen of bin', positiveIntConverter, positiveIntMessage),
     new Parameter('yLen', 8, 'yLen of bin', positiveIntConverter, positiveIntMessage),
     new Parameter('fillCenter', true, 'fill center?', boolConverter, boolMessage, boolOptions),
@@ -414,7 +414,7 @@ function levelGenGuill(q) {
 
 levelGenGuill.paramMap = toParamMap([
     new Parameter('nBins', 3, 'number of bins', positiveIntConverter, positiveIntMessage),
-    new Parameter('nCuts', 12, 'number of cuts', positiveIntConverter, positiveIntMessage),
+    new Parameter('nCuts', 14, 'number of cuts', positiveIntConverter, positiveIntMessage),
     new Parameter('xLen', 12, 'xLen of bin', positiveIntConverter, positiveIntMessage),
     new Parameter('yLen', 12, 'yLen of bin', positiveIntConverter, positiveIntMessage),
     new Parameter('seed', null, 'seed for random number generator',
