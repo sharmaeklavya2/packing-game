@@ -354,7 +354,7 @@ function weightedSample(scores, rand) {
 function chooseItem(items, rand) {
     let scores = [];
     for(let i=0; i < items.length; ++i) {
-        const score = items[i].xLen * items[i].yLen;
+        const score = items[i].xLen * items[i].yLen - 1;
         scores.push(score);
     }
     return weightedSample(scores, rand);
