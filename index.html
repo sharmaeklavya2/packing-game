@@ -10,41 +10,61 @@
 <body>
 <header>
     <ul id="main-toolbar" class="toolbar">
-        <li id="new-game-button" title="New game">+</li>
+        <li id="new-game-button" title="New game">
+            <svg class="icon" id="plus-icon"><title>New game</title>
+                <use xlink:href="sprites.svg#fa-plus"/></svg>
+            <span class="label">New</span>
+        </li>
         <li id="undo-button" class="disabled" title="Undo">
             <svg class="icon" id="undo-icon"><title>Undo</title>
                 <use xlink:href="sprites.svg#fa-undo"/></svg>
+            <span class="label">Undo</span>
         </li>
         <li id="redo-button" class="disabled" title="Redo">
             <svg class="icon" id="redo-icon" transform="scale(-1,1)"><title>Redo</title>
                 <use xlink:href="sprites.svg#fa-undo"/></svg>
+            <span class="label">Redo</span>
         </li>
         <li id="zoom-button" title="Zoom">
             <svg class="icon" id="zoom-icon"><title>Zoom</title>
                 <use xlink:href="sprites.svg#fa-search-pm"/></svg>
+            <span class="label">Zoom</span>
         </li>
         <li id="save-game-button" title="Save game">
             <svg class="icon" id="save-icon"><title>Save game</title>
                 <use xlink:href="sprites.svg#fa-save"/></svg>
+            <span class="label">Save</span>
         </li>
         <li id="unpack-button" title="Clear">
             <svg class="icon" id="unpack-icon"><title>Clear</title>
                 <use xlink:href="sprites.svg#fa-broom"/></svg>
+            <span class="label">Clear</span>
         </li>
         <li id="solutions-button" title="View solution">
             <svg class="icon" id="solutions-icon"><title>View solution</title>
                 <use xlink:href="sprites.svg#fa-eye"/></svg>
+            <span class="label">Solution</span>
         </li>
-        <li id="auto-pack-button" title="Run algorithms">&#9654;</li>
+        <li id="auto-pack-button" title="Run algorithms">
+            <svg class="icon" id="play-icon"><title>Run algorithms</title>
+                <use xlink:href="sprites.svg#fa-play"/></svg>
+            <span class="label">Algo</span>
+        </li>
         <li id="export-button" title="Export as figure">
             <svg class="icon" id="export-img-icon"><title>Export as figure</title>
                 <use xlink:href="sprites.svg#fa-file-image"/></svg>
+            <span class="label">Figure</span>
         </li>
         <li id="edit-button" title="Creator mode">
             <svg class="icon" id="edit-icon"><title>Creator mode</title>
                 <use xlink:href="sprites.svg#fa-edit"/></svg>
+            <span class="label">Edit</span>
         </li>
-        <li id="about-button" title="About">?</li>
+        <li id="about-button" title="About">
+            <svg class="icon" id="about-icon"><title>About</title>
+                <use xlink:href="sprites.svg#fa-question"/></svg>
+            <span class="label">About</span>
+        </li>
     </ul>
     <form id="ng-form" class="menu disabled">
         <div class="heading">Load a new game</div>

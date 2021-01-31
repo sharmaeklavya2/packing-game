@@ -205,12 +205,21 @@ header {
     justify-content: space-around;
     box-sizing: border-box;
     min-width: 3rem;
-    font-size: 2.25rem;
+    min-height: 3rem;
     user-select: none;
-    height: 3rem;
     background-color: var(--menu-color);
     border-left: 1px solid black;
     border-bottom: 1px solid black;
+    flex-direction: column;
+}
+.toolbar > li > svg {
+    margin: 0.25rem;
+    max-width: 1.8rem;
+    max-height: 1.8rem;
+}
+.toolbar > li > .label {
+    font-size: 0.75rem;
+    margin: 0.1rem 0.2rem;
 }
 .toolbar > li:not(.disabled) {
     cursor: pointer;
@@ -230,9 +239,6 @@ header {
 }
 .toolbar > li:last-child {
     border-right: 1px solid black;
-}
-#main-toolbar > li#auto-pack-button {
-    font-size: 1.5rem;
 }
 
 header .heading {
