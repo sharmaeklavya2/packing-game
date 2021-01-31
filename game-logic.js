@@ -329,15 +329,38 @@ function createBarItems(domParent, names) {
 
 function inferScaleFactors(invXLen, invYLen, binXLen, binYLen, nBins=1) {
     nBins = Math.max(1, nBins);
-    const arenaX = window.innerWidth - 2 * outerMargin;
-    const persistentFooterHeight = 32;
-    const arenaY = window.innerHeight - 2 * outerMargin - persistentFooterHeight
-        - getPersistentHeaderHeight();
-    const scaleX = (arenaX - 4 * innerMargin) / (invXLen + binXLen);
-    const scaleY1 = (arenaY - 2 * innerMargin) / invYLen;
-    const scaleY2 = (arenaY - innerMargin * (nBins + 1)) / (nBins * binYLen);
-    console.debug("inferred scales:", scaleX, scaleY1, scaleY2);
-    return [scaleX, Math.min(scaleY1, scaleY2)];
+    const bodyRect = document.body.getBoundingClientRect();
+    const persistentFooterHeight = 40;
+    const arenaX = Math.min(window.innerWidth, bodyRect.width) - 2 * outerMargin;
+    const arenaY = Math.min(window.innerHeight, bodyRect.height)
+        - 2 * outerMargin - persistentFooterHeight - getPersistentHeaderHeight();
+    let binGridDims = [];
+    let sqrtNBins = Math.floor(Math.sqrt(nBins));
+    for(let i=1; i <= sqrtNBins; ++i) {
+        const j = Math.ceil(nBins / i);
+        binGridDims.push([i, j], [j, i]);
+    }
+
+    function inferScaleFactorsHelper(rows, cols) {
+        const scaleX = (arenaX - (cols + 3) * innerMargin) / (invXLen + cols * binXLen);
+        const scaleY1 = (arenaY - 2 * innerMargin) / invYLen;
+        const scaleY2 = (arenaY - innerMargin * (rows + 1)) / (rows * binYLen);
+        return [scaleX, Math.min(scaleY1, scaleY2)];
+    }
+
+    const [hScaleX, hScaleY] = inferScaleFactorsHelper(nBins, 1);
+    let finalScale = 0;
+    let scaleReason = null;
+    for(const [rows, cols] of binGridDims) {
+        const [scaleX, scaleY] = inferScaleFactorsHelper(rows, cols);
+        const scale = Math.min(scaleX, scaleY);
+        if(scale > finalScale) {
+            finalScale = scale;
+            scaleReason = [rows, cols];
+        }
+    }
+    console.debug("inferred scales:", finalScale, hScaleX, finalScale, scaleReason);
+    return [finalScale, hScaleX, finalScale];
 }
 
 function arraySwap(arr, i, j) {
@@ -993,7 +1016,7 @@ class Game {
     }
 
     _setScaleFactor(scaleFactor) {
-        let [inferredScaleX, inferredScaleY] = inferScaleFactors(
+        let [inferredScale, inferredScaleX, inferredScaleY] = inferScaleFactors(
             this.invXLen, this.invYLen, this.level.binXLen, this.level.binYLen,
             this.lowerBound());
         if(scaleFactor === 'x') {
@@ -1003,13 +1026,15 @@ class Game {
             this.scaleFactor = inferredScaleY;
         }
         else if(scaleFactor === null) {
-            this.scaleFactor = Math.min(inferredScaleX, inferredScaleY);
+            this.scaleFactor = inferredScale;
         }
         else {
             this.scaleFactor = scaleFactor;
         }
-        let actualArenaWidth = (this.invXLen + this.level.binXLen) * this.scaleFactor + 4 * innerMargin;
-        let spaceForArenaWidth = window.innerWidth - 2 * outerMargin;
+        let actualArenaWidth = (this.invXLen + this.level.binXLen) * this.scaleFactor
+            + 4 * innerMargin;
+        const bodyRect = document.body.getBoundingClientRect();
+        let spaceForArenaWidth = Math.min(window.innerWidth, bodyRect.width) - 2 * outerMargin;
         if(actualArenaWidth >= spaceForArenaWidth) {
             arena.classList.add('large');
         }

@@ -46,10 +46,6 @@ footer {
     .show-bins-only .bin:empty {
     display: none;
 }
-.show-bins-only #packing-area {
-    flex-direction: row;
-    flex-wrap: wrap;
-}
 .show-bins-only #arena {
     box-shadow: none;
     margin: 0;
@@ -63,7 +59,8 @@ footer {
     padding: 5px;
     display: flex;
     align-items: flex-start;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
 }
 
 .bin {

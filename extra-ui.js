@@ -342,6 +342,9 @@ function addExtraUIEventListeners() {
     document.getElementById('zoom-y-button').addEventListener('click', function(ev) {
             game.resize('y');
         });
+    document.getElementById('zoom-fit-button').addEventListener('click', function(ev) {
+            game.resize(null);
+        });
 
     document.getElementById('export-li-tikz').addEventListener('click', function(ev) {
             if(game.nBinsUsed === 0) {
