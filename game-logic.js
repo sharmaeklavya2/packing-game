@@ -977,10 +977,15 @@ class Game {
     _computeInventoryDimsAndItemHomePositions(origInvXLen=null) {
         let rawItems = this.level.items;
         let maxXLen = this.level.binXLen;
+        let area = 0;
         for(let item of rawItems) {
             maxXLen = Math.max(maxXLen, item.xLen);
+            area += item.xLen * item.yLen;
         }
-        if(origInvXLen === null || origInvXLen < maxXLen) {
+        if(origInvXLen === null) {
+            origInvXLen = Math.floor(Math.sqrt(area));
+        }
+        if(origInvXLen < maxXLen) {
             origInvXLen = maxXLen;
         }
         this.stripPackSol = nfdhStripPack(rawItems, origInvXLen);
