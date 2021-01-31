@@ -18,11 +18,15 @@ function toggleMenus(buttonId) {
     for(const [buttonId2, menuId] of buttonToMenuMap.entries()) {
         if(buttonId2 !== buttonId) {
             document.getElementById(buttonId2).classList.remove('pressed');
-            document.getElementById(menuId).classList.add('disabled');
+            if(menuId !== null) {
+                document.getElementById(menuId).classList.add('disabled');
+            }
         }
         else {
             document.getElementById(buttonId).classList.toggle('pressed');
-            document.getElementById(menuId).classList.toggle('disabled');
+            if(menuId !== null) {
+                document.getElementById(menuId).classList.toggle('disabled');
+            }
         }
     }
 }
