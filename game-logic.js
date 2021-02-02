@@ -377,6 +377,7 @@ class Game {
         this._computeAutoPack('ffdh-ff');
         this._computeAutoPack('ffdh-ff-mirror');
         this._improveLowerBound();
+        this.won = false;
 
         this.itemInfoBar = new ItemInfoBar(this.level.gameType);
         this.history = [];
@@ -579,6 +580,7 @@ class Game {
         let newPos = this.level.solutions.get(solnName);
         let oldPos = this.getItemPositions();
         this._recordHistoryCommand({'cmd': 'bulkMove', 'oldPos': oldPos, 'newPos': newPos});
+        this.won = true;
         this.putBack(newPos);
     }
 
@@ -621,6 +623,7 @@ class Game {
     }
 
     popItem() {
+        this.won = true;
         const itemId = this.level.items.length - 1;
         if(itemId < 0) {
             console.warn('nothing to pop');
@@ -664,11 +667,13 @@ class Game {
     }
 
     removeItem(itemId) {
+        this.won = true;
         this._swapItems(itemId, this.items.length - 1);
         this.popItem();
     }
 
     modifyItem(itemId, itemInfo) {
+        this.won = true;
         if(itemId >= this.items.length) {
             throw new Error('item ' + itemId + ' does not exist.');
         }
@@ -694,6 +699,7 @@ class Game {
     }
 
     hardRotate(itemId) {
+        this.won = true;
         if(itemId >= this.items.length) {
             throw new Error('item ' + itemId + ' does not exist.');
         }
@@ -703,6 +709,7 @@ class Game {
     }
 
     pushItem(itemInfo) {
+        this.won = true;
         const itemId = this.items.length;
         itemInfo.id = itemId;
         this.level.items.push(itemInfo);
@@ -857,6 +864,12 @@ class Game {
             }
         }
         this._refreshStatsDom();
+        if(!this.won) {
+            if(this.packedStats.count === this.items.length && used <= lb) {
+                this.won = true;
+                showCelebration();
+            }
+        }
         return binTypes;
     }
 

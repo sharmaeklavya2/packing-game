@@ -421,3 +421,55 @@ function addMsg(type, text) {
         msgList.appendChild(liElem);
     }
 }
+
+function showCelebration() {
+    let canvas = document.getElementById('celebrate-canvas');
+    if(!canvas.getContext) {return;}
+    const width = window.innerWidth, height = window.innerHeight;
+    const minDim = Math.min(width, height);
+    canvas.width = width;
+    canvas.height = height;
+    let ctx = canvas.getContext('2d');
+    const canvasNewX = Math.floor(width / 2), canvasNewY = Math.floor(height / 3);
+    ctx.translate(canvasNewX, canvasNewY);
+
+    const n = 50;
+    let ux = [], uy = [], hues = [];
+    for(let i=0; i<n; ++i) {
+        ux[i] = 2 * Math.random() - 1;
+        uy[i] = 2 * Math.random() - 1;
+        hues[i] = 360 * Math.random();
+    }
+
+    function terminateAnimation() {
+        ctx.translate(-canvasNewX, -canvasNewY);
+        canvas.width = 0;
+        canvas.height = 0;
+    }
+
+    let startTime = null;
+    function draw(timeStamp) {
+        if(startTime === null) {
+            startTime = timeStamp;
+        }
+        const t = (timeStamp - startTime) / 1000;
+        const g = 5, vScale = 2;
+        ctx.clearRect(-canvasNewX, -canvasNewY, width, height);
+        for(let i=0; i<n; ++i) {
+            const x = ux[i]*vScale*t, y = uy[i]*vScale*t + g*t*t / 2;
+            const alpha = Math.max(0, 1 - t/2);
+            ctx.fillStyle = `hsla(${hues[i]}, 100%, 50%, ${alpha})`;
+            ctx.beginPath();
+            ctx.arc(x*minDim, y*minDim, 8, 0, 2 * Math.PI, true);
+            ctx.closePath();
+            ctx.fill();
+        }
+        if(t < 2) {
+            window.requestAnimationFrame(draw);
+        }
+        else {
+            terminateAnimation();
+        }
+    }
+    window.requestAnimationFrame(draw);
+}

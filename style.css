@@ -381,3 +381,10 @@ textarea {
 .msg-close-btn:active {
     background-color: var(--heavy-tint);
 }
+
+#celebrate-canvas {
+    position: fixed;
+    top: 0;
+    z-index: 1000;
+    pointer-events: none;
+}
