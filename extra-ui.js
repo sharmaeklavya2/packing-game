@@ -488,19 +488,17 @@ function showCelebration() {
     canvas.width = width;
     canvas.height = height;
     let ctx = canvas.getContext('2d');
-    const canvasNewX = Math.floor(width / 2), canvasNewY = Math.floor(height / 3);
-    ctx.translate(canvasNewX, canvasNewY);
+    const canvasOffX = Math.floor(width / 2), canvasOffY = Math.floor(height / 3);
 
     const n = 50;
     let ux = [], uy = [], hues = [];
     for(let i=0; i<n; ++i) {
         ux[i] = 2 * Math.random() - 1;
         uy[i] = 2 * Math.random() - 1;
-        hues[i] = 360 * Math.random();
+        hues[i] = 6 * Math.floor(30 * Math.random());
     }
 
     function terminateAnimation() {
-        ctx.translate(-canvasNewX, -canvasNewY);
         canvas.width = 0;
         canvas.height = 0;
     }
@@ -512,13 +510,13 @@ function showCelebration() {
         }
         const t = (timeStamp - startTime) / 1000;
         const g = 5, vScale = 2;
-        ctx.clearRect(-canvasNewX, -canvasNewY, width, height);
+        ctx.clearRect(0, 0, width, height);
         for(let i=0; i<n; ++i) {
             const x = ux[i]*vScale*t, y = uy[i]*vScale*t + g*t*t / 2;
             const alpha = Math.max(0, 1 - t/2);
             ctx.fillStyle = `hsla(${hues[i]}, 100%, 50%, ${alpha})`;
             ctx.beginPath();
-            ctx.arc(x*minDim, y*minDim, 8, 0, 2 * Math.PI, true);
+            ctx.arc(canvasOffX + x*minDim, canvasOffY + y*minDim, 8, 0, 2 * Math.PI, true);
             ctx.closePath();
             ctx.fill();
         }
