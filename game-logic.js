@@ -335,8 +335,7 @@ function inferScaleFactors(invXLen, invYLen, binXLen, binYLen, nBins=1) {
     const arenaY = Math.min(window.innerHeight, bodyRect.height)
         - 2 * outerMargin - persistentFooterHeight - getPersistentHeaderHeight();
     let binGridDims = [];
-    let sqrtNBins = Math.floor(Math.sqrt(nBins));
-    for(let i=1; i <= sqrtNBins; ++i) {
+    for(let i=1; i*(i-1) < nBins; ++i) {
         const j = Math.ceil(nBins / i);
         binGridDims.push([i, j], [j, i]);
     }
