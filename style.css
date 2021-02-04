@@ -252,9 +252,10 @@ header .heading {
 .menu.disabled, .toolbar.disabled {
     display: none;
 }
-.menu:not(.disabled) {
+.menu {
     background-color: var(--menu-color);
     border-radius: 0.5rem;
+    margin: 0;
     display: flex;
     flex-direction: column;
     align-self: center;
@@ -302,11 +303,6 @@ textarea {
 }
 #ng-form-gen-params {
     padding-left: 1rem;
-}
-.menu:not(.disabled) {
-    margin: 0;
-    display: flex;
-    flex-direction: column;
 }
 .menu > ul {
     list-style-type: none;
