@@ -72,6 +72,11 @@ function toggleFromToolbar(buttonId) {
     toolbarButtonChooser.select(buttonId, true);
     menuChooser.select(buttonToMenuMap.get(buttonId), true);
 }
+function unsetToolbar(buttonId=null) {
+    const menuId = buttonToMenuMap.get(buttonId) || null;
+    toolbarButtonChooser.unset(buttonId);
+    menuChooser.unset(menuId);
+}
 
 var aboutText = "This is a 2D geometric bin-packing game. You have to pack all items from "
     + "the left side into the minimum number of bins on the right side.";
@@ -81,8 +86,7 @@ function getPersistentHeaderHeight() {
 }
 
 function ngFormSuccess() {
-    menuChooser.unset('ng-form');
-    toolbarButtonChooser.unset('new-game-button');
+    unsetToolbar('new-game-button');
     ngForm.classList.remove('loading');
 }
 
@@ -220,13 +224,11 @@ function ngFormSubmitHandler(ev) {
 }
 
 function showSolutionSuccess() {
-    menuChooser.unset('solutions-menu');
-    toolbarButtonChooser.unset('solutions-button');
+    unsetToolbar('solutions-button');
 }
 
 function autoPackComplete() {
-    menuChooser.unset('auto-pack-menu');
-    toolbarButtonChooser.unset('auto-pack-button');
+    unsetToolbar('auto-pack-button');
 }
 
 function solutionsClickHandler(ev) {
@@ -385,13 +387,11 @@ function addExportEventListeners() {
                 addMsg('error', 'No bins have been used; nothing to export.');
             }
             downloadBinsToTikz();
-            toolbarButtonChooser.unset('export-button');
-            menuChooser.unset('export-menu');
+            unsetToolbar('export-button');
         });
     document.getElementById('export-li-svg').addEventListener('click', function(ev) {
             downloadAsSvg();
-            toolbarButtonChooser.unset('export-button');
-            menuChooser.unset('export-menu');
+            unsetToolbar('export-button');
         });
     document.getElementById('export-li-pdf').addEventListener('click', function(ev) {
             if(game.nBinsUsed === 0) {
@@ -402,8 +402,7 @@ function addExportEventListeners() {
                 window.print();
                 setTimeout(function() {document.body.classList.remove('show-bins-only');}, 0);
             }
-            toolbarButtonChooser.unset('export-button');
-            menuChooser.unset('export-menu');
+            unsetToolbar('export-button');
         });
 }
 
@@ -431,11 +430,10 @@ function addExtraUIEventListeners() {
     editForm.addEventListener('input', editFormCheckHandler);
 
     for(let elem of document.querySelectorAll('.menu .close-btn')) {
-        elem.addEventListener('click',
-            (ev) => {toolbarButtonChooser.unset(); menuChooser.unset();});
+        elem.addEventListener('click', (ev) => unsetToolbar());
     }
     document.querySelector('#modal-group > .overlay').addEventListener('click',
-        (ev) => {toolbarButtonChooser.unset(); menuChooser.unset();});
+        (ev) => unsetToolbar());
 }
 
 function disableUndoButton() {
