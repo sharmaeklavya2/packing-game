@@ -5,6 +5,7 @@ var redoButton = document.getElementById('redo-button');
 var ngForm = document.getElementById('ng-form');
 var editForm = document.getElementById('edit-form');
 var ngFormRawTextarea = document.getElementById('ng-raw');
+
 var buttonToMenuMap = new Map([
     ['new-game-button', 'ng-form'],
     ['solutions-button', 'solutions-menu'],
@@ -14,21 +15,62 @@ var buttonToMenuMap = new Map([
     ['edit-button', 'edit-form'],
 ]);
 
-function toggleMenus(buttonId) {
-    for(const [buttonId2, menuId] of buttonToMenuMap.entries()) {
-        if(buttonId2 !== buttonId) {
-            document.getElementById(buttonId2).classList.remove('pressed');
-            if(menuId !== null) {
-                document.getElementById(menuId).classList.add('disabled');
-            }
+class DomChooser {
+    constructor(yesClass, noClass, activeId=null) {
+        this.yesClass = yesClass;
+        this.noClass = noClass;
+        this.activeId = activeId;
+        if(activeId === null) {
+            this.activeElem = null;
         }
         else {
-            document.getElementById(buttonId).classList.toggle('pressed');
-            if(menuId !== null) {
-                document.getElementById(menuId).classList.toggle('disabled');
-            }
+            this.activeElem = document.getElementById(activeId);
+            console.assert(this.activeElem !== null, 'id ' + id + ' not found in DOM.');
         }
     }
+
+    unset(id=null) {
+        if(this.activeId !== null && (id === null || id === this.activeId)) {
+            if(this.yesClass) {
+                this.activeElem.classList.remove(this.yesClass);
+            }
+            if(this.noClass) {
+                this.activeElem.classList.add(this.noClass);
+            }
+            this.activeElem = null;
+            this.activeId = null;
+        }
+    }
+
+    _set(id) {
+        this.activeId = id;
+        this.activeElem = document.getElementById(id);
+        console.assert(this.activeElem !== null, 'id ' + id + ' not found in DOM.');
+        if(this.yesClass) {
+            this.activeElem.classList.add(this.yesClass);
+        }
+        if(this.noClass) {
+            this.activeElem.classList.remove(this.noClass);
+        }
+    }
+
+    select(id, toggle=false) {
+        if(this.activeId === id) {
+            if(toggle) {this.unset();}
+        }
+        else {
+            this.unset();
+            this._set(id);
+        }
+    }
+}
+
+var toolbarButtonChooser = new DomChooser('pressed', null);
+var menuChooser = new DomChooser(null, 'disabled');
+
+function toggleFromToolbar(buttonId) {
+    toolbarButtonChooser.select(buttonId, true);
+    menuChooser.select(buttonToMenuMap.get(buttonId), true);
 }
 
 var aboutText = "This is a 2D geometric bin-packing game. You have to pack all items from "
@@ -39,9 +81,9 @@ function getPersistentHeaderHeight() {
 }
 
 function ngFormSuccess() {
-    ngForm.classList.add('disabled');
+    menuChooser.unset('ng-form');
+    toolbarButtonChooser.unset('new-game-button');
     ngForm.classList.remove('loading');
-    document.getElementById('new-game-button').classList.remove('pressed');
 }
 
 function createGenParamsInputs(src) {
@@ -178,13 +220,13 @@ function ngFormSubmitHandler(ev) {
 }
 
 function showSolutionSuccess() {
-    document.getElementById('solutions-menu').classList.add('disabled');
-    document.getElementById('solutions-button').classList.remove('pressed');
+    menuChooser.unset('solutions-menu');
+    toolbarButtonChooser.unset('solutions-button');
 }
 
 function autoPackComplete() {
-    document.getElementById('auto-pack-menu').classList.add('disabled');
-    document.getElementById('auto-pack-button').classList.remove('pressed');
+    menuChooser.unset('auto-pack-menu');
+    toolbarButtonChooser.unset('auto-pack-button');
 }
 
 function solutionsClickHandler(ev) {
@@ -280,7 +322,7 @@ function populateNgForm() {
 
 function addExtraUIEventListeners() {
     document.getElementById('new-game-button').addEventListener('click', function(ev) {
-            toggleMenus('new-game-button');
+            toggleFromToolbar('new-game-button');
             ngForm.classList.remove('loading');
         });
     undoButton.addEventListener('click', function(ev) {
@@ -306,7 +348,7 @@ function addExtraUIEventListeners() {
                     }
                 }
                 else {
-                    toggleMenus('solutions-button');
+                    toggleFromToolbar('solutions-button');
                 }
             }
         });
@@ -315,9 +357,7 @@ function addExtraUIEventListeners() {
         });
     let onlyToggleIds = ['zoom-button', 'auto-pack-button', 'export-button', 'edit-button'];
     for(const id of onlyToggleIds) {
-        document.getElementById(id).addEventListener('click', function(ev) {
-                toggleMenus(id);
-            });
+        document.getElementById(id).addEventListener('click', (ev) => toggleFromToolbar(id));
     }
 
     ngForm.addEventListener('submit', ngFormSubmitHandler);
@@ -355,13 +395,13 @@ function addExtraUIEventListeners() {
                 addMsg('error', 'No bins have been used; nothing to export.');
             }
             downloadBinsToTikz();
-            document.getElementById('export-button').classList.remove('pressed');
-            document.getElementById('export-menu').classList.add('disabled');
+            toolbarButtonChooser.unset('export-button');
+            menuChooser.unset('export-menu');
         });
     document.getElementById('export-li-svg').addEventListener('click', function(ev) {
             downloadAsSvg();
-            document.getElementById('export-button').classList.remove('pressed');
-            document.getElementById('export-menu').classList.add('disabled');
+            toolbarButtonChooser.unset('export-button');
+            menuChooser.unset('export-menu');
         });
     document.getElementById('export-li-pdf').addEventListener('click', function(ev) {
             if(game.nBinsUsed === 0) {
@@ -372,8 +412,8 @@ function addExtraUIEventListeners() {
                 window.print();
                 setTimeout(function() {document.body.classList.remove('show-bins-only');}, 0);
             }
-            document.getElementById('export-button').classList.remove('pressed');
-            document.getElementById('export-menu').classList.add('disabled');
+            toolbarButtonChooser.unset('export-button');
+            menuChooser.unset('export-menu');
         });
 }
 
