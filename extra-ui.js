@@ -415,6 +415,10 @@ function addExtraUIEventListeners() {
             toolbarButtonChooser.unset('export-button');
             menuChooser.unset('export-menu');
         });
+    for(let elem of document.querySelectorAll('.menu .close-btn')) {
+        elem.addEventListener('click',
+            (ev) => {toolbarButtonChooser.unset(); menuChooser.unset();});
+    }
 }
 
 function disableUndoButton() {
