@@ -1613,6 +1613,5 @@ function addEventListeners() {
 window.addEventListener('load', function() {
     addEventListeners();
     loadGameFromQParams(getQParams(), null, function(msg) {addMsg('error', msg);});
-    populateNgForm();
     addExtraUIEventListeners();
 });

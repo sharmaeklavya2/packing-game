@@ -2,12 +2,10 @@
 
 var undoButton = document.getElementById('undo-button');
 var redoButton = document.getElementById('redo-button');
-var ngForm = document.getElementById('ng-form');
 var editForm = document.getElementById('edit-form');
-var ngFormRawTextarea = document.getElementById('ng-raw');
 
 var buttonToMenuMap = new Map([
-    ['new-game-button', 'ng-form'],
+    ['new-game-button', 'ng-menu'],
     ['solutions-button', 'solutions-menu'],
     ['auto-pack-button', 'auto-pack-menu'],
     ['export-button', 'export-menu'],
@@ -85,18 +83,11 @@ function getPersistentHeaderHeight() {
     return document.getElementById('main-toolbar').getBoundingClientRect().height;
 }
 
-function ngFormSuccess() {
-    unsetToolbar('new-game-button');
-    ngForm.classList.remove('loading');
-}
-
-function createGenParamsInputs(src) {
-    let ngFormGenParams = document.getElementById('ng-form-gen-params');
-    ngFormGenParams.innerHTML = '';
-    for(const [paramName, param] of levelGenerators.get(src).paramMap) {
+function createGenParamsInputs(genName, container) {
+    for(const [paramName, param] of levelGenerators.get(genName).paramMap) {
         let div = document.createElement('div');
         div.classList.add('input-pair');
-        let id = 'ng-gen-param-' + paramName;
+        let id = 'ng-gen-' + genName + '-param-' + paramName;
         let labelElem = document.createElement('label');
         labelElem.innerHTML = paramName;
         labelElem.setAttribute('for', id);
@@ -111,6 +102,8 @@ function createGenParamsInputs(src) {
             inputElem.setAttribute('placeholder', param.defaultValue);
         }
         div.appendChild(inputElem);
+        inputElem.addEventListener('focus', () => {handleKeyPresses = false;});
+        inputElem.addEventListener('blur', () => {handleKeyPresses = true;});
 
         if(param.options !== null) {
             let datalist = document.createElement('datalist');
@@ -125,47 +118,56 @@ function createGenParamsInputs(src) {
             div.appendChild(datalist);
         }
 
-        ngFormGenParams.appendChild(div);
+        container.appendChild(div);
     }
 }
 
-function ngFormCheckHandler(ev) {
-    const formData = new FormData(ngForm);
-    let choice = formData.get('ng-choice');
-    let ngFormSubmitButton = document.getElementById('ng-submit');
-    let ngFormGenParamsWrapper = document.getElementById('ng-form-gen-params-wrapper');
-    if(choice === null) {
-        ngFormSubmitButton.setAttribute('disabled', 'disabled');
-        ngFormGenParamsWrapper.classList.add('disabled');
-    }
-    else {
-        ngFormSubmitButton.removeAttribute('disabled');
-        let [srctype, src] = choice.split(':');
-        if(srctype === 'raw') {
-            ngFormRawTextarea.setAttribute('required', 'required');
-            let disAttr = ngFormRawTextarea.getAttribute('disabled');
-            if(disAttr !== null) {
-                ngFormRawTextarea.removeAttribute('disabled');
-                ngFormRawTextarea.setAttribute('rows', 6);
-                ngFormRawTextarea.setAttribute('cols', 80);
-                ngFormRawTextarea.focus();
+function createGenParamsMenu(genName, menuId) {
+    let menu = document.createElement('form');
+    menu.setAttribute('id', menuId);
+    menu.classList.add('menu', 'disabled');
+    let header = document.createElement('header');
+    menu.appendChild(header);
+    let options = document.createElement('div');
+    options.classList.add('options', 'menu-body');
+    menu.appendChild(options);
+    let submit = document.createElement('button');
+    submit.setAttribute('type', 'submit');
+    submit.innerHTML = 'Submit';
+    menu.appendChild(submit);
+
+    let backBtn = document.createElement('div');
+    backBtn.classList.add('back-btn');
+    backBtn.addEventListener('click', (ev) => menuChooser.select('ng-gen-menu'));
+    header.appendChild(backBtn);
+    let heading = document.createElement('div');
+    heading.classList.add('heading');
+    heading.innerHTML = 'Enter parameters for ' + genName;
+    header.appendChild(heading);
+    let closeBtn = document.createElement('div');
+    closeBtn.classList.add('close-btn');
+    header.appendChild(closeBtn);
+
+    createGenParamsInputs(genName, options);
+
+    menu.addEventListener('submit', function(ev) {
+        ev.preventDefault();
+        let q = {'srctype': 'gen', 'src': genName}
+        const formData = new FormData(menu);
+        for(let [key, value] of formData.entries()) {
+            if(value !== '') {
+                q[key] = value;
             }
         }
-        else {
-            ngFormRawTextarea.removeAttribute('required');
+        const qs = toQueryString(q);
+        function succHook() {
+            window.history.replaceState({}, null, '?' + qs);
+            toolbarButtonChooser.unset('new-game-button');
+            menuChooser.unset(menuId);
         }
-        if(srctype !== 'gen') {
-            ngFormGenParamsWrapper.classList.add('disabled');
-        }
-        else {
-            ngFormGenParamsWrapper.classList.remove('disabled');
-            let oldSrc = ngFormGenParamsWrapper.getAttribute('data-gen');
-            if(oldSrc !== src) {
-                ngFormGenParamsWrapper.setAttribute('data-gen', src);
-                createGenParamsInputs(src);
-            }
-        }
-    }
+        loadGameFromGen(genName, q, null, succHook, toolbarFailHook);
+    });
+    return menu;
 }
 
 function editFormCheckHandler(ev) {
@@ -182,45 +184,6 @@ function toQueryString(obj) {
         strs.push(encodeURIComponent(key) + "=" + encodeURIComponent(value));
     }
     return strs.join("&");
-}
-
-function ngFormSubmitHandler(ev) {
-    ev.preventDefault();
-    ngForm.classList.add('loading');
-
-    const formData = new FormData(ngForm);
-    let choice = formData.get('ng-choice');
-    let [srctype, src] = choice.split(':');
-    let q = {'srctype': srctype, 'src': src};
-    let qs = '';
-
-    function failHook(msg) {addMsg('error', msg); ngFormSuccess();}
-    function succHook() {
-        window.history.replaceState({}, null, '?' + qs);
-        ngFormSuccess();
-    }
-
-    if(srctype === 'raw') {
-        let j = formData.get('ng-raw');
-        loadGameFromJsonString(j, null, succHook, failHook);
-    }
-    else if(srctype === 'upload') {
-        loadGameFromUpload(null, null, failHook);
-        succHook();
-    }
-    else if(srctype === 'url') {
-        qs = toQueryString(q);
-        loadGameFromUrl(src, null, succHook, failHook);
-    }
-    else if(srctype === 'gen') {
-        for(let [key, value] of formData.entries()) {
-            if(!(key.startsWith('ng-')) && value !== '') {
-                q[key] = value;
-            }
-        }
-        qs = toQueryString(q);
-        loadGameFromGen(src, q, null, succHook, failHook);
-    }
 }
 
 function showSolutionSuccess() {
@@ -280,52 +243,10 @@ function repopulateAutoPackMenu() {
     }
 }
 
-function populateNgForm() {
-    let levels = [
-        ['levels/bp/1.json', 'Level 1'],
-        ['levels/bp/2.json', 'Level 2'],
-        ['levels/bp/3.json', 'Level 3'],
-        ['levels/bp/4.json', 'Level 4'],
-    ];
-    for(let i=0; i < levels.length; ++i) {
-        let [url, label] = levels[i];
-        let id = 'ng-radio-url-' + i;
-        let inputElem = document.createElement('input');
-        inputElem.setAttribute('type', 'radio');
-        inputElem.setAttribute('id', id);
-        inputElem.setAttribute('name', 'ng-choice');
-        inputElem.setAttribute('value', 'url:' + url);
-        let labelElem = document.createElement('label');
-        labelElem.innerHTML = label;
-        labelElem.setAttribute('for', id);
-        let div = document.createElement('div');
-        div.appendChild(inputElem);
-        div.appendChild(labelElem);
-        div.classList.add('input-pair');
-        document.getElementById('ng-form-levels').appendChild(div);
-    }
-    for(const [genName, gen] of levelGenerators) {
-        let id = 'ng-radio-gen-' + genName;
-        let inputElem = document.createElement('input');
-        inputElem.setAttribute('type', 'radio');
-        inputElem.setAttribute('id', id);
-        inputElem.setAttribute('name', 'ng-choice');
-        inputElem.setAttribute('value', 'gen:' + genName);
-        let labelElem = document.createElement('label');
-        labelElem.innerHTML = genName;
-        labelElem.setAttribute('for', id);
-        let div = document.createElement('div');
-        div.appendChild(inputElem);
-        div.appendChild(labelElem);
-        div.classList.add('input-pair');
-        document.getElementById('ng-form-gens').appendChild(div);
-    }
-}
-
 function addToolbarEventListeners() {
     document.getElementById('new-game-button').addEventListener('click', function(ev) {
             toggleFromToolbar('new-game-button');
-            ngForm.classList.remove('loading');
+            document.getElementById('ng-menu').classList.remove('loading');
         });
     undoButton.addEventListener('click', function(ev) {
             if(game !== null) {game.undo();}
@@ -406,25 +327,68 @@ function addExportEventListeners() {
         });
 }
 
-function addNgFormEventListeners() {
-    ngForm.addEventListener('submit', ngFormSubmitHandler);
-    ngForm.addEventListener('change', ngFormCheckHandler);
-    ngForm.addEventListener('input', ngFormCheckHandler);
+var menuTraversalList = [
+    ['ng-menu', 'ng-url', 'ng-url-menu'],
+    ['ng-menu', 'ng-gen', 'ng-gen-menu'],
+    ['ng-menu', 'ng-json', 'ng-json-menu'],
+];
 
-    ngFormRawTextarea.addEventListener('focus', function() {
-            handleKeyPresses = false;
-            document.getElementById('ng-radio-raw').click();
-        });
-    ngFormRawTextarea.addEventListener('blur', function() {
-            handleKeyPresses = true;
-        });
+function toolbarFailHook(msg) {
+    addMsg('error', msg);
+    toolbarButtonChooser.unset();
+    menuChooser.unset();
+}
+
+function addNgMenuEventListeners() {
+    for(const [oldMenuId, buttonId, newMenuId] of menuTraversalList) {
+        document.getElementById(buttonId).addEventListener('click',
+            (ev) => menuChooser.select(newMenuId));
+        document.querySelector(`#${newMenuId} .back-btn`).addEventListener('click',
+            (ev) => menuChooser.select(oldMenuId));
+    }
+    function succHookWrapper(menuName, qs) {
+        window.history.replaceState({}, null, '?' + qs);
+        toolbarButtonChooser.unset('new-game-button');
+        menuChooser.unset(menuName);
+    }
+    document.getElementById('ng-url-list').addEventListener('click', function(ev) {
+        const url = ev.target.getAttribute('data-url');
+        const qs = toQueryString({'srctype': 'url', 'src': url});
+        loadGameFromUrl(url, null, () => succHookWrapper('ng-url-menu', qs), toolbarFailHook);
+    });
+    document.getElementById('ng-upload').addEventListener('click', function(ev) {
+        loadGameFromUpload(null, null, toolbarFailHook);
+        succHookWrapper('ng-menu');
+    });
+    let textarea = document.getElementById('ng-json-input');
+    document.getElementById('ng-json-submit').addEventListener('click', function(ev) {
+        let j = textarea.value;
+        loadGameFromJsonString(j, null, () => succHookWrapper('ng-json-menu', ''), toolbarFailHook);
+    });
+    textarea.addEventListener('focus', () => {handleKeyPresses = false;});
+    textarea.addEventListener('blur', () => {handleKeyPresses = true;});
+
+    let genList = document.getElementById('ng-gen-list');
+    let modalGroup = document.getElementById('modal-group');
+    let modalOverlay = document.getElementById('modal-overlay');
+    for(const [genName, gen] of levelGenerators) {
+        let liElem = document.createElement('li');
+        liElem.setAttribute('data-gen', genName);
+        liElem.innerHTML = genName;
+        genList.appendChild(liElem);
+        const menuId = 'ng-gen-' + genName + '-menu';
+        liElem.addEventListener('click', (ev) => menuChooser.select(menuId));
+
+        let menu = createGenParamsMenu(genName, menuId);
+        modalGroup.insertBefore(menu, modalOverlay);
+    }
 }
 
 function addExtraUIEventListeners() {
     addToolbarEventListeners();
     addZoomEventListeners();
     addExportEventListeners();
-    addNgFormEventListeners();
+    addNgMenuEventListeners();
 
     editForm.addEventListener('change', editFormCheckHandler);
     editForm.addEventListener('input', editFormCheckHandler);

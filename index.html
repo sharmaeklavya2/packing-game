@@ -141,34 +141,49 @@
 </section>
 <section id="modal-group">
     <div class="gas"></div>
-    <form id="ng-form" class="menu disabled">
+    <div id="ng-menu" class="menu disabled">
         <header>
             <div class="heading">Load a new game</div>
             <div class="close-btn"></div>
         </header>
-        <div class="menu-body options">
-            <p>Levels:</p>
-            <div id="ng-form-levels"></div>
-            <p>Generators:</p>
-            <div id="ng-form-gens"></div>
-            <div id="ng-form-gen-params-wrapper" class="disabled">
-                <p id="ng-form-gen-params-header">Generator parameters:</p>
-                <div id="ng-form-gen-params"></div>
-            </div>
-            <p>Custom:</p>
-            <div class="input-pair">
-                <input type="radio" id="ng-radio-upload" name="ng-choice" value="upload:" />
-                <label for="ng-radio-upload">Choose file on disk</label>
-            </div>
-            <div class="input-pair">
-                <input type="radio" id="ng-radio-raw" name="ng-choice" value="raw:" />
-                <label for="ng-radio-raw">JSON text:</label>
-            </div>
-            <textarea id="ng-raw" name="ng-raw" rows="2" cols="10" disabled="disabled"
-                autocapitalize="none" autocomplete="off" spellcheck="false"></textarea>
-        </div>
-        <button id="ng-submit" type="submit" disabled="disabled">Submit</button>
-    </form>
+        <ul id="ng-list" class="menu-body">
+            <li id="ng-url">Select existing level</li>
+            <li id="ng-gen">Generate level randomly</li>
+            <li id="ng-upload">Upload a file</li>
+            <li id="ng-json">Enter raw JSON</li>
+        </ul>
+    </div>
+    <div id="ng-url-menu" class="menu disabled">
+        <header>
+            <div class="back-btn"></div>
+            <div class="heading">Select existing level</div>
+            <div class="close-btn"></div>
+        </header>
+        <ul id="ng-url-list" class="menu-body">
+            <li data-url="levels/bp/1.json">Level 1</li>
+            <li data-url="levels/bp/2.json">Level 2</li>
+            <li data-url="levels/bp/3.json">Level 3</li>
+            <li data-url="levels/bp/4.json">Level 4</li>
+        </ul>
+    </div>
+    <div id="ng-gen-menu" class="menu disabled">
+        <header>
+            <div class="back-btn"></div>
+            <div class="heading">Choose random generator</div>
+            <div class="close-btn"></div>
+        </header>
+        <ul id="ng-gen-list" class="menu-body"></ul>
+    </div>
+    <div id="ng-json-menu" class="menu disabled">
+        <header>
+            <div class="back-btn"></div>
+            <div class="heading">Enter raw JSON</div>
+            <div class="close-btn"></div>
+        </header>
+        <textarea id="ng-json-input" name="ng-json" rows="8" cols="80"
+            autocapitalize="none" autocomplete="off" spellcheck="false"></textarea>
+        <button id="ng-json-submit" type="submit">Submit</button>
+    </div>
     <div id="solutions-menu" class="menu disabled">
         <header>
             <div class="heading">View solutions</div>
@@ -194,7 +209,7 @@
             <li id="export-li-pdf">Print (bins only)</li>
         </ul>
     </div>
-    <div class="overlay"></div>
+    <div id="modal-overlay" class="overlay"></div>
     <div class="gas"></div>
 </section>
 </body>

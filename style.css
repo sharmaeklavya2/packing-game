@@ -286,21 +286,28 @@ form.menu .input-pair, form.menu p {
     display: flex;
     align-items: baseline;
 }
+input[type="text"] {
+    padding: 0.375rem 0.75rem;
+    border: none;
+    border-radius: 0.25rem;
+    font-size: 1em;
+}
 .input-pair > input[type="radio"] {
     margin: 0 0.5rem 0 0;
 }
 .input-pair > input[type="text"] {
-    margin: 0 0 0 0.5rem;
+    margin: 0 0 0 1rem;
     flex-grow: 1;
 }
 .input-pair > label {
     flex-grow: 0;
 }
 textarea {
-    width: calc(100% - 1rem);
+    width: calc(100% - 2.5rem);
     margin-left: 1rem;
+    margin-right: 1rem;
 }
-#ng-submit {
+button[type="submit"] {
     margin: 0.25rem 0 0.5rem 0;
     align-self: center;
     padding: 0.2rem 1rem;
@@ -372,7 +379,7 @@ textarea {
     color: #155724;
     background-color: #d4edda;
 }
-.close-btn {
+.close-btn, .back-btn {
     font-size: 1.5em;
     flex-grow: 0;
     width: 2.5rem;
@@ -387,10 +394,14 @@ textarea {
     content: "×";
     transform: rotate(90deg);
 }
-.close-btn:hover {
+.back-btn::before {
+    content: "➔";
+    transform: scale(-1, 1);
+}
+.close-btn:hover, .back-btn:hover {
     background-color: var(--tint);
 }
-.close-btn:active {
+.close-btn:active, .back-btn:active {
     background-color: var(--heavy-tint);
 }
 
