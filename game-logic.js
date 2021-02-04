@@ -330,7 +330,8 @@ function createBarItems(domParent, names) {
 function inferScaleFactors(invXLen, invYLen, binXLen, binYLen, nBins=1) {
     nBins = Math.max(1, nBins);
     const bodyRect = document.body.getBoundingClientRect();
-    const persistentFooterHeight = 40;
+    const persistentFooterHeight = document.getElementById('footer')
+        .getBoundingClientRect().height;
     const arenaX = Math.min(window.innerWidth, bodyRect.width) - 2 * outerMargin;
     const arenaY = Math.min(window.innerHeight, bodyRect.height)
         - 2 * outerMargin - persistentFooterHeight - getPersistentHeaderHeight();
@@ -387,8 +388,8 @@ class Game {
         this.packedStats = new ItemSetStats();
         this.nBinsUsed = 0;
 
-        this._setScaleFactor(scaleFactor);
         this._createStatsBar();
+        this._setScaleFactor(scaleFactor);
         this._createItems();
         this._createBinsAndPackItems(this.level.startPos);
         this._refreshStatsDom();
