@@ -6,6 +6,10 @@
 <meta name="description" content="A 2D geometric bin-packing game that runs in the browser. You have to pack all rectangles from the left side into the minimum number of bins on the right side." />
 <title>Packing game</title>
 <link rel="stylesheet" href="style.css" />
+<script defer src="game-logic.js"></script>
+<script defer src="game-io.js"></script>
+<script defer src="algo.js"></script>
+<script defer src="extra-ui.js"></script>
 </head>
 <body>
 <canvas id="celebrate-canvas"></canvas>
@@ -172,10 +176,6 @@
 <section id="invisible-section">
     <input type="file" id="level-loader" accept=".json,application/json" style="display:none" />
     <a id="downloader" rel="nofollow"></a>
-    <script src="game-logic.js"></script>
-    <script src="game-io.js"></script>
-    <script src="algo.js"></script>
-    <script src="extra-ui.js"></script>
 </section>
 </body>
 </html>
