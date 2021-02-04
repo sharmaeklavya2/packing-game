@@ -867,7 +867,7 @@ class Game {
         if(!this.won) {
             if(this.packedStats.count === this.items.length && used <= lb) {
                 this.won = true;
-                showCelebration();
+                window.setTimeout(showCelebration, 100);
             }
         }
         return binTypes;
