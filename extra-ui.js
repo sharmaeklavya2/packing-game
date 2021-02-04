@@ -320,7 +320,7 @@ function populateNgForm() {
     }
 }
 
-function addExtraUIEventListeners() {
+function addToolbarEventListeners() {
     document.getElementById('new-game-button').addEventListener('click', function(ev) {
             toggleFromToolbar('new-game-button');
             ngForm.classList.remove('loading');
@@ -359,21 +359,9 @@ function addExtraUIEventListeners() {
     for(const id of onlyToggleIds) {
         document.getElementById(id).addEventListener('click', (ev) => toggleFromToolbar(id));
     }
+}
 
-    ngForm.addEventListener('submit', ngFormSubmitHandler);
-    ngForm.addEventListener('change', ngFormCheckHandler);
-    ngForm.addEventListener('input', ngFormCheckHandler);
-    editForm.addEventListener('change', editFormCheckHandler);
-    editForm.addEventListener('input', editFormCheckHandler);
-
-    ngFormRawTextarea.addEventListener('focus', function() {
-            handleKeyPresses = false;
-            document.getElementById('ng-radio-raw').click();
-        });
-    ngFormRawTextarea.addEventListener('blur', function() {
-            handleKeyPresses = true;
-        });
-
+function addZoomEventListeners() {
     document.getElementById('zoom-in-button').addEventListener('click', function(ev) {
             game.resize(game.scaleFactor * 1.1);
         });
@@ -389,7 +377,9 @@ function addExtraUIEventListeners() {
     document.getElementById('zoom-fit-button').addEventListener('click', function(ev) {
             game.resize(null);
         });
+}
 
+function addExportEventListeners() {
     document.getElementById('export-li-tikz').addEventListener('click', function(ev) {
             if(game.nBinsUsed === 0) {
                 addMsg('error', 'No bins have been used; nothing to export.');
@@ -415,6 +405,31 @@ function addExtraUIEventListeners() {
             toolbarButtonChooser.unset('export-button');
             menuChooser.unset('export-menu');
         });
+}
+
+function addNgFormEventListeners() {
+    ngForm.addEventListener('submit', ngFormSubmitHandler);
+    ngForm.addEventListener('change', ngFormCheckHandler);
+    ngForm.addEventListener('input', ngFormCheckHandler);
+
+    ngFormRawTextarea.addEventListener('focus', function() {
+            handleKeyPresses = false;
+            document.getElementById('ng-radio-raw').click();
+        });
+    ngFormRawTextarea.addEventListener('blur', function() {
+            handleKeyPresses = true;
+        });
+}
+
+function addExtraUIEventListeners() {
+    addToolbarEventListeners();
+    addZoomEventListeners();
+    addExportEventListeners();
+    addNgFormEventListeners();
+
+    editForm.addEventListener('change', editFormCheckHandler);
+    editForm.addEventListener('input', editFormCheckHandler);
+
     for(let elem of document.querySelectorAll('.menu .close-btn')) {
         elem.addEventListener('click',
             (ev) => {toolbarButtonChooser.unset(); menuChooser.unset();});
