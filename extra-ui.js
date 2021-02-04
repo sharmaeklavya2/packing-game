@@ -453,8 +453,7 @@ function addMsg(type, text) {
         msgSpan.innerHTML = text;
         liElem.appendChild(msgSpan);
         let closeButton = document.createElement('span');
-        closeButton.classList.add('msg-close-btn');
-        closeButton.innerHTML = '&times;';
+        closeButton.classList.add('close-btn');
         closeButton.addEventListener('click', closeBtnClickHandler);
         liElem.appendChild(closeButton);
         let msgList = document.getElementById('msg-list');
