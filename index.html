@@ -71,59 +71,6 @@
             <span class="label">About</span>
         </li>
     </ul>
-    <form id="ng-form" class="menu disabled">
-        <header>
-            <div class="heading">Load a new game</div>
-            <div class="close-btn"></div>
-        </header>
-        <div class="options">
-            <p>Levels:</p>
-            <div id="ng-form-levels"></div>
-            <p>Generators:</p>
-            <div id="ng-form-gens"></div>
-            <div id="ng-form-gen-params-wrapper" class="disabled">
-                <p id="ng-form-gen-params-header">Generator parameters:</p>
-                <div id="ng-form-gen-params"></div>
-            </div>
-            <p>Custom:</p>
-            <div class="input-pair">
-                <input type="radio" id="ng-radio-upload" name="ng-choice" value="upload:" />
-                <label for="ng-radio-upload">Choose file on disk</label>
-            </div>
-            <div class="input-pair">
-                <input type="radio" id="ng-radio-raw" name="ng-choice" value="raw:" />
-                <label for="ng-radio-raw">JSON text:</label>
-            </div>
-            <textarea id="ng-raw" name="ng-raw" rows="2" cols="10" disabled="disabled"
-                autocapitalize="none" autocomplete="off" spellcheck="false"></textarea>
-        </div>
-        <button id="ng-submit" type="submit" disabled="disabled">Submit</button>
-    </form>
-    <div id="solutions-menu" class="menu disabled">
-        <header>
-            <div class="heading">View solutions</div>
-            <div class="close-btn"></div>
-        </header>
-        <ul id="solutions-list"></ul>
-    </div>
-    <div id="auto-pack-menu" class="menu disabled">
-        <header>
-            <div class="heading">Run algorithms</div>
-            <div class="close-btn"></div>
-        </header>
-        <ul id="auto-pack-list"></ul>
-    </div>
-    <div id="export-menu" class="menu disabled">
-        <header>
-            <div class="heading">Export as figure</div>
-            <div class="close-btn"></div>
-        </header>
-        <ul id="export-list">
-            <li id="export-li-svg">SVG</li>
-            <li id="export-li-tikz">TikZ (bins only)</li>
-            <li id="export-li-pdf">Print (bins only)</li>
-        </ul>
-    </div>
     <ul id="zoom-toolbar" class="toolbar disabled">
         <li id="zoom-in-button" title="Zoom in">
             <svg class="icon" id="zoom-in-icon"><title>Zoom in</title>
@@ -151,7 +98,7 @@
             <div class="heading">Creator mode</div>
             <div class="close-btn"></div>
         </header>
-        <div class="options">
+        <div class="options menu-body">
             <p>Item click mode:</p>
             <div class="input-pair">
                 <input type="radio" id="edit-radio-item-drag" name="edit-item" value="drag" checked/>
@@ -183,7 +130,7 @@
     <div id="inventory"></div>
     <div id="packing-area"></div>
 </main>
-<div id="gas"></div>
+<div class="gas"></div>
 <footer id="footer">
     <div class="bar disabled" id="item-info-bar"></div>
     <div class="bar" id="stats-bar"></div>
@@ -191,6 +138,64 @@
 <section id="invisible-section">
     <input type="file" id="level-loader" accept=".json,application/json" style="display:none" />
     <a id="downloader" rel="nofollow"></a>
+</section>
+<section id="modal-group">
+    <div class="gas"></div>
+    <form id="ng-form" class="menu disabled">
+        <header>
+            <div class="heading">Load a new game</div>
+            <div class="close-btn"></div>
+        </header>
+        <div class="menu-body options">
+            <p>Levels:</p>
+            <div id="ng-form-levels"></div>
+            <p>Generators:</p>
+            <div id="ng-form-gens"></div>
+            <div id="ng-form-gen-params-wrapper" class="disabled">
+                <p id="ng-form-gen-params-header">Generator parameters:</p>
+                <div id="ng-form-gen-params"></div>
+            </div>
+            <p>Custom:</p>
+            <div class="input-pair">
+                <input type="radio" id="ng-radio-upload" name="ng-choice" value="upload:" />
+                <label for="ng-radio-upload">Choose file on disk</label>
+            </div>
+            <div class="input-pair">
+                <input type="radio" id="ng-radio-raw" name="ng-choice" value="raw:" />
+                <label for="ng-radio-raw">JSON text:</label>
+            </div>
+            <textarea id="ng-raw" name="ng-raw" rows="2" cols="10" disabled="disabled"
+                autocapitalize="none" autocomplete="off" spellcheck="false"></textarea>
+        </div>
+        <button id="ng-submit" type="submit" disabled="disabled">Submit</button>
+    </form>
+    <div id="solutions-menu" class="menu disabled">
+        <header>
+            <div class="heading">View solutions</div>
+            <div class="close-btn"></div>
+        </header>
+        <ul id="solutions-list" class="menu-body"></ul>
+    </div>
+    <div id="auto-pack-menu" class="menu disabled">
+        <header>
+            <div class="heading">Run algorithms</div>
+            <div class="close-btn"></div>
+        </header>
+        <ul id="auto-pack-list" class="menu-body"></ul>
+    </div>
+    <div id="export-menu" class="menu disabled">
+        <header>
+            <div class="heading">Export as figure</div>
+            <div class="close-btn"></div>
+        </header>
+        <ul id="export-list" class="menu-body">
+            <li id="export-li-svg">SVG</li>
+            <li id="export-li-tikz">TikZ (bins only)</li>
+            <li id="export-li-pdf">Print (bins only)</li>
+        </ul>
+    </div>
+    <div class="overlay"></div>
+    <div class="gas"></div>
 </section>
 </body>
 </html>

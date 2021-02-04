@@ -419,6 +419,8 @@ function addExtraUIEventListeners() {
         elem.addEventListener('click',
             (ev) => {toolbarButtonChooser.unset(); menuChooser.unset();});
     }
+    document.querySelector('#modal-group > .overlay').addEventListener('click',
+        (ev) => {toolbarButtonChooser.unset(); menuChooser.unset();});
 }
 
 function disableUndoButton() {
