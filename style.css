@@ -315,15 +315,6 @@ button[type="submit"] {
     padding: 0.2rem 1rem;
     font-size: 1rem;
 }
-#ng-submit:not([disabled]) {
-    cursor: pointer;
-}
-#ng-form-gen-params-wrapper.disabled {
-    display: none;
-}
-#ng-form-gen-params {
-    padding-left: 1rem;
-}
 .menu > ul {
     list-style-type: none;
     margin: 0;
