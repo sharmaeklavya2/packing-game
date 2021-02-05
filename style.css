@@ -12,11 +12,11 @@ body {
     overflow-y: scroll;
     --tint: rgba(0, 0, 0, 0.1);
     --heavy-tint: rgba(0, 0, 0, 0.2);
-    --menu-color: rgba(192, 192, 192, 0.8);
-    --menu-color-loading: rgba(192, 192, 192, 1);
-    --menu-color-heavy: rgba(192, 192, 192, 1);
-    --menu-color-heavy2: rgba(176, 176, 176, 1);
-    --menu-color-heavy3: rgba(160, 160, 160, 1);
+    --text-color-loading: hsl(0, 0%, 40%);
+    --menu-color: hsl(0, 0%, 80%);
+    --menu-color-heavy: hsl(0, 0%, 65%);
+    --menu-color-heavy2: hsl(0, 0%, 55%);
+    --menu-color-heavy3: hsl(0, 0%, 45%);
 }
 #arena {
     position: relative;
@@ -272,10 +272,6 @@ footer {
     align-items: stretch;
     max-height: 100%;
 }
-.menu:not(.disabled).loading {
-    background-color: var(--menu-color-loading);
-    opacity: 0.5;
-}
 form.menu > .options {
     padding: 0 2rem;
 }
@@ -438,6 +434,9 @@ button[type="submit"] {
     z-index: 2010;
     pointer-events: auto;
     box-shadow: 0 4px 8px rgba(0,0,0,0.4), 0 4px 12px 4px rgba(0,0,0,0.2);
+}
+#modal-group.loading > .menu {
+    color: var(--text-color-loading);
 }
 #modal-group > .gas {
     width: 100%;
