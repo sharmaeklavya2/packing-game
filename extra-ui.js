@@ -284,6 +284,10 @@ function addToolbarEventListeners() {
     document.getElementById('about-button').addEventListener('click', function(ev) {
             window.alert(aboutText);
         });
+    document.getElementById('dark-mode-button').addEventListener('click', function(ev) {
+            document.body.classList.toggle('light');
+            document.body.classList.toggle('dark');
+        });
     let onlyToggleIds = ['zoom-button', 'auto-pack-button', 'export-button', 'edit-button'];
     for(const id of onlyToggleIds) {
         document.getElementById(id).addEventListener('click', (ev) => toggleFromToolbar(id));
