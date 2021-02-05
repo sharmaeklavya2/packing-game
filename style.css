@@ -13,10 +13,15 @@ body {
     --tint: rgba(0, 0, 0, 0.1);
     --heavy-tint: rgba(0, 0, 0, 0.2);
     --text-color-loading: hsl(0, 0%, 40%);
+    --text-color-disabled: gray;
     --menu-color: hsl(0, 0%, 80%);
     --menu-color-heavy: hsl(0, 0%, 65%);
     --menu-color-heavy2: hsl(0, 0%, 55%);
     --menu-color-heavy3: hsl(0, 0%, 45%);
+    --large-shadow: 0 4px 8px rgba(0,0,0,0.4), 0 4px 12px 4px rgba(0,0,0,0.2);
+    --small-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 1px 3px 1px rgba(0,0,0,0.15);
+    --bin-outline-color: rgba(0, 0, 0, 0.3);
+    --grid-color: rgba(0, 0, 0, 0.1);
 }
 #arena {
     position: relative;
@@ -83,7 +88,7 @@ footer {
     touch-action: none;
 }
 .item.moving {
-    box-shadow: 0 4px 8px rgba(0,0,0,0.4), 0 4px 12px 4px rgba(0,0,0,0.2);
+    box-shadow: var(--large-shadow);
 }
 .show-id .item::after {
     content: attr(data-item-id);
@@ -136,10 +141,10 @@ footer {
 /* beautification */
 
 #arena, .item {
-    box-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 1px 3px 1px rgba(0,0,0,0.15);
+    box-shadow: var(--small-shadow);
 }
 #inventory, .bin {
-    box-shadow: 0 0 0 1px rgba(0,0,0,0.3);
+    outline: 1px solid var(--bin-outline-color);
 }
 .bin[data-bin-type="good"] {
     box-shadow: 0 0 3px 1px rgb(0, 165, 40);
@@ -151,7 +156,7 @@ footer {
     box-shadow: 0 0 3px 1px rgb(191, 0, 0);
 }
 .bar {
-    background: var(--menu-color);
+    background-color: var(--menu-color);
 }
 
 .item {
@@ -163,14 +168,14 @@ footer {
     box-shadow: none;
 }
 #hover-rect.success {
-    background: rgba(40, 167, 69, 0.5);
+    background-color: rgba(40, 167, 69, 0.5);
 }
 #hover-rect.failure {
-    background: rgba(220, 53, 69, 0.5);
+    background-color: rgba(220, 53, 69, 0.5);
 }
 #inventory, .bin {
-    background-image: linear-gradient(to right, rgba(0,0,0,0.1) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(0,0,0,0.1) 1px, transparent 1px);
+    background-image: linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
     background-position: -0.5px -0.5px;
 }
 #downloader {
@@ -225,8 +230,8 @@ footer {
     cursor: pointer;
 }
 .toolbar > li.disabled {
-    color: gray;
-    fill: gray;
+    color: var(--text-color-disabled);
+    fill: var(--text-color-disabled);
 }
 .toolbar > li:not(.disabled):hover, .toolbar > li:not(.disabled).pressed {
     background-color: var(--menu-color-heavy);
@@ -433,7 +438,7 @@ button[type="submit"] {
 #modal-group > .menu {
     z-index: 2010;
     pointer-events: auto;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.4), 0 4px 12px 4px rgba(0,0,0,0.2);
+    box-shadow: var(--large-shadow);
 }
 #modal-group.loading > .menu {
     color: var(--text-color-loading);
