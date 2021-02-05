@@ -3,6 +3,7 @@
 var undoButton = document.getElementById('undo-button');
 var redoButton = document.getElementById('redo-button');
 var editForm = document.getElementById('edit-form');
+var modalGroup = document.getElementById('modal-group');
 
 var buttonToMenuMap = new Map([
     ['new-game-button', 'ng-menu'],
@@ -164,7 +165,9 @@ function createGenParamsMenu(genName, menuId) {
             window.history.replaceState({}, null, '?' + qs);
             toolbarButtonChooser.unset('new-game-button');
             menuChooser.unset(menuId);
+            modalGroup.classList.remove('loading');
         }
+        modalGroup.classList.add('loading');
         loadGameFromGen(genName, q, null, succHook, toolbarFailHook);
     });
     return menu;
@@ -192,6 +195,7 @@ function showSolutionSuccess() {
 
 function autoPackComplete() {
     unsetToolbar('auto-pack-button');
+    modalGroup.classList.remove('loading');
 }
 
 function solutionsClickHandler(ev) {
@@ -204,7 +208,9 @@ function solutionsClickHandler(ev) {
 function autoPackClickHandler(ev) {
     ev.preventDefault();
     let algoName = ev.target.innerHTML;
-    game.selectAutoPack(algoName, null, autoPackComplete, autoPackComplete, null);
+    modalGroup.classList.add('loading');
+    window.setTimeout(() => game.selectAutoPack(
+        algoName, null, autoPackComplete, autoPackComplete, null));
 }
 
 function repopulateSolutionsMenu(solutions) {
@@ -246,7 +252,7 @@ function repopulateAutoPackMenu() {
 function addToolbarEventListeners() {
     document.getElementById('new-game-button').addEventListener('click', function(ev) {
             toggleFromToolbar('new-game-button');
-            document.getElementById('ng-menu').classList.remove('loading');
+            modalGroup.classList.remove('loading');
         });
     undoButton.addEventListener('click', function(ev) {
             if(game !== null) {game.undo();}
@@ -337,6 +343,7 @@ function toolbarFailHook(msg) {
     addMsg('error', msg);
     toolbarButtonChooser.unset();
     menuChooser.unset();
+    modalGroup.classList.remove('loading');
 }
 
 function addNgMenuEventListeners() {
@@ -350,10 +357,12 @@ function addNgMenuEventListeners() {
         window.history.replaceState({}, null, '?' + qs);
         toolbarButtonChooser.unset('new-game-button');
         menuChooser.unset(menuName);
+        modalGroup.classList.remove('loading');
     }
     document.getElementById('ng-url-list').addEventListener('click', function(ev) {
         const url = ev.target.getAttribute('data-url');
         const qs = toQueryString({'srctype': 'url', 'src': url});
+        modalGroup.classList.add('loading');
         loadGameFromUrl(url, null, () => succHookWrapper('ng-url-menu', qs), toolbarFailHook);
     });
     document.getElementById('ng-upload').addEventListener('click', function(ev) {
@@ -363,6 +372,7 @@ function addNgMenuEventListeners() {
     let textarea = document.getElementById('ng-json-input');
     document.getElementById('ng-json-submit').addEventListener('click', function(ev) {
         let j = textarea.value;
+        modalGroup.classList.add('loading');
         loadGameFromJsonString(j, null, () => succHookWrapper('ng-json-menu', ''), toolbarFailHook);
     });
     textarea.addEventListener('focus', () => {handleKeyPresses = false;});
