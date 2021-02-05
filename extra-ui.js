@@ -12,6 +12,7 @@ var buttonToMenuMap = new Map([
     ['export-button', 'export-menu'],
     ['zoom-button', 'zoom-toolbar'],
     ['edit-button', 'edit-form'],
+    ['about-button', 'about-menu'],
 ]);
 
 class DomChooser {
@@ -76,9 +77,6 @@ function unsetToolbar(buttonId=null) {
     toolbarButtonChooser.unset(buttonId);
     menuChooser.unset(menuId);
 }
-
-var aboutText = "This is a 2D geometric bin-packing game. You have to pack all items from "
-    + "the left side into the minimum number of bins on the right side.";
 
 function getPersistentHeaderHeight() {
     return document.getElementById('main-toolbar').getBoundingClientRect().height;
@@ -281,14 +279,12 @@ function addToolbarEventListeners() {
                 }
             }
         });
-    document.getElementById('about-button').addEventListener('click', function(ev) {
-            window.alert(aboutText);
-        });
     document.getElementById('dark-mode-button').addEventListener('click', function(ev) {
             document.body.classList.toggle('light');
             document.body.classList.toggle('dark');
         });
-    let onlyToggleIds = ['zoom-button', 'auto-pack-button', 'export-button', 'edit-button'];
+    let onlyToggleIds = ['about-button', 'zoom-button', 'auto-pack-button',
+        'export-button', 'edit-button'];
     for(const id of onlyToggleIds) {
         document.getElementById(id).addEventListener('click', (ev) => toggleFromToolbar(id));
     }

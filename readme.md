@@ -4,7 +4,7 @@ This is a 2D geometric bin-packing game that can be played in the browser.
 
 ## How to play
 
-Drag-and-drop rectangles from the left side (arena)
+Drag-and-drop rectangles from the left side (inventory)
 into the minimum number of bins on the right side.
 
 ## How to contribute

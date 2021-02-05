@@ -328,6 +328,10 @@ footer {
 .menu-body {
     overflow-y: auto;
 }
+.menu-body p {
+    margin: 1em;
+    max-width: 640px;
+}
 .menu.disabled, .toolbar.disabled {
     display: none;
 }
