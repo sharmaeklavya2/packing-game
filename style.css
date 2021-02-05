@@ -346,7 +346,7 @@ button[type="submit"] {
     background-color: var(--menu-color-heavy);
 }
 .menu > ul > li:active {
-    background-color: var(--menu-color-heavy);
+    background-color: var(--menu-color-heavy2);
 }
 
 #msg-list {
