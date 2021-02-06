@@ -1611,6 +1611,7 @@ function addEventListeners() {
 //==[ Main ]====================================================================
 
 window.addEventListener('load', function() {
+    initThemeFromLocalStorage();
     addEventListeners();
     loadGameFromQParams(getQParams(), null, function(msg) {addMsg('error', msg);});
     addExtraUIEventListeners();

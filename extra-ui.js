@@ -282,6 +282,17 @@ function addToolbarEventListeners() {
     document.getElementById('dark-mode-button').addEventListener('click', function(ev) {
             document.body.classList.toggle('light');
             document.body.classList.toggle('dark');
+            try {
+                if(window.localStorage.getItem('dark')) {
+                    window.localStorage.removeItem('dark');
+                }
+                else {
+                    window.localStorage.setItem('dark', '1');
+                }
+            }
+            catch(e) {
+                console.warn('setting localStorage failed: ' + e);
+            }
         });
     let onlyToggleIds = ['about-button', 'zoom-button', 'auto-pack-button',
         'export-button', 'edit-button'];
@@ -502,4 +513,16 @@ function showCelebration() {
         }
     }
     window.requestAnimationFrame(draw);
+}
+
+function initThemeFromLocalStorage() {
+    try {
+        if(window.localStorage.getItem('dark')) {
+            document.body.classList.remove('light');
+            document.body.classList.add('dark');
+        }
+    }
+    catch(e) {
+        console.warn('initializing from localStorage failed: ' + e);
+    }
 }
