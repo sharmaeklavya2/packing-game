@@ -2,6 +2,12 @@ html {
     height: 100%;
     font-family: sans-serif;
 }
+noscript p {
+    text-align: center;
+}
+noscript .large {
+    font-size: 200%;
+}
 body {
     min-height: 100%;
     width: 100%;
