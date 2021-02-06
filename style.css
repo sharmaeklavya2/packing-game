@@ -78,12 +78,13 @@ footer {
 }
 
 .show-bins-only #main-header, .show-bins-only footer, .show-bins-only #inventory,
-    .show-bins-only .bin:empty {
+    .show-bins-only #modal-group, .show-bins-only .bin:empty {
     display: none;
 }
-.show-bins-only #arena {
-    box-shadow: none;
+.show-bins-only #arena, .dark.show-bins-only #arena, .light.show-bins-only #arena {
     margin: 0;
+    box-shadow: none;
+    outline: none;
 }
 #inventory {
     margin: 10px;
