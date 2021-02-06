@@ -363,6 +363,16 @@ function inferScaleFactors(invXLen, invYLen, binXLen, binYLen, nBins=1) {
     return [finalScale, hScaleX, finalScale];
 }
 
+function roundScaleFactors(factors) {
+    const devicePixelRatio = window.devicePixelRatio;
+    for(let i=0; i < factors.length; ++i) {
+        if(factors[i] * devicePixelRatio > 20) {
+            factors[i] = Math.floor(devicePixelRatio * factors[i]) / devicePixelRatio;
+        }
+    }
+    return factors;
+}
+
 function arraySwap(arr, i, j) {
     let t = arr[i];
     arr[i] = arr[j];
@@ -1032,6 +1042,8 @@ class Game {
         let [inferredScale, inferredScaleX, inferredScaleY] = inferScaleFactors(
             this.invXLen, this.invYLen, this.level.binXLen, this.level.binYLen,
             this.lowerBound());
+        [inferredScale, inferredScaleX, inferredScaleY] = roundScaleFactors(
+            [inferredScale, inferredScaleX, inferredScaleY]);
         if(scaleFactor === 'x') {
             this.scaleFactor = inferredScaleX;
         }
