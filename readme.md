@@ -9,21 +9,23 @@ into the minimum number of bins on the right side.
 
 ## How to contribute
 
+* Try out the game and suggest improvements.
+Open an [issue](https://github.com/sharmaeklavya2/packing-game/issues)
+for your suggestion after ensuring that there isn't already an issue for it.
+
 * Help with design decisions. See the issues labeled 'design'.
 We want you to come up with precise descriptions of what the UI should look like
 and how would the user interact with it.
 
-* Try out the game and suggest improvements.
-Open an issue for your suggestion after ensuring that
-there isn't already an issue for it.
-
-* Help in implementing stuff. See the issues for what needs to be done.
+* Help in implementing stuff. See the
+[issues](https://github.com/sharmaeklavya2/packing-game/issues)
+for what needs to be done.
 Before making a major change, preferably talk about the change to ensure
 that you're implementing the right thing.
 
 ## Guidelines for adding a new feature
 
-The game is written in a layered manner (see `script.js`),
+The core of the game is written in a layered manner (see `game-logic.js`),
 and additions to code must adhere to this structure.
 
 Consider the example of picking an item and placing it into a bin (already implemented).
