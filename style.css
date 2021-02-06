@@ -47,6 +47,9 @@ body.dark {
     --grid-color: hsla(0, 0%, 100%, 0.1);
     --bin-shadow-dims: 0 0 4px 2px;
 }
+.dark a {
+    color: rgb(65, 175, 235);
+}
 .light .dark-only, .dark .light-only {
     display: none;
 }
