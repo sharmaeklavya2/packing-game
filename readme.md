@@ -82,3 +82,14 @@ of what the generator does.
 The output of generators can often be tuned by additional parameters in the querystring.
 For each value `v` of `levelGenerators`, see `v.paramMap` to know what parameters
 are available, their description, and what their default values are.
+
+## License
+
+Copyright © 2020-2021 Eklavya Sharma.
+
+All code for this game other than the icons is licensed under
+[GNU GPLv3](https://www.gnu.org/licenses/gpl-3.0.txt).
+
+The icons used in this game are derived from
+[Font Awesome Free](https://fontawesome.com/license/free).
+They are licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).

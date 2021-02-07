@@ -1,3 +1,5 @@
+// @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3
+// Copyright (C) 2020-2021 Eklavya Sharma. Licensed under GNU GPLv3.
 'use strict';
 
 var undoButton = document.getElementById('undo-button');
@@ -526,3 +528,4 @@ function initThemeFromLocalStorage() {
         console.warn('initializing from localStorage failed: ' + e);
     }
 }
+// @license-end

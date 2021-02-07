@@ -1,3 +1,5 @@
+// @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3
+// Copyright (C) 2020-2021 Eklavya Sharma. Licensed under GNU GPLv3.
 'use strict';
 
 class InputError extends Error {
@@ -993,3 +995,4 @@ function downloadAsSvg(showInventory=null, textFunc=null, filename='packing-game
     let blob = new Blob([svgText], {type: 'image/svg+xml'});
     downloadBlob(blob, filename, cleanup);
 }
+// @license-end

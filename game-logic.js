@@ -1,3 +1,5 @@
+// @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3
+// Copyright (C) 2020-2021 Eklavya Sharma. Licensed under GNU GPLv3.
 'use strict';
 
 var arena = document.getElementById('arena');
@@ -1628,3 +1630,4 @@ window.addEventListener('load', function() {
     loadGameFromQParams(getQParams(), null, function(msg) {addMsg('error', msg);});
     addExtraUIEventListeners();
 });
+// @license-end
