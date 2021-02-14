@@ -12,6 +12,7 @@ function throwInputError(msg) {
 
 var levelGenerators = new Map();
 var defaultItemColorTikz = '3399ff';
+var gameLoadParams = null;
 
 //==[ Parsing ]=================================================================
 
@@ -497,6 +498,7 @@ function loadGameFromRawLevel(level, scaleFactor=null, succHook=null, failHook=n
     }
     if(processedLevel !== null) {
         clearGame();
+        gameLoadParams = null;
         game = new Game(processedLevel, scaleFactor);
         if(succHook !== null) {
             succHook();
@@ -542,6 +544,7 @@ function loadGameFromGen(genName, q, scaleFactor=null, succHook=null, failHook=n
         failHook('level generator ' + genName + ' not found');
     }
     else {
+        let origQ = Object.assign({}, q);
         let errors = validateAndConvert(q, gen.paramMap);
         if(errors.length === 0) {
             let level = null;
@@ -552,7 +555,16 @@ function loadGameFromGen(genName, q, scaleFactor=null, succHook=null, failHook=n
                 handleWithFailHook(e, failHook);
             }
             if(level !== null) {
-                loadGameFromRawLevel(level, scaleFactor, succHook, failHook);
+                function succHook2() {
+                    gameLoadParams = origQ;
+                    gameLoadParams['srctype'] = 'gen';
+                    gameLoadParams['src'] = genName;
+                    if(scaleFactor !== null) {
+                        gameLoadParams['scaleFactor'] = scaleFactor;
+                    }
+                    if(succHook !== null) {succHook();}
+                }
+                loadGameFromRawLevel(level, scaleFactor, succHook2, failHook);
             }
         }
         else {
@@ -608,8 +620,7 @@ function getQParams() {
 
 function loadGameFromQParams(q, succHook=null, failHook=null) {
     if(Object.keys(q).length === 0) {
-        q['srctype'] = 'gen';
-        q['src'] = 'bp1';
+        q = {'srctype': 'gen', 'src': 'bp1'};
     }
 
     let scaleFactor = null;

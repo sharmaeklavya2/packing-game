@@ -166,6 +166,7 @@ function createGenParamsMenu(genName, menuId) {
             toolbarButtonChooser.unset('new-game-button');
             menuChooser.unset(menuId);
             modalGroup.classList.remove('loading');
+            resetReloadButton();
         }
         modalGroup.classList.add('loading');
         loadGameFromGen(genName, q, null, succHook, toolbarFailHook);
@@ -253,6 +254,14 @@ function addToolbarEventListeners() {
     document.getElementById('new-game-button').addEventListener('click', function(ev) {
             toggleFromToolbar('new-game-button');
             modalGroup.classList.remove('loading');
+        });
+    document.getElementById('reload-button').addEventListener('click', function(ev) {
+            if(gameLoadParams !== null) {
+                toolbarButtonChooser.select('reload-button');
+                function succHook() {toolbarButtonChooser.unset('reload-button');}
+                function failHook(msg) {succHook(); addMsg('error', msg);}
+                loadGameFromQParams(gameLoadParams, succHook, failHook);
+            }
         });
     undoButton.addEventListener('click', function(ev) {
             if(game !== null) {game.undo();}
@@ -371,6 +380,7 @@ function addNgMenuEventListeners() {
         toolbarButtonChooser.unset('new-game-button');
         menuChooser.unset(menuName);
         modalGroup.classList.remove('loading');
+        resetReloadButton();
     }
     document.getElementById('ng-url-list').addEventListener('click', function(ev) {
         const url = ev.target.getAttribute('data-url');
@@ -379,8 +389,7 @@ function addNgMenuEventListeners() {
         loadGameFromUrl(url, null, () => succHookWrapper('ng-url-menu', qs), toolbarFailHook);
     });
     document.getElementById('ng-upload').addEventListener('click', function(ev) {
-        loadGameFromUpload(null, null, toolbarFailHook);
-        succHookWrapper('ng-menu');
+        loadGameFromUpload(null, () => succHookWrapper('ng-menu', ''), toolbarFailHook);
     });
     let textarea = document.getElementById('ng-json-input');
     document.getElementById('ng-json-submit').addEventListener('click', function(ev) {
@@ -421,6 +430,20 @@ function addExtraUIEventListeners() {
     }
     document.querySelector('#modal-group > .overlay').addEventListener('click',
         (ev) => unsetToolbar());
+
+    document.body.addEventListener('drop', function(ev) {
+        ev.stopPropagation();
+        ev.preventDefault();
+        ev.dataTransfer.dropEffect = 'copy';
+        function succHook() {
+            resetReloadButton();
+            window.history.replaceState({}, null, '?');
+        }
+        function failHook(msg) {addMsg('error', msg);}
+        if(ev.dataTransfer.files.length > 0) {
+            loadGameFromFiles(ev.dataTransfer.files, null, succHook, failHook);
+        }
+    });
 }
 
 function disableUndoButton() {
@@ -526,6 +549,16 @@ function initThemeFromLocalStorage() {
     }
     catch(e) {
         console.warn('initializing from localStorage failed: ' + e);
+    }
+}
+
+function resetReloadButton() {
+    let reloadButton = document.getElementById('reload-button');
+    if(gameLoadParams !== null) {
+        reloadButton.classList.remove('disabled');
+    }
+    else {
+        reloadButton.classList.add('disabled');
     }
 }
 // @license-end

@@ -1605,20 +1605,15 @@ function addEventListeners() {
     window.addEventListener('keydown', keydownHandler);
 
     document.getElementById('level-loader').addEventListener('change', function(ev) {
-            loadGameFromFiles(ev.target.files, uploadInfo['scaleFactor'],
-                uploadInfo['succHook'], uploadInfo['failHook']);
+            if(ev.target.files.length > 0) {
+                loadGameFromFiles(ev.target.files, uploadInfo['scaleFactor'],
+                    uploadInfo['succHook'], uploadInfo['failHook']);
+            }
         });
     document.body.addEventListener('dragover', function(ev) {
             ev.stopPropagation();
             ev.preventDefault();
             ev.dataTransfer.dropEffect = 'copy';
-        });
-    document.body.addEventListener('drop', function(ev) {
-            ev.stopPropagation();
-            ev.preventDefault();
-            ev.dataTransfer.dropEffect = 'copy';
-            loadGameFromFiles(ev.dataTransfer.files, uploadInfo['scaleFactor'],
-                uploadInfo['succHook'], uploadInfo['failHook']);
         });
 }
 
@@ -1627,7 +1622,7 @@ function addEventListeners() {
 window.addEventListener('load', function() {
     initThemeFromLocalStorage();
     addEventListeners();
-    loadGameFromQParams(getQParams(), null, function(msg) {addMsg('error', msg);});
+    loadGameFromQParams(getQParams(), resetReloadButton, (msg) => addMsg('error', msg));
     addExtraUIEventListeners();
 });
 // @license-end
