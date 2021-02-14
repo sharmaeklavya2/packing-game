@@ -408,6 +408,16 @@ function removeSmallArea(items, delFrac) {
     items.length = areas.length;
 }
 
+function randomShrink(items, shrinkFrac, rand) {
+    if(shrinkFrac > 1) {
+        shrinkFrac = 1;
+    }
+    for(let item of items) {
+        item.xLen = item.xLen - Math.floor(item.xLen * shrinkFrac * rand());
+        item.yLen = item.yLen - Math.floor(item.yLen * shrinkFrac * rand());
+    }
+}
+
 function levelGenGuill(q) {
     const binXLen = q.xLen, binYLen = q.yLen;
     let items = [], solution = [];
@@ -434,6 +444,9 @@ function levelGenGuill(q) {
         solution[i] = [items[i].nBin, items[i].x, items[i].y];
     }
     addRandomColors(items, rand);
+    if(q.shrinkFrac > 0) {
+        randomShrink(items, q.shrinkFrac, rand);
+    }
     return obj;
 }
 
@@ -443,6 +456,8 @@ levelGenGuill.paramMap = toParamMap([
     new Parameter('xLen', 12, 'xLen of bin', positiveIntConverter, positiveIntMessage),
     new Parameter('yLen', 12, 'yLen of bin', positiveIntConverter, positiveIntMessage),
     new Parameter('delFrac', 0.03, 'fraction of area to delete',
+        nonNegFloatConverter, nonNegFloatMessage),
+    new Parameter('shrinkFrac', 0.1, 'fraction to randomly shrink an item by',
         nonNegFloatConverter, nonNegFloatMessage),
     new Parameter('seed', null, 'seed for random number generator',
         urlEncodeIdemp, urlEncodeIdempMessage),
