@@ -32,11 +32,15 @@ function mulberry32(a) {
 
 function getRandomSeed() {
     const seed = 'r' + Math.random().toString().substr(2, 12);
+    console.debug('getRandomSeed: ' + seed);
     seeds.push(seed);
     return seed;
 }
 
 function getRandGen(seed) {
+    if(seed === null) {
+        seed = getRandomSeed();
+    }
     return mulberry32(xmur3(seed)());
 }
 

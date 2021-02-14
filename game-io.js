@@ -254,9 +254,6 @@ function levelGenBP1(q) {
         "binXLen": binXLen, "binYLen": binYLen,
         "gameType": "bp", "items": items, "defaultProfit": "area",
     };
-    if(q.seed === null) {
-        q.seed = getRandomSeed();
-    }
     let rand = getRandGen(q.seed);
     for(let i=0; i<n; ++i) {
         items.push({
@@ -303,9 +300,6 @@ function levelGen4in1(q) {
         "binXLen": binXLen, "binYLen": binYLen, "gameType": "bp",
         "items": items, "solution": solution,
     };
-    if(q.seed === null) {
-        q.seed = getRandomSeed();
-    }
     let rand = getRandGen(q.seed);
     for(let i=0; i<n; ++i) {
         let [x1, x2] = distinctChoose(q.xMargin, binXLen - q.xMargin, rand);
@@ -425,9 +419,6 @@ function levelGenGuill(q) {
         "binXLen": binXLen, "binYLen": binYLen, "gameType": "bp",
         "items": items, "solution": solution,
     };
-    if(q.seed === null) {
-        q.seed = getRandomSeed();
-    }
     for(let i=0; i < q.nBins; ++i) {
         items.push({'xLen': binXLen, 'yLen': binYLen, 'x': 0, 'y': 0, 'nBin': i});
     }
