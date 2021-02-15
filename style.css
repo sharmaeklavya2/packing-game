@@ -57,6 +57,9 @@ body.dark {
 .dark a {
     color: rgb(65, 175, 235);
 }
+a:not(:hover) {
+    text-decoration: none;
+}
 .light .dark-only, .dark .light-only {
     display: none;
 }
