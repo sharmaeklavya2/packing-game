@@ -293,6 +293,8 @@ function addToolbarEventListeners() {
     document.getElementById('dark-mode-button').addEventListener('click', function(ev) {
             document.body.classList.toggle('light');
             document.body.classList.toggle('dark');
+            document.documentElement.style.setProperty('color-scheme',
+                (document.body.classList.contains('dark') ? 'dark' : 'light'));
             try {
                 if(window.localStorage.getItem('dark')) {
                     window.localStorage.removeItem('dark');
@@ -545,6 +547,7 @@ function initThemeFromLocalStorage() {
         if(window.localStorage.getItem('dark')) {
             document.body.classList.remove('light');
             document.body.classList.add('dark');
+            document.documentElement.style.setProperty('color-scheme', 'dark');
         }
     }
     catch(e) {
