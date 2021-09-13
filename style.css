@@ -108,6 +108,12 @@ footer {
     flex-direction: row;
     flex-wrap: wrap;
 }
+#arena-separator {
+    width: 0px;
+    border: 1px solid var(--bin-outline-color);
+    align-self: stretch;
+    margin: 0 10px;
+}
 
 .bin {
     position: relative;
