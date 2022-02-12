@@ -401,6 +401,7 @@ class Game {
         this.nBinsUsed = 0;
 
         this._createStatsBar();
+        this._startTimer();
         this._setScaleFactor(scaleFactor);
         this._createItems();
         this._createBinsAndPackItems(this.level.startPos);
@@ -593,6 +594,7 @@ class Game {
         let oldPos = this.getItemPositions();
         this._recordHistoryCommand({'cmd': 'bulkMove', 'oldPos': oldPos, 'newPos': newPos});
         this.won = true;
+        this.endTime = Date.now();
         this.putBack(newPos);
     }
 
@@ -757,6 +759,7 @@ class Game {
         this._invalidateHistory();
         this.totalStats = null;
         this.packedStats = null;
+        this._destroyTimer();
         this._destroyStatsBar();
         this.itemInfoBar.destroy();
         this.level = null;
@@ -879,6 +882,7 @@ class Game {
         if(!this.won) {
             if(this.packedStats.count === this.items.length && used <= lb) {
                 this.won = true;
+                this.endTime = Date.now();
                 window.setTimeout(showCelebration, 100);
             }
         }
@@ -1095,6 +1099,7 @@ class Game {
         else if(this.level.gameType === 'ks') {
             domElemNames.push('profit');
         }
+        domElemNames.push('time');
         this.statsDomElems = createBarItems(document.getElementById('stats-bar'), domElemNames);
     }
 
@@ -1159,6 +1164,47 @@ class Game {
             inventory.removeChild(item.domElem);
         }
         this.items.length = 0;
+    }
+
+    _startTimer() {
+        this.startTime = Date.now();
+        this.endTime = null;
+        this.timerId = setInterval(showTime, 100);
+    }
+
+    _destroyTimer() {
+        clearInterval(this.timerId);
+    }
+}
+
+function timeToString(delta) {
+    var ds = Math.floor(delta / 100);
+    var s = Math.floor(delta / 1000);
+    var m = Math.floor(delta / 60000);
+    var h = Math.floor(delta / 3600000);
+    ds -= s * 10
+    s -= 60 * m;
+    m -= 60 * h;
+    var hStr = (h > 0 ? h + ':' : '');
+    var mStr = m.toString().padStart(2, '0') + ':';
+    var sStr = s.toString().padStart(2, '0') + '.';
+    return hStr + mStr + sStr + ds;
+}
+
+function showTime() {
+    if (game === null) {
+        console.warn('game is null but printTime is still running.')
+    }
+    else if (game.won) {
+        clearInterval(game.timerId);
+        if (game.endTime !== null) {
+            var delta = game.endTime - game.startTime;
+            game.statsDomElems['time'].innerHTML = timeToString(delta);
+        }
+    }
+    else {
+        var delta = Date.now() - game.startTime;
+        game.statsDomElems['time'].innerHTML = timeToString(delta);
     }
 }
 
