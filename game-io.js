@@ -415,6 +415,9 @@ function randomShrink(items, shrinkFrac, rand) {
 
 function levelGenGuill(q) {
     const binXLen = q.xLen, binYLen = q.yLen;
+    if(q.nCuts >= binXLen * binYLen * q.nBins) {
+        throw new InputError('nCuts should be less than nBins * xLen * yLen.');
+    }
     let items = [], solution = [];
     let obj = {
         "binXLen": binXLen, "binYLen": binYLen, "gameType": "bp",
