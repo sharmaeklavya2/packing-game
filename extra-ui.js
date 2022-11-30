@@ -272,6 +272,13 @@ function addToolbarEventListeners() {
     document.getElementById('save-game-button').addEventListener('click', function(ev) {
             if(game !== null) {downloadProgress();}
         });
+    document.getElementById('share-button').addEventListener('click', function(ev) {
+            if(game !== null) {
+                function succHook() {addMsg('success', 'URL copied to clipboard');}
+                function failHook(reason) {addMsg('error', 'Could not copy URL to clipboard: ' + reason);}
+                copyLevelURLToClipboard(succHook, failHook);
+            }
+        });
     document.getElementById('unpack-button').addEventListener('click', function(ev) {
             let oldPos = game.getItemPositions();
             game.putBack();
