@@ -649,6 +649,11 @@ function loadGameFromQParams(q, succHook=null, failHook=null) {
             const genName = dictAssertAccess(q, 'src', 'querystring');
             loadGameFromGen(genName, q, scaleFactor, succHook, failHook);
         }
+        else if(srctype === 'str') {
+            const encoded = dictAssertAccess(q, 'src', 'querystring');
+            const s = decodeURIComponent(encoded);
+            loadGameFromJsonString(s, scaleFactor, succHook, failHook);
+        }
         else {
             throw new InputError('unknown srctype: ' + srctype);
         }
@@ -767,6 +772,22 @@ function downloadProgress(filename='progress.json', cleanup=false) {
     let level = serializeLevel(game.level, game.getItemPositions());
     let blob = new Blob([prettyJSONize(level)], {type: 'application/json'});
     downloadBlob(blob, filename, cleanup);
+}
+
+function serializeAndEncodeLevel() {
+    let level = serializeLevel(game.level, game.getItemPositions());
+    let s = prettyJSONize(level);
+    return encodeURIComponent(s);
+}
+
+function getLevelURL() {
+    return window.location.origin + window.location.pathname + '?srctype=str&src='
+        + serializeAndEncodeLevel();
+}
+
+function copyLevelURLToClipboard(succHook, failHook) {
+    const levelURL = getLevelURL();
+    navigator.clipboard.writeText(levelURL).then(succHook, failHook);
 }
 
 function getItemColor(itemId) {
