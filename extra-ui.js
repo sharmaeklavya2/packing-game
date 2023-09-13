@@ -365,7 +365,7 @@ function addExportEventListeners() {
 }
 
 var menuTraversalList = [
-    ['ng-menu', 'ng-url', 'ng-url-menu'],
+    ['ng-menu', 'ng-hc', 'ng-hc-menu'],
     ['ng-menu', 'ng-gen', 'ng-gen-menu'],
     ['ng-menu', 'ng-json', 'ng-json-menu'],
 ];
@@ -391,11 +391,11 @@ function addNgMenuEventListeners() {
         modalGroup.classList.remove('loading');
         resetReloadButton();
     }
-    document.getElementById('ng-url-list').addEventListener('click', function(ev) {
-        const url = ev.target.getAttribute('data-url');
-        const qs = toQueryString({'srctype': 'url', 'src': url});
+    document.getElementById('ng-hc-list').addEventListener('click', function(ev) {
+        const name = ev.target.getAttribute('data-name');
+        const qs = toQueryString({'srctype': 'hc', 'src': name});
         modalGroup.classList.add('loading');
-        loadGameFromUrl(url, null, () => succHookWrapper('ng-url-menu', qs), toolbarFailHook);
+        loadGameFromHC(name, null, () => succHookWrapper('ng-hc-menu', qs), toolbarFailHook);
     });
     document.getElementById('ng-upload').addEventListener('click', function(ev) {
         loadGameFromUpload(null, () => succHookWrapper('ng-menu', ''), toolbarFailHook);

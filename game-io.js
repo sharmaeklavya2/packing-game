@@ -527,6 +527,11 @@ function loadGameFromJsonString(levelString, scaleFactor=null, succHook=null, fa
     }
 }
 
+function loadGameFromHC(name, scaleFactor=null, succHook=null, failHook=null) {
+    // HC = hand-crafted
+    loadGameFromUrl('levels/' + name + '.json', scaleFactor, succHook, failHook);
+}
+
 function loadGameFromUrl(url, scaleFactor=null, succHook=null, failHook=null) {
     let failHook2 = null;
     if(failHook !== null) {
@@ -641,7 +646,12 @@ function loadGameFromQParams(q, succHook=null, failHook=null) {
     try {
         const srctype = dictAssertAccess(q, 'srctype', 'querystring');
 
-        if(srctype === 'url') {
+        if(srctype === 'hc') {
+            // hc = hand-crafted
+            const name = dictAssertAccess(q, 'src', 'querystring');
+            loadGameFromHC(name, scaleFactor, succHook, failHook);
+        }
+        else if(srctype === 'url') {
             const url = dictAssertAccess(q, 'src', 'querystring');
             loadGameFromUrl(url, scaleFactor, succHook, failHook);
         }
