@@ -457,7 +457,7 @@ levelGenGuill.paramMap = toParamMap([
     new Parameter('seed', null, 'seed for random number generator',
         urlEncodeIdemp, urlEncodeIdempMessage),
 ]);
-levelGen4in1.info = 'Generate an instance by repeatedly cutting items.'
+levelGenGuill.info = 'Generate an instance by repeatedly cutting items.'
 levelGenerators.set('guill', levelGenGuill);
 
 //==[ Loading game ]============================================================
