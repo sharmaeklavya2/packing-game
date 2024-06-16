@@ -628,7 +628,7 @@ function getQParams() {
 
 function loadGameFromQParams(q, succHook=null, failHook=null) {
     if(Object.keys(q).length === 0) {
-        q = {'srctype': 'gen', 'src': 'bp1'};
+        q = {'srctype': 'gen', 'src': 'guill'};
     }
 
     let scaleFactor = null;
