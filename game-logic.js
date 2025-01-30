@@ -365,14 +365,9 @@ function inferScaleFactors(invXLen, invYLen, binXLen, binYLen, nBins=1) {
     return [finalScale, hScaleX, finalScale];
 }
 
-function roundScaleFactors(factors) {
-    const devicePixelRatio = window.devicePixelRatio;
-    for(let i=0; i < factors.length; ++i) {
-        if(factors[i] * devicePixelRatio > 20) {
-            factors[i] = Math.floor(devicePixelRatio * factors[i]) / devicePixelRatio;
-        }
-    }
-    return factors;
+function roundScaleFactor(factor) {
+    const dpr = window.devicePixelRatio;
+    return (factor * dpr > 15) ? Math.floor(factor * dpr) / dpr : factor;
 }
 
 function arraySwap(arr, i, j) {
@@ -1048,20 +1043,19 @@ class Game {
         let [inferredScale, inferredScaleX, inferredScaleY] = inferScaleFactors(
             this.invXLen, this.invYLen, this.level.binXLen, this.level.binYLen,
             this.lowerBound());
-        [inferredScale, inferredScaleX, inferredScaleY] = roundScaleFactors(
-            [inferredScale, inferredScaleX, inferredScaleY]);
         if(scaleFactor === 'x') {
-            this.scaleFactor = inferredScaleX;
+            this.latentScaleFactor = inferredScaleX;
         }
         else if(scaleFactor === 'y') {
-            this.scaleFactor = inferredScaleY;
+            this.latentScaleFactor = inferredScaleY;
         }
         else if(scaleFactor === null) {
-            this.scaleFactor = inferredScale;
+            this.latentScaleFactor = inferredScaleY;
         }
         else {
-            this.scaleFactor = scaleFactor;
+            this.latentScaleFactor = scaleFactor;
         }
+        this.scaleFactor = roundScaleFactor(this.latentScaleFactor);
         let actualArenaWidth = (this.invXLen + this.level.binXLen) * this.scaleFactor
             + 4 * innerMargin;
         const bodyRect = document.body.getBoundingClientRect();

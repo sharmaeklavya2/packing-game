@@ -323,10 +323,10 @@ function addToolbarEventListeners() {
 
 function addZoomEventListeners() {
     document.getElementById('zoom-in-button').addEventListener('click', function(ev) {
-            game.resize(game.scaleFactor * 1.1);
+            game.resize(game.latentScaleFactor * 1.1);
         });
     document.getElementById('zoom-out-button').addEventListener('click', function(ev) {
-            game.resize(game.scaleFactor / 1.1);
+            game.resize(game.latentScaleFactor / 1.1);
         });
     document.getElementById('zoom-x-button').addEventListener('click', function(ev) {
             game.resize('x');
